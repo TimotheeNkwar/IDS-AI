@@ -1,28 +1,50 @@
 import os
-from motor.motor_asyncio import AsyncIOMotorClient
+from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
+from sqlalchemy.orm import sessionmaker
 from dotenv import load_dotenv
 
 load_dotenv()
 
-MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017")
+MYSQL_HOST = os.getenv("MYSQL_HOST", "localhost")
+MYSQL_PORT = os.getenv("MYSQL_PORT", "3306")
+MYSQL_USER = os.getenv("MYSQL_USER", "root")
+MYSQL_PASSWORD = os.getenv("MYSQL_PASSWORD", "")
 DATABASE_NAME = os.getenv("DATABASE_NAME", "ids_ai")
 
-client: AsyncIOMotorClient = None
+# Construct async MySQL connection string: aiomysql://user:password@host:port/db
+DATABASE_URL = f"mysql+aiomysql://{MYSQL_USER}:{MYSQL_PASSWORD}@{MYSQL_HOST}:{MYSQL_PORT}/{DATABASE_NAME}"
+
+engine = None
+AsyncSessionLocal = None
 
 
 async def connect_db():
-    """Open the database connection."""
-    global client
-    client = AsyncIOMotorClient(MONGO_URI)
+    """Initialize the database engine and session factory."""
+    global engine, AsyncSessionLocal
+    engine = create_async_engine(
+        DATABASE_URL,
+        echo=False,
+        future=True,
+        pool_pre_ping=True,
+        pool_size=10,
+        max_overflow=20,
+    )
+    AsyncSessionLocal = sessionmaker(
+        engine, class_=AsyncSession, expire_on_commit=False
+    )
 
 
 async def close_db():
-    """Close the database connection."""
-    global client
-    if client:
-        client.close()
+    """Close the database connection pool."""
+    global engine
+    if engine:
+        await engine.dispose()
 
 
-def get_database():
-    """Return the active database instance."""
-    return client[DATABASE_NAME]
+async def get_session():
+    """Yield an async database session."""
+    async with AsyncSessionLocal() as session:
+        try:
+            yield session
+        finally:
+            await session.close()

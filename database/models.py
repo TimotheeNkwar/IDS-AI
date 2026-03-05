@@ -1,41 +1,66 @@
+from sqlalchemy import Column, Integer, String, Float, DateTime, func
+from sqlalchemy.ext.declarative import declarative_base
+from datetime import datetime, timezone
 from pydantic import BaseModel, Field
 from typing import Optional
-from datetime import datetime, timezone
+
+Base = declarative_base()
 
 
-class AlertModel(BaseModel):
-    """Represents an intrusion detection alert stored in the database."""
+class Alert(Base):
+    """SQLAlchemy model for intrusion detection alerts."""
 
-    id: Optional[str] = Field(default=None, alias="_id")
-    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
-    type: str = Field(..., description="Category of the alert (e.g. Port Scan, DDoS)")
-    message: str = Field(..., description="Human-readable description of the alert")
-    source_ip: Optional[str] = Field(default=None, description="Source IP address")
-    severity: str = Field(default="medium", description="Alert severity: low, medium, high, critical")
+    __tablename__ = "alerts"
+
+    id = Column(Integer, primary_key=True, index=True)
+    timestamp = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    type = Column(String(100), nullable=False, index=True)
+    message = Column(String(500), nullable=False)
+    source_ip = Column(String(45), nullable=True, index=True)  # IPv4 or IPv6
+    severity = Column(String(20), default="medium", nullable=False)  # low, medium, high, critical
+
+
+class NetworkTraffic(Base):
+    """SQLAlchemy model for network traffic records used for ML inference."""
+
+    __tablename__ = "network_traffic"
+
+    id = Column(Integer, primary_key=True, index=True)
+    timestamp = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    source_ip = Column(String(45), nullable=False, index=True)
+    destination_ip = Column(String(45), nullable=False, index=True)
+    protocol = Column(String(20), nullable=False)  # TCP, UDP, ICMP, etc.
+    packet_size = Column(Integer, nullable=False)
+    duration = Column(Float, nullable=False)
+    label = Column(String(50), nullable=True)  # normal or attack type
+
+
+# Pydantic schemas for API responses
+class AlertSchema(BaseModel):
+    """Pydantic schema for Alert responses."""
+
+    id: Optional[int] = None
+    timestamp: datetime
+    type: str
+    message: str
+    source_ip: Optional[str] = None
+    severity: str = "medium"
 
     class Config:
-        populate_by_name = True
-        json_schema_extra = {
-            "example": {
-                "type": "Port Scan",
-                "message": "Suspicious port scan from 192.168.1.100",
-                "source_ip": "192.168.1.100",
-                "severity": "high",
-            }
-        }
+        from_attributes = True
 
 
-class NetworkTrafficModel(BaseModel):
-    """Represents a network traffic record used for ML inference."""
+class NetworkTrafficSchema(BaseModel):
+    """Pydantic schema for NetworkTraffic responses."""
 
-    id: Optional[str] = Field(default=None, alias="_id")
-    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    id: Optional[int] = None
+    timestamp: datetime
     source_ip: str
     destination_ip: str
-    protocol: str = Field(..., description="Network protocol (TCP, UDP, ICMP, etc.)")
-    packet_size: int = Field(..., description="Packet size in bytes")
-    duration: float = Field(..., description="Connection duration in seconds")
-    label: Optional[str] = Field(default=None, description="ML label: normal or attack type")
+    protocol: str
+    packet_size: int
+    duration: float
+    label: Optional[str] = None
 
     class Config:
-        populate_by_name = True
+        from_attributes = True
