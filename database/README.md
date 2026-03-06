@@ -35,7 +35,7 @@ Set the following environment variables (or add them to `backend/.env`):
 
 ## Files
 
-```
+```text
 database/
 ├── config.py    # Database connection helpers (SQLAlchemy async client)
 ├── models.py    # SQLAlchemy ORM models and Pydantic schemas
