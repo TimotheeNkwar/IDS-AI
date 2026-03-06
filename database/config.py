@@ -1,50 +1,43 @@
+#type: ignore
+
 import os
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
-from sqlalchemy.orm import sessionmaker
+from motor.motor_asyncio import AsyncClient, AsyncDatabase
 from dotenv import load_dotenv
 
 load_dotenv()
 
-MYSQL_HOST = os.getenv("MYSQL_HOST", "localhost")
-MYSQL_PORT = os.getenv("MYSQL_PORT", "3306")
-MYSQL_USER = os.getenv("MYSQL_USER", "root")
-MYSQL_PASSWORD = os.getenv("MYSQL_PASSWORD", "")
+MONGO_HOST = os.getenv("MONGO_HOST", "localhost")
+MONGO_PORT = os.getenv("MONGO_PORT", "27017")
+MONGO_USER = os.getenv("MONGO_USER", "")
+MONGO_PASSWORD = os.getenv("MONGO_PASSWORD", "")
 DATABASE_NAME = os.getenv("DATABASE_NAME", "ids_ai")
 
-# Construct async MySQL connection string: aiomysql://user:password@host:port/db
-DATABASE_URL = f"mysql+aiomysql://{MYSQL_USER}:{MYSQL_PASSWORD}@{MYSQL_HOST}:{MYSQL_PORT}/{DATABASE_NAME}"
+# Construct MongoDB connection string
+if MONGO_USER and MONGO_PASSWORD:
+    MONGODB_URL = f"mongodb://{MONGO_USER}:{MONGO_PASSWORD}@{MONGO_HOST}:{MONGO_PORT}/{DATABASE_NAME}"
+else:
+    MONGODB_URL = f"mongodb://{MONGO_HOST}:{MONGO_PORT}/{DATABASE_NAME}"
 
-engine = None
-AsyncSessionLocal = None
+client: AsyncClient = None
+db: AsyncDatabase = None
 
 
 async def connect_db():
-    """Initialize the database engine and session factory."""
-    global engine, AsyncSessionLocal
-    engine = create_async_engine(
-        DATABASE_URL,
-        echo=False,
-        future=True,
-        pool_pre_ping=True,
-        pool_size=10,
-        max_overflow=20,
-    )
-    AsyncSessionLocal = sessionmaker(
-        engine, class_=AsyncSession, expire_on_commit=False
-    )
+    """Initialize the MongoDB client and database connection."""
+    global client, db
+    client = AsyncClient(MONGODB_URL)
+    db = client[DATABASE_NAME]
+    # Test connection
+    await client.admin.command('ping')
 
 
 async def close_db():
-    """Close the database connection pool."""
-    global engine
-    if engine:
-        await engine.dispose()
+    """Close the MongoDB connection."""
+    global client
+    if client:
+        client.close()
 
 
-async def get_session():
-    """Yield an async database session."""
-    async with AsyncSessionLocal() as session:
-        try:
-            yield session
-        finally:
-            await session.close()
+async def get_db():
+    """Return the MongoDB database instance."""
+    return db
