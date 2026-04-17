@@ -1,0 +1,272 @@
+KNOWLEDGE_BASE: CYBER ATTACK DETECTION
+
+========================================
+
+1. SQL INJECTION (SQLi)
+   ========================================
+   Description:
+   Injection of malicious SQL queries through user input fields.
+
+Characteristics:
+
+* Inputs containing ' OR 1=1 --
+* Use of UNION SELECT statements
+* Direct database access attempts
+
+Patterns:
+
+* ' OR '1'='1
+* UNION SELECT
+* DROP TABLE
+* -- (SQL comment)
+
+Indicators:
+
+* Visible SQL errors
+* Unauthorized data access
+* Unusual or complex queries
+
+========================================
+2. CROSS-SITE SCRIPTING (XSS)
+=============================
+
+Description:
+Injection of malicious client-side scripts.
+
+Characteristics:
+
+* JavaScript embedded in user input
+* Executed in victim's browser
+
+Patterns:
+
+* <script>alert(1)</script>
+* javascript:
+* onerror= / onload=
+
+Indicators:
+
+* Unexpected popups
+* Redirects
+* Cookie/session theft
+
+========================================
+3. CROSS-SITE REQUEST FORGERY (CSRF)
+====================================
+
+Description:
+Unauthorized actions triggered via forged requests.
+
+Characteristics:
+
+* Requests sent from authenticated user sessions
+* Missing CSRF protection tokens
+
+Patterns:
+
+* POST requests without CSRF token
+* Sensitive actions without validation
+
+Indicators:
+
+* Actions not initiated by user
+* Suspicious account changes
+
+========================================
+4. COMMAND INJECTION
+====================
+
+Description:
+Execution of system commands via user input.
+
+Characteristics:
+
+* Use of shell operators ; && |
+* System-level command execution
+
+Patterns:
+
+* ; ls
+* && cat /etc/passwd
+* | whoami
+
+Indicators:
+
+* Unexpected system responses
+* Access to sensitive files
+
+========================================
+5. DIRECTORY TRAVERSAL
+======================
+
+Description:
+Accessing files outside the intended directory.
+
+Characteristics:
+
+* Use of ../ sequences
+
+Patterns:
+
+* ../../etc/passwd
+* ..\..\windows\system32
+
+Indicators:
+
+* Access to system files
+* Path-related errors
+
+========================================
+6. DENIAL OF SERVICE (DoS/DDoS)
+===============================
+
+Description:
+Overloading a system to disrupt availability.
+
+Characteristics:
+
+* High volume of requests
+* Abnormal traffic patterns
+
+Patterns:
+
+* Repeated massive requests
+
+Indicators:
+
+* Increased latency
+* Service downtime
+
+========================================
+7. BRUTE FORCE ATTACK
+=====================
+
+Description:
+Repeated login attempts to guess credentials.
+
+Characteristics:
+
+* Multiple authentication attempts
+* Password variations
+
+Patterns:
+
+* login=admin&password=...
+* Rapid repeated attempts
+
+Indicators:
+
+* Multiple failed logins
+* Repeated IP usage
+
+========================================
+8. FILE INCLUSION (LFI/RFI)
+===========================
+
+Description:
+Including local or remote files into execution.
+
+Characteristics:
+
+* Manipulated file parameters
+
+Patterns:
+
+* file=../../etc/passwd
+* http://malicious.com/shell.txt
+
+Indicators:
+
+* Execution of external code
+* Reading sensitive files
+
+========================================
+9. XML EXTERNAL ENTITY (XXE)
+============================
+
+Description:
+Exploiting XML parsers via external entities.
+
+Characteristics:
+
+* Malicious XML payloads
+
+Patterns:
+
+* <!ENTITY xxe SYSTEM "file:///etc/passwd">
+
+Indicators:
+
+* Internal file disclosure
+* Internal network access
+
+========================================
+10. SERVER-SIDE REQUEST FORGERY (SSRF)
+======================================
+
+Description:
+Server making unauthorized internal requests.
+
+Characteristics:
+
+* Manipulated URLs
+
+Patterns:
+
+* http://127.0.0.1
+* http://internal-service
+
+Indicators:
+
+* Access to internal services
+* Internal network scanning
+
+========================================
+11. PRIVILEGE ESCALATION
+========================
+
+Description:
+Gaining higher access rights than allowed.
+
+Characteristics:
+
+* Unauthorized admin actions
+
+Indicators:
+
+* Role changes without permission
+* Access to restricted features
+
+========================================
+12. MALWARE / PAYLOAD OBFUSCATION
+=================================
+
+Description:
+Hidden or obfuscated malicious code.
+
+Characteristics:
+
+* Base64 encoding
+* JavaScript obfuscation
+
+Patterns:
+
+* eval(atob())
+* Encoded payloads
+
+Indicators:
+
+* Unreadable code
+* Dynamic execution behavior
+
+========================================
+GLOBAL DETECTION RULES
+======================
+
+* Inputs with suspicious special characters
+* Abnormal input length
+* High repetition patterns
+* Unusual encoding (hex, base64)
+* Mismatch between expected input type and actual content
+
+END_OF_KNOWLEDGE_BASE

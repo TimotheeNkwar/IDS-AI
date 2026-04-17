@@ -2,6 +2,17 @@ version = 1
 revision = 3
 requires-python = ">=3.11"
 
+[manifest]
+members = [
+    "backend",
+    "ids-ai",
+]
+
+[[package]]
+name = "backend"
+version = "0.1.0"
+source = { virtual = "backend" }
+
 [[package]]
 name = "ids-ai"
 version = "0.1.0"
