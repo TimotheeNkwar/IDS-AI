@@ -15,9 +15,20 @@ import logging
 import os
 import re
 from functools import lru_cache
+from pathlib import Path
 from typing import Any
 
 log = logging.getLogger(__name__)
+
+_KB_PATH = Path(__file__).parent / "knowledge_base.txt"
+
+
+def _load_knowledge_base() -> str:
+    try:
+        return _KB_PATH.read_text(encoding="utf-8")
+    except FileNotFoundError:
+        log.warning("knowledge_base.txt not found — skipping")
+        return ""
 
 LLM_MODEL_NAME = os.getenv("LLM_MODEL_NAME", "mistralai/Mistral-7B-Instruct-v0.2")
 LLM_DEVICE = os.getenv("LLM_DEVICE", "auto")
@@ -25,6 +36,11 @@ LLM_ENABLED = os.getenv("LLM_ENABLED", "true").lower() not in ("false", "0", "no
 
 _PROMPT_TEMPLATE = """\
 [INST] You are an intrusion detection system.
+
+Use the following knowledge base to guide your analysis:
+---
+{knowledge_base}
+---
 
 Classify the following network log entry into exactly one of:
 - Normal
@@ -59,13 +75,8 @@ def _load_pipeline() -> Any | None:
         pipe = pipeline(
             "text-generation",
             model=LLM_MODEL_NAME,
-            torch_dtype=dtype,
+            dtype=dtype,
             device_map=device_map,
-            max_new_tokens=256,
-            do_sample=False,
-            temperature=None,
-            top_p=None,
-            repetition_penalty=1.1,
         )
         log.info("LLM loaded successfully")
         return pipe
@@ -132,10 +143,11 @@ def analyze_with_llm(log_entry: str) -> dict[str, Any]:
             "llm_available": False,
         }
 
-    prompt = _PROMPT_TEMPLATE.format(log=log_entry[:1024])  # cap input length
+    kb = _load_knowledge_base()
+    prompt = _PROMPT_TEMPLATE.format(knowledge_base=kb, log=log_entry[:1024])
 
     try:
-        outputs = pipe(prompt)
+        outputs = pipe(prompt, max_new_tokens=256, do_sample=False)
         generated = outputs[0]["generated_text"]
         result = _parse_llm_output(generated)
         result["llm_available"] = True

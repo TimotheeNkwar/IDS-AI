@@ -94,10 +94,11 @@ class LogEvent(BaseModel):
 class AnalysisResult(BaseModel):
     timestamp: str
     # ML layer
-    ml_label: str                    # "normal" | "attack"
+    ml_label: str                    # "normal" | <attack_type>
     ml_confidence: float
     ml_model: str
     is_anomaly: bool
+    attack_type: str | None          # e.g. "ddos", "injection", None when normal
     # LLM layer (only when anomaly)
     classification: str              # "Normal" | "Suspicious" | "Malicious"
     llm_confidence: float
@@ -155,6 +156,7 @@ async def analyze(event: LogEvent) -> AnalysisResult:
     ml_label: str = ml_result["label"]
     ml_conf: float = ml_result["confidence"]
     ml_model: str = ml_result["model_name"]
+    attack_type: str | None = ml_result.get("attack_type")
 
     # Step 4: LLM analysis (only for anomalies)
     if is_anomaly:
@@ -177,6 +179,7 @@ async def analyze(event: LogEvent) -> AnalysisResult:
         ml_confidence=ml_conf,
         ml_model=ml_model,
         is_anomaly=is_anomaly,
+        attack_type=attack_type,
         classification=classification,
         llm_confidence=llm_result["llm_confidence"],
         explanation=llm_result["explanation"],

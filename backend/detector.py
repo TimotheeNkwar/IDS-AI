@@ -103,10 +103,10 @@ def predict(raw_log: dict[str, Any]) -> dict[str, Any]:
     Returns:
         {
             "is_anomaly": bool,
-            "label": "normal" | "attack",
-            "confidence": float,      # 0‒1
+            "label": "normal" | <attack_type>,   # e.g. "ddos", "injection", …
+            "attack_type": str | None,            # None when normal
+            "confidence": float,                  # 0‒1
             "model_name": str,
-            "raw_score": float,
         }
     """
     bundle = _load_bundle()
@@ -114,30 +114,42 @@ def predict(raw_log: dict[str, Any]) -> dict[str, Any]:
         return {
             "is_anomaly": False,
             "label": "unknown",
+            "attack_type": None,
             "confidence": 0.0,
             "model_name": "none",
-            "raw_score": 0.0,
             "error": "Model not loaded — run train.py first",
         }
 
     X = _build_row(raw_log, bundle)
     model = bundle["model"]
     model_name = bundle["model_name"]
+    type_encoder = bundle.get("type_encoder")
+    type_classes: list[str] = bundle.get("type_classes", [])
 
     if isinstance(model, IsolationForest):
-        raw_pred = model.predict(X)[0]          # -1 or 1
+        raw_pred = model.predict(X)[0]
         is_anomaly = raw_pred == -1
         confidence = _isolation_confidence(model, X)
+        attack_type = "unknown_attack" if is_anomaly else None
+        label = attack_type if is_anomaly else "normal"
     else:
-        pred = int(model.predict(X)[0])         # 0 or 1
+        pred_idx = int(model.predict(X)[0])
         proba = model.predict_proba(X)[0]
-        is_anomaly = pred == 1
-        confidence = float(proba[pred])
+        confidence = float(proba[pred_idx])
+
+        predicted_type = (
+            type_encoder.inverse_transform([pred_idx])[0]
+            if type_encoder is not None
+            else (type_classes[pred_idx] if type_classes else str(pred_idx))
+        )
+        is_anomaly = predicted_type != "normal"
+        attack_type = predicted_type if is_anomaly else None
+        label = predicted_type
 
     return {
         "is_anomaly": is_anomaly,
-        "label": "attack" if is_anomaly else "normal",
+        "label": label,
+        "attack_type": attack_type,
         "confidence": round(confidence, 4),
         "model_name": model_name,
-        "raw_score": float(X[0, 0]),            # first feature as reference
     }
