@@ -28,6 +28,7 @@ frontend/
 ├── public/
 │   └── index.html       # HTML entry point
 ├── src/
+│   ├── App.css          # Dashboard styles
 │   ├── App.jsx          # Main application component
 │   └── index.jsx        # React DOM entry point
 └── package.json         # Node dependencies and scripts
@@ -118,6 +119,9 @@ git branch --merged main
 
 ## Features
 
-- Real-time alert dashboard
-- System status indicator
-- Communicates with the backend API at `/api`
+- Auto-refreshing SOC-style dashboard
+- ML, LLM, alert storage, and traffic storage health indicators
+- Alert severity and workflow counters
+- Alert filtering by search, severity, and status
+- Inline alert status updates via `PATCH /api/alerts/{id}/status`
+- Recent analyzed traffic view from `/api/traffic`
