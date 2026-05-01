@@ -1,8 +1,17 @@
-#type: ignore
+# type: ignore
+"""Pydantic schemas for MongoDB documents."""
+
+from __future__ import annotations
+
 from datetime import datetime, timezone
-from pydantic import BaseModel, Field
 from typing import Optional
-from bson import ObjectId
+
+from pydantic import BaseModel, Field
+
+try:
+    from bson import ObjectId
+except ImportError:
+    ObjectId = str
 
 
 class Alert(BaseModel):
@@ -12,14 +21,23 @@ class Alert(BaseModel):
     timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     type: str
     message: str
-    source_ip: Optional[str] = None  # IPv4 or IPv6
-    severity: str = "medium"  # low, medium, high, critical
+    source_ip: Optional[str] = None
+    destination_ip: Optional[str] = None
+    severity: str = "medium"
+    status: str = "open"
+    classification: Optional[str] = None
+    ml_label: Optional[str] = None
+    ml_confidence: Optional[float] = None
+    llm_confidence: Optional[float] = None
+    final_confidence: Optional[float] = None
+    recommended_action: Optional[str] = None
+    needs_manual_review: bool = True
 
     class Config:
         populate_by_name = True
         json_encoders = {
             ObjectId: str,
-            datetime: lambda v: v.isoformat()
+            datetime: lambda v: v.isoformat(),
         }
 
 
@@ -30,19 +48,19 @@ class NetworkTraffic(BaseModel):
     timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     source_ip: str
     destination_ip: str
-    protocol: str  # TCP, UDP, ICMP, etc.
-    packet_size: int
-    duration: float
-    label: Optional[str] = None  # normal or attack type
+    protocol: str
+    packet_size: int = 0
+    duration: float = 0.0
+    label: Optional[str] = None
+    raw_event: Optional[dict] = None
 
     class Config:
         populate_by_name = True
         json_encoders = {
             ObjectId: str,
-            datetime: lambda v: v.isoformat()
+            datetime: lambda v: v.isoformat(),
         }
 
 
-# Aliases for API responses (same as models)
 AlertSchema = Alert
 NetworkTrafficSchema = NetworkTraffic

@@ -9,34 +9,26 @@ from __future__ import annotations
 
 import logging
 import os
+import sys
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
+from pathlib import Path
 from typing import Any
 
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
+sys.path.append(str(Path(__file__).resolve().parents[1]))
+
 import detector
 import model as llm_module
-
-try:
-    from bson import ObjectId
-    from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorCollection
-except ImportError:
-    ObjectId = None
-    AsyncIOMotorClient = None
-    AsyncIOMotorCollection = Any
+from database import alerts as alert_repo
+from database import config as db_config
+from database import traffic as traffic_repo
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s  %(levelname)s  %(message)s")
 log = logging.getLogger(__name__)
-
-MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017/ids_ai")
-DATABASE_NAME = os.getenv("DATABASE_NAME", "ids_ai")
-MONGO_ENABLED = os.getenv("MONGO_ENABLED", "true").lower() not in ("false", "0", "no")
-
-_mongo_client: Any | None = None
-_alerts_collection: AsyncIOMotorCollection | None = None
 
 
 # ── Startup / shutdown ─────────────────────────────────────────────────────────
@@ -54,11 +46,10 @@ async def lifespan(app: FastAPI):
         log.info("Pre-loading LLM …")
         llm_module._load_pipeline()
 
-    await _connect_alert_store()
+    await db_config.connect_db()
 
     yield
-    if _mongo_client is not None:
-        _mongo_client.close()
+    await db_config.close_db()
     log.info("IDS-AI shutting down")
 
 
@@ -165,41 +156,8 @@ def _final_confidence(ml_confidence: float, llm_confidence: float, llm_available
     return round((0.7 * ml_confidence) + (0.3 * llm_confidence), 2)
 
 
-async def _connect_alert_store() -> None:
-    global _mongo_client, _alerts_collection
-
-    if not MONGO_ENABLED:
-        log.info("MongoDB alert storage disabled via MONGO_ENABLED=false")
-        return
-
-    if AsyncIOMotorClient is None:
-        log.warning("MongoDB dependencies not installed; alerts will not be persisted")
-        return
-
-    try:
-        _mongo_client = AsyncIOMotorClient(MONGO_URI, serverSelectionTimeoutMS=2000)
-        await _mongo_client.admin.command("ping")
-        _alerts_collection = _mongo_client[DATABASE_NAME]["alerts"]
-        log.info("MongoDB alert storage ready: %s/%s", MONGO_URI, DATABASE_NAME)
-    except Exception as exc:
-        _mongo_client = None
-        _alerts_collection = None
-        log.warning("MongoDB unavailable; alerts will not be persisted: %s", exc)
-
-
-def _serialize_alert(alert: dict[str, Any]) -> dict[str, Any]:
-    alert["id"] = str(alert.pop("_id"))
-    if isinstance(alert.get("timestamp"), datetime):
-        alert["timestamp"] = alert["timestamp"].isoformat()
-    return alert
-
-
 async def _save_alert(result: AnalysisResult) -> None:
-    if _alerts_collection is None:
-        return
-
-    await _alerts_collection.insert_one({
-        "timestamp": datetime.now(timezone.utc),
+    await alert_repo.create_alert({
         "type": result.attack_type or result.ml_label,
         "message": result.explanation,
         "source_ip": result.src_ip,
@@ -213,6 +171,21 @@ async def _save_alert(result: AnalysisResult) -> None:
         "final_confidence": result.final_confidence,
         "recommended_action": result.recommended_action,
         "needs_manual_review": result.needs_manual_review,
+    })
+
+
+async def _save_traffic(event: LogEvent, result: AnalysisResult, raw_event: dict[str, Any]) -> None:
+    await traffic_repo.create_traffic_record({
+        "source_ip": event.src_ip,
+        "destination_ip": event.dst_ip,
+        "protocol": event.proto,
+        "packet_size": event.src_bytes + event.dst_bytes,
+        "duration": event.duration,
+        "label": result.ml_label,
+        "is_anomaly": result.is_anomaly,
+        "ml_confidence": result.ml_confidence,
+        "severity": result.severity,
+        "raw_event": raw_event,
     })
 
 
@@ -289,6 +262,8 @@ async def analyze(event: LogEvent) -> AnalysisResult:
     if is_anomaly:
         await _save_alert(result)
 
+    await _save_traffic(event, result, raw)
+
     return result
 
 
@@ -306,8 +281,9 @@ async def health() -> dict[str, Any]:
         "llm_model": llm_module.LLM_MODEL_NAME,
         "llm_enabled": llm_module.LLM_ENABLED,
         "llm_loaded": pipe.currsize > 0,
-        "alert_storage_enabled": MONGO_ENABLED,
-        "alert_storage_connected": _alerts_collection is not None,
+        "alert_storage_enabled": db_config.MONGO_ENABLED,
+        "alert_storage_connected": alert_repo.is_available(),
+        "traffic_storage_connected": traffic_repo.is_available(),
     }
 
 
@@ -320,31 +296,30 @@ async def api_status() -> dict[str, Any]:
 
 @app.get("/api/alerts")
 async def api_alerts(limit: int = Query(default=50, ge=1, le=200)) -> dict[str, Any]:
-    if _alerts_collection is None:
+    if not alert_repo.is_available():
         return {"alerts": [], "storage_available": False}
 
-    cursor = _alerts_collection.find().sort("timestamp", -1).limit(limit)
-    alerts = [_serialize_alert(alert) async for alert in cursor]
-    return {"alerts": alerts, "storage_available": True}
+    return {"alerts": await alert_repo.list_alerts(limit), "storage_available": True}
 
 
 @app.patch("/api/alerts/{alert_id}/status")
 async def update_alert_status(alert_id: str, payload: AlertStatusUpdate) -> dict[str, Any]:
-    if _alerts_collection is None:
+    if not alert_repo.is_available():
         raise HTTPException(status_code=503, detail="Alert storage unavailable")
 
-    if ObjectId is None:
-        raise HTTPException(status_code=503, detail="MongoDB dependencies unavailable")
-
     try:
-        object_id = ObjectId(alert_id)
-    except Exception as exc:
-        raise HTTPException(status_code=400, detail="Invalid alert id") from exc
+        updated = await alert_repo.update_alert_status(alert_id, payload.status)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
 
-    result = await _alerts_collection.update_one(
-        {"_id": object_id},
-        {"$set": {"status": payload.status, "updated_at": datetime.now(timezone.utc)}},
-    )
-    if result.matched_count == 0:
+    if not updated:
         raise HTTPException(status_code=404, detail="Alert not found")
     return {"id": alert_id, "status": payload.status}
+
+
+@app.get("/api/traffic")
+async def api_traffic(limit: int = Query(default=50, ge=1, le=200)) -> dict[str, Any]:
+    if not traffic_repo.is_available():
+        return {"traffic": [], "storage_available": False}
+
+    return {"traffic": await traffic_repo.list_traffic(limit), "storage_available": True}

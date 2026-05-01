@@ -129,6 +129,7 @@ git branch --merged main
 | GET    | /api/status   | System health check          |
 | GET    | /api/alerts   | Retrieve recent IDS alerts   |
 | PATCH  | /api/alerts/{id}/status | Update alert workflow status |
+| GET    | /api/traffic  | Retrieve recent analyzed traffic |
 
 ## Environment Variables
 

@@ -68,6 +68,7 @@ function App() {
           <SystemItem label="LLM model" value={health?.llm_model || 'Unknown'} />
           <SystemItem label="LLM loaded" value={health?.llm_loaded ? 'Yes' : 'No'} />
           <SystemItem label="Alert storage" value={health?.alert_storage_connected ? 'Connected' : 'Unavailable'} />
+          <SystemItem label="Traffic storage" value={health?.traffic_storage_connected ? 'Connected' : 'Unavailable'} />
         </div>
       </section>
 

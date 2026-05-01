@@ -18,8 +18,10 @@ IDS-AI/
 │   └── requirements.txt
 ├── frontend/                 # React UI (Dashboard + alerts)
 ├── database/                 # MongoDB configuration
+│   ├── alerts.py             # Alert repository (create/list/status update)
 │   ├── config.py             # Async Motor client + connection helpers
-│   └── models.py             # Pydantic models: Alert, NetworkTraffic
+│   ├── models.py             # Pydantic models: Alert, NetworkTraffic
+│   └── traffic.py            # Network traffic repository
 ├── pyproject.toml
 └── uv.lock
 ```
@@ -124,7 +126,7 @@ API available at `http://localhost:8000` · Interactive docs: `http://localhost:
 
 ### `POST /analyze`
 
-Analyzes a network event through the full pipeline (ML + LLM if anomaly). Anomalies are saved as alerts when MongoDB is available.
+Analyzes a network event through the full pipeline (ML + LLM if anomaly). Events are saved to `network_traffic`, and anomalies are also saved as alerts when MongoDB is available.
 
 **Request body (all fields are optional):**
 
@@ -193,7 +195,8 @@ Analyzes a network event through the full pipeline (ML + LLM if anomaly). Anomal
   "llm_enabled": true,
   "llm_loaded": true,
   "alert_storage_enabled": true,
-  "alert_storage_connected": true
+  "alert_storage_connected": true,
+  "traffic_storage_connected": true
 }
 ```
 
@@ -236,6 +239,10 @@ Updates an alert workflow status. Accepted values: `open`, `reviewing`, `resolve
 ```json
 { "status": "reviewing" }
 ```
+
+### `GET /api/traffic`
+
+Returns recent network events persisted after analysis.
 
 ## Database
 
