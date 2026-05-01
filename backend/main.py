@@ -200,6 +200,7 @@ async def health() -> dict[str, Any]:
         "ml_model": bundle["model_name"] if bundle else None,
         "ml_model_loaded": bundle is not None,
         "ml_f1": round(bundle["metrics"]["f1"], 4) if bundle else None,
+        "llm_provider": llm_module.LLM_PROVIDER,
         "llm_model": llm_module.LLM_MODEL_NAME,
         "llm_enabled": llm_module.LLM_ENABLED,
         "llm_loaded": pipe.currsize > 0,

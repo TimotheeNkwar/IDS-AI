@@ -1,10 +1,12 @@
 # type: ignore
 """
 IDS-AI — LLM analysis module
-Wraps a HuggingFace text-generation model (default: Mistral-7B-Instruct)
+Wraps an Ollama or HuggingFace text-generation model
 and exposes analyze_with_llm(log) → dict.
 
+Set LLM_PROVIDER to "ollama" (default) or "huggingface".
 Set LLM_MODEL_NAME env var to override the model.
+Set OLLAMA_BASE_URL to override the Ollama server URL.
 Set LLM_DEVICE to "cpu", "cuda", or "auto" (default: auto).
 Set LLM_ENABLED=false to disable LLM entirely (useful for low-RAM environments).
 """
@@ -14,6 +16,8 @@ from __future__ import annotations
 import logging
 import os
 import re
+import json
+from urllib import request, error
 from functools import lru_cache
 from pathlib import Path
 from typing import Any
@@ -30,7 +34,12 @@ def _load_knowledge_base() -> str:
         log.warning("knowledge_base.txt not found — skipping")
         return ""
 
-LLM_MODEL_NAME = os.getenv("LLM_MODEL_NAME", "mistralai/Mistral-7B-Instruct-v0.2")
+LLM_PROVIDER = os.getenv("LLM_PROVIDER", "ollama").lower()
+LLM_MODEL_NAME = os.getenv(
+    "LLM_MODEL_NAME",
+    "mistral" if LLM_PROVIDER == "ollama" else "mistralai/Mistral-7B-Instruct-v0.2",
+)
+OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434").rstrip("/")
 LLM_DEVICE = os.getenv("LLM_DEVICE", "auto")
 LLM_ENABLED = os.getenv("LLM_ENABLED", "true").lower() not in ("false", "0", "no")
 
@@ -64,6 +73,14 @@ def _load_pipeline() -> Any | None:
         log.info("LLM disabled via LLM_ENABLED=false")
         return None
 
+    if LLM_PROVIDER == "ollama":
+        log.info("Using Ollama LLM: %s (%s)", LLM_MODEL_NAME, OLLAMA_BASE_URL)
+        return {"provider": "ollama"}
+
+    if LLM_PROVIDER != "huggingface":
+        log.error("Unknown LLM_PROVIDER=%s; expected 'ollama' or 'huggingface'", LLM_PROVIDER)
+        return None
+
     try:
         import torch
         from transformers import pipeline
@@ -86,6 +103,30 @@ def _load_pipeline() -> Any | None:
     except Exception as exc:
         log.error("Failed to load LLM (%s): %s", LLM_MODEL_NAME, exc)
         return None
+
+
+def _generate_with_ollama(prompt: str) -> str:
+    payload = json.dumps({
+        "model": LLM_MODEL_NAME,
+        "prompt": prompt,
+        "stream": False,
+        "options": {"temperature": 0},
+    }).encode("utf-8")
+    req = request.Request(
+        f"{OLLAMA_BASE_URL}/api/generate",
+        data=payload,
+        headers={"Content-Type": "application/json"},
+        method="POST",
+    )
+    try:
+        with request.urlopen(req, timeout=120) as response:
+            data = json.loads(response.read().decode("utf-8"))
+            return data.get("response", "")
+    except error.URLError as exc:
+        raise RuntimeError(
+            f"Ollama is not reachable at {OLLAMA_BASE_URL}. "
+            f"Start it with `ollama serve` and ensure `{LLM_MODEL_NAME}` is pulled."
+        ) from exc
 
 
 def _parse_llm_output(text: str) -> dict[str, Any]:
@@ -147,8 +188,11 @@ def analyze_with_llm(log_entry: str) -> dict[str, Any]:
     prompt = _PROMPT_TEMPLATE.format(knowledge_base=kb, log=log_entry[:1024])
 
     try:
-        outputs = pipe(prompt, max_new_tokens=256, do_sample=False)
-        generated = outputs[0]["generated_text"]
+        if LLM_PROVIDER == "ollama":
+            generated = _generate_with_ollama(prompt)
+        else:
+            outputs = pipe(prompt, max_new_tokens=256, do_sample=False)
+            generated = outputs[0]["generated_text"]
         result = _parse_llm_output(generated)
         result["llm_available"] = True
         return result

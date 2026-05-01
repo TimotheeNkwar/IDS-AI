@@ -6,6 +6,7 @@ FastAPI-based backend providing REST APIs and machine learning inference for the
 
 - Python >= 3.10
 - pip
+- Ollama running locally for LLM analysis
 
 ## Getting Started
 
@@ -17,9 +18,15 @@ source venv/bin/activate   # Windows: venv\Scripts\activate
 # Install dependencies
 pip install -r requirements.txt
 
+# Prepare the default local LLM
+ollama pull mistral
+ollama serve
+
 # Start the development server (http://localhost:8000)
 uvicorn main:app --reload
 ```
+
+`ollama serve` keeps running in the terminal. Open another terminal before starting `uvicorn`.
 
 Interactive API docs are available at `http://localhost:8000/docs`.
 
@@ -127,9 +134,9 @@ git branch --merged main
 Create a `.env` file in this directory:
 
 ```
-MYSQL_HOST=localhost
-MYSQL_PORT=3306
-MYSQL_USER=root
-MYSQL_PASSWORD=your_password
+LLM_PROVIDER=ollama
+LLM_MODEL_NAME=mistral
+OLLAMA_BASE_URL=http://localhost:11434
+LLM_ENABLED=true
 DATABASE_NAME=ids_ai
 ```
