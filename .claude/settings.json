@@ -1,8 +1,0 @@
-{
-  "permissions": {
-    "allow": [
-      "Bash(python3 -c \"import pandas as pd; df=pd.read_csv\\('/home/timothee/IDS-AI/backend/data.csv'\\); print\\('Shape:', df.shape\\); print\\('Columns:', list\\(df.columns\\)\\); print\\('Label col sample:', df.iloc[:,[-1]].value_counts\\(\\).head\\(\\)\\)\")",
-      "Bash(python3 -c ' *)"
-    ]
-  }
-}
