@@ -41,10 +41,10 @@ Network request
       │
       ▼
  [LLM — Ollama]
- Knowledge base + classification + explanation
+ Knowledge base + JSON classification + recommended action
       │
       ▼
- { Normal | Suspicious | Malicious, confidence, explanation, severity }
+ { Normal | Suspicious | Malicious, confidence, explanation, action, severity }
 ```
 
 ## Trained ML Models
@@ -124,7 +124,7 @@ API available at `http://localhost:8000` · Interactive docs: `http://localhost:
 
 ### `POST /analyze`
 
-Analyzes a network event through the full pipeline (ML + LLM if anomaly).
+Analyzes a network event through the full pipeline (ML + LLM if anomaly). Anomalies are saved as alerts when MongoDB is available.
 
 **Request body (all fields are optional):**
 
@@ -169,7 +169,10 @@ Analyzes a network event through the full pipeline (ML + LLM if anomaly).
   "classification": "Malicious",
   "llm_confidence": 0.91,
   "explanation": "Connection on port 4444 with a high volume of source bytes — characteristic of a backdoor.",
+  "recommended_action": "Isolate the source host and inspect recent outbound connections.",
+  "needs_manual_review": true,
   "llm_available": true,
+  "final_confidence": 0.95,
   "severity": "high",
   "src_ip": "192.168.1.10",
   "dst_ip": "10.0.0.1"
@@ -188,7 +191,9 @@ Analyzes a network event through the full pipeline (ML + LLM if anomaly).
   "llm_provider": "ollama",
   "llm_model": "mistral",
   "llm_enabled": true,
-  "llm_loaded": true
+  "llm_loaded": true,
+  "alert_storage_enabled": true,
+  "alert_storage_connected": true
 }
 ```
 
@@ -198,6 +203,38 @@ Legacy endpoint — returns basic operational status.
 
 ```json
 { "status": "operational", "timestamp": "2026-04-18T10:23:00Z" }
+```
+
+### `GET /api/alerts`
+
+Returns recent persisted alerts.
+
+```json
+{
+  "storage_available": true,
+  "alerts": [
+    {
+      "id": "662244...",
+      "timestamp": "2026-04-18T10:23:00Z",
+      "type": "backdoor",
+      "message": "Connection on port 4444...",
+      "source_ip": "192.168.1.10",
+      "destination_ip": "10.0.0.1",
+      "severity": "high",
+      "status": "open",
+      "classification": "Malicious",
+      "recommended_action": "Isolate the source host and inspect recent outbound connections."
+    }
+  ]
+}
+```
+
+### `PATCH /api/alerts/{id}/status`
+
+Updates an alert workflow status. Accepted values: `open`, `reviewing`, `resolved`, `false_positive`.
+
+```json
+{ "status": "reviewing" }
 ```
 
 ## Database
@@ -231,6 +268,7 @@ MongoDB is used to persist alerts and network traffic records. The `database/` m
 | `CORS_ORIGINS`    | `http://localhost:3000`               | Allowed CORS origins                 |
 | `MONGO_URI`       | `mongodb://localhost:27017/ids_ai`    | MongoDB connection URI               |
 | `DATABASE_NAME`   | `ids_ai`                              | MongoDB database name                |
+| `MONGO_ENABLED`   | `true`                                | Disable alert persistence with `false` |
 
 With Ollama, pull the model once and keep the local server running:
 
@@ -260,7 +298,7 @@ After SMOTE, all classes in the training split are equalized to the count of the
 
 ## Frontend
 
-React dashboard showing system status and recent alerts. Fetches from `/api/status` and `/api/alerts`.
+React dashboard showing ML/LLM status, alert storage health, severity counters, and recent alerts. Fetches from `/health` and `/api/alerts`.
 
 ```bash
 cd frontend

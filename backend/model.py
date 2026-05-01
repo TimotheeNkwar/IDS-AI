@@ -56,11 +56,18 @@ Classify the following network log entry into exactly one of:
 - Suspicious
 - Malicious
 
-Then explain your reasoning clearly in 2-3 sentences.
-Respond in this exact format:
-Classification: <Normal|Suspicious|Malicious>
-Confidence: <0-100>%
-Explanation: <your reasoning>
+Use the ML context as supporting evidence, but correct it if the log clearly contradicts it.
+Respond only with valid JSON matching this schema:
+{{
+  "classification": "Normal|Suspicious|Malicious",
+  "confidence": 0.0,
+  "explanation": "2-3 sentence reasoning",
+  "recommended_action": "specific next action for an analyst",
+  "needs_manual_review": true
+}}
+
+ML context:
+{ml_context}
 
 Log:
 {log}
@@ -129,15 +136,58 @@ def _generate_with_ollama(prompt: str) -> str:
         ) from exc
 
 
+def _extract_json_object(text: str) -> dict[str, Any] | None:
+    """Best-effort extraction for models that wrap JSON in extra text."""
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError:
+        pass
+
+    start = text.find("{")
+    end = text.rfind("}")
+    if start == -1 or end == -1 or end <= start:
+        return None
+
+    try:
+        return json.loads(text[start:end + 1])
+    except json.JSONDecodeError:
+        return None
+
+
 def _parse_llm_output(text: str) -> dict[str, Any]:
     """Extract classification, confidence, and explanation from raw LLM text."""
     # Strip the prompt echo that some models return
     if "[/INST]" in text:
         text = text.split("[/INST]", 1)[-1]
 
+    data = _extract_json_object(text.strip())
+    if data:
+        classification = str(data.get("classification", "Suspicious")).capitalize()
+        if classification not in {"Normal", "Suspicious", "Malicious"}:
+            classification = "Suspicious"
+
+        confidence = data.get("confidence", data.get("llm_confidence", 0.5))
+        try:
+            confidence = float(confidence)
+        except (TypeError, ValueError):
+            confidence = 0.5
+        if confidence > 1:
+            confidence = confidence / 100.0
+
+        return {
+            "classification": classification,
+            "llm_confidence": round(min(max(confidence, 0.0), 1.0), 2),
+            "explanation": str(data.get("explanation", "")).strip()[:500],
+            "recommended_action": str(
+                data.get("recommended_action", "Review the event and correlate with recent traffic.")
+            ).strip()[:300],
+            "needs_manual_review": bool(data.get("needs_manual_review", classification != "Normal")),
+        }
+
     classification = "Suspicious"
     confidence = 50.0
     explanation = text.strip()
+    recommended_action = "Review the event and correlate with recent traffic."
 
     m = re.search(r"Classification:\s*(Normal|Suspicious|Malicious)", text, re.IGNORECASE)
     if m:
@@ -155,10 +205,12 @@ def _parse_llm_output(text: str) -> dict[str, Any]:
         "classification": classification,
         "llm_confidence": round(confidence / 100.0, 2),
         "explanation": explanation,
+        "recommended_action": recommended_action,
+        "needs_manual_review": classification != "Normal",
     }
 
 
-def analyze_with_llm(log_entry: str) -> dict[str, Any]:
+def analyze_with_llm(log_entry: str, ml_context: dict[str, Any] | None = None) -> dict[str, Any]:
     """
     Classify a log entry with the LLM.
 
@@ -167,6 +219,8 @@ def analyze_with_llm(log_entry: str) -> dict[str, Any]:
             "classification": "Normal" | "Suspicious" | "Malicious",
             "llm_confidence": float,   # 0-1
             "explanation": str,
+            "recommended_action": str,
+            "needs_manual_review": bool,
             "llm_available": bool,
         }
     """
@@ -181,11 +235,17 @@ def analyze_with_llm(log_entry: str) -> dict[str, Any]:
                 "LLM analysis unavailable. The ML model flagged this traffic as anomalous. "
                 "Manual review is recommended."
             ),
+            "recommended_action": "Review the event manually and correlate with source IP history.",
+            "needs_manual_review": True,
             "llm_available": False,
         }
 
     kb = _load_knowledge_base()
-    prompt = _PROMPT_TEMPLATE.format(knowledge_base=kb, log=log_entry[:1024])
+    prompt = _PROMPT_TEMPLATE.format(
+        knowledge_base=kb,
+        ml_context=json.dumps(ml_context or {}, ensure_ascii=False),
+        log=log_entry[:1024],
+    )
 
     try:
         if LLM_PROVIDER == "ollama":
@@ -202,5 +262,7 @@ def analyze_with_llm(log_entry: str) -> dict[str, Any]:
             "classification": "Suspicious",
             "llm_confidence": 0.5,
             "explanation": f"LLM inference failed: {exc}. Manual review recommended.",
+            "recommended_action": "Review the event manually and check that the LLM service is healthy.",
+            "needs_manual_review": True,
             "llm_available": False,
         }

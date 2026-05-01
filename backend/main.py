@@ -13,15 +13,30 @@ from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 from typing import Any
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
 import detector
 import model as llm_module
 
+try:
+    from bson import ObjectId
+    from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorCollection
+except ImportError:
+    ObjectId = None
+    AsyncIOMotorClient = None
+    AsyncIOMotorCollection = Any
+
 logging.basicConfig(level=logging.INFO, format="%(asctime)s  %(levelname)s  %(message)s")
 log = logging.getLogger(__name__)
+
+MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017/ids_ai")
+DATABASE_NAME = os.getenv("DATABASE_NAME", "ids_ai")
+MONGO_ENABLED = os.getenv("MONGO_ENABLED", "true").lower() not in ("false", "0", "no")
+
+_mongo_client: Any | None = None
+_alerts_collection: AsyncIOMotorCollection | None = None
 
 
 # ── Startup / shutdown ─────────────────────────────────────────────────────────
@@ -39,7 +54,11 @@ async def lifespan(app: FastAPI):
         log.info("Pre-loading LLM …")
         llm_module._load_pipeline()
 
+    await _connect_alert_store()
+
     yield
+    if _mongo_client is not None:
+        _mongo_client.close()
     log.info("IDS-AI shutting down")
 
 
@@ -56,7 +75,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=os.getenv("CORS_ORIGINS", "http://localhost:3000").split(","),
     allow_credentials=True,
-    allow_methods=["GET", "POST"],
+    allow_methods=["GET", "POST", "PATCH"],
     allow_headers=["Content-Type", "Authorization"],
 )
 
@@ -103,11 +122,18 @@ class AnalysisResult(BaseModel):
     classification: str              # "Normal" | "Suspicious" | "Malicious"
     llm_confidence: float
     explanation: str
+    recommended_action: str
+    needs_manual_review: bool
     llm_available: bool
     # Summary
+    final_confidence: float
     severity: str                    # "low" | "medium" | "high"
     src_ip: str
     dst_ip: str
+
+
+class AlertStatusUpdate(BaseModel):
+    status: str = Field(pattern="^(open|reviewing|resolved|false_positive)$")
 
 
 # ── Helper ─────────────────────────────────────────────────────────────────────
@@ -131,6 +157,63 @@ def _build_raw_log(event: LogEvent) -> str:
         f"missed={event.missed_bytes} src_pkts={event.src_pkts} dst_pkts={event.dst_pkts} "
         f"http_status={event.http_status_code}"
     )
+
+
+def _final_confidence(ml_confidence: float, llm_confidence: float, llm_available: bool) -> float:
+    if not llm_available:
+        return round(ml_confidence, 2)
+    return round((0.7 * ml_confidence) + (0.3 * llm_confidence), 2)
+
+
+async def _connect_alert_store() -> None:
+    global _mongo_client, _alerts_collection
+
+    if not MONGO_ENABLED:
+        log.info("MongoDB alert storage disabled via MONGO_ENABLED=false")
+        return
+
+    if AsyncIOMotorClient is None:
+        log.warning("MongoDB dependencies not installed; alerts will not be persisted")
+        return
+
+    try:
+        _mongo_client = AsyncIOMotorClient(MONGO_URI, serverSelectionTimeoutMS=2000)
+        await _mongo_client.admin.command("ping")
+        _alerts_collection = _mongo_client[DATABASE_NAME]["alerts"]
+        log.info("MongoDB alert storage ready: %s/%s", MONGO_URI, DATABASE_NAME)
+    except Exception as exc:
+        _mongo_client = None
+        _alerts_collection = None
+        log.warning("MongoDB unavailable; alerts will not be persisted: %s", exc)
+
+
+def _serialize_alert(alert: dict[str, Any]) -> dict[str, Any]:
+    alert["id"] = str(alert.pop("_id"))
+    if isinstance(alert.get("timestamp"), datetime):
+        alert["timestamp"] = alert["timestamp"].isoformat()
+    return alert
+
+
+async def _save_alert(result: AnalysisResult) -> None:
+    if _alerts_collection is None:
+        return
+
+    await _alerts_collection.insert_one({
+        "timestamp": datetime.now(timezone.utc),
+        "type": result.attack_type or result.ml_label,
+        "message": result.explanation,
+        "source_ip": result.src_ip,
+        "destination_ip": result.dst_ip,
+        "severity": result.severity,
+        "status": "open",
+        "classification": result.classification,
+        "ml_label": result.ml_label,
+        "ml_confidence": result.ml_confidence,
+        "llm_confidence": result.llm_confidence,
+        "final_confidence": result.final_confidence,
+        "recommended_action": result.recommended_action,
+        "needs_manual_review": result.needs_manual_review,
+    })
 
 
 # ── Endpoints ──────────────────────────────────────────────────────────────────
@@ -161,19 +244,30 @@ async def analyze(event: LogEvent) -> AnalysisResult:
     # Step 4: LLM analysis (only for anomalies)
     if is_anomaly:
         log_text = event.raw_log or _build_raw_log(event)
-        llm_result = llm_module.analyze_with_llm(log_text)
+        llm_result = llm_module.analyze_with_llm(
+            log_text,
+            {
+                "ml_label": ml_label,
+                "ml_confidence": ml_conf,
+                "ml_model": ml_model,
+                "attack_type": attack_type,
+            },
+        )
     else:
         llm_result = {
             "classification": "Normal",
             "llm_confidence": ml_conf,
             "explanation": "Traffic classified as normal by the ML model. No LLM analysis required.",
+            "recommended_action": "No action required.",
+            "needs_manual_review": False,
             "llm_available": True,
         }
 
     classification: str = llm_result["classification"]
+    final_conf = _final_confidence(ml_conf, llm_result["llm_confidence"], llm_result["llm_available"])
     severity = _severity(is_anomaly, classification, ml_conf)
 
-    return AnalysisResult(
+    result = AnalysisResult(
         timestamp=datetime.now(timezone.utc).isoformat(),
         ml_label=ml_label,
         ml_confidence=ml_conf,
@@ -183,11 +277,19 @@ async def analyze(event: LogEvent) -> AnalysisResult:
         classification=classification,
         llm_confidence=llm_result["llm_confidence"],
         explanation=llm_result["explanation"],
+        recommended_action=llm_result["recommended_action"],
+        needs_manual_review=llm_result["needs_manual_review"],
         llm_available=llm_result["llm_available"],
+        final_confidence=final_conf,
         severity=severity,
         src_ip=event.src_ip,
         dst_ip=event.dst_ip,
     )
+
+    if is_anomaly:
+        await _save_alert(result)
+
+    return result
 
 
 @app.get("/health", summary="Health check")
@@ -204,6 +306,8 @@ async def health() -> dict[str, Any]:
         "llm_model": llm_module.LLM_MODEL_NAME,
         "llm_enabled": llm_module.LLM_ENABLED,
         "llm_loaded": pipe.currsize > 0,
+        "alert_storage_enabled": MONGO_ENABLED,
+        "alert_storage_connected": _alerts_collection is not None,
     }
 
 
@@ -212,3 +316,35 @@ async def health() -> dict[str, Any]:
 @app.get("/api/status")
 async def api_status() -> dict[str, Any]:
     return {"status": "operational", "timestamp": datetime.now(timezone.utc).isoformat()}
+
+
+@app.get("/api/alerts")
+async def api_alerts(limit: int = Query(default=50, ge=1, le=200)) -> dict[str, Any]:
+    if _alerts_collection is None:
+        return {"alerts": [], "storage_available": False}
+
+    cursor = _alerts_collection.find().sort("timestamp", -1).limit(limit)
+    alerts = [_serialize_alert(alert) async for alert in cursor]
+    return {"alerts": alerts, "storage_available": True}
+
+
+@app.patch("/api/alerts/{alert_id}/status")
+async def update_alert_status(alert_id: str, payload: AlertStatusUpdate) -> dict[str, Any]:
+    if _alerts_collection is None:
+        raise HTTPException(status_code=503, detail="Alert storage unavailable")
+
+    if ObjectId is None:
+        raise HTTPException(status_code=503, detail="MongoDB dependencies unavailable")
+
+    try:
+        object_id = ObjectId(alert_id)
+    except Exception as exc:
+        raise HTTPException(status_code=400, detail="Invalid alert id") from exc
+
+    result = await _alerts_collection.update_one(
+        {"_id": object_id},
+        {"$set": {"status": payload.status, "updated_at": datetime.now(timezone.utc)}},
+    )
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Alert not found")
+    return {"id": alert_id, "status": payload.status}

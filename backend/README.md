@@ -128,6 +128,7 @@ git branch --merged main
 |--------|---------------|------------------------------|
 | GET    | /api/status   | System health check          |
 | GET    | /api/alerts   | Retrieve recent IDS alerts   |
+| PATCH  | /api/alerts/{id}/status | Update alert workflow status |
 
 ## Environment Variables
 
@@ -138,5 +139,7 @@ LLM_PROVIDER=ollama
 LLM_MODEL_NAME=mistral
 OLLAMA_BASE_URL=http://localhost:11434
 LLM_ENABLED=true
+MONGO_ENABLED=true
+MONGO_URI=mongodb://localhost:27017/ids_ai
 DATABASE_NAME=ids_ai
 ```
