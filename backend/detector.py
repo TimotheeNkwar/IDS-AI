@@ -56,32 +56,37 @@ def _convert_http_trans_depth(value: Any) -> float:
         return 0.0
 
 
-def _build_row(raw: dict[str, Any], bundle: dict) -> np.ndarray:
-    """Convert a raw log dict into a scaled feature vector."""
+def _feature_values(raw: dict[str, Any], bundle: dict) -> dict[str, float]:
+    """Convert a raw log dict into unscaled numeric/encoded feature values."""
     label_encoders = bundle["label_encoders"]
-    scaler = bundle["scaler"]
 
-    row: list[float] = []
+    values: dict[str, float] = {}
 
-    # Numeric features
     for col in NUMERIC_FEATURES:
         val = raw.get(col, 0)
         if col == "http_trans_depth":
-            row.append(_convert_http_trans_depth(val))
+            values[col] = _convert_http_trans_depth(val)
         else:
             try:
-                row.append(float(val) if val not in (None, "", "-") else 0.0)
+                values[col] = float(val) if val not in (None, "", "-") else 0.0
             except (TypeError, ValueError):
-                row.append(0.0)
+                values[col] = 0.0
 
-    # Categorical features
     for col in CATEGORICAL_FEATURES:
         le = label_encoders[col]
         v = str(raw.get(col, ""))
         known = set(le.classes_)
         enc = le.transform([v])[0] if v in known else -1
-        row.append(float(enc))
+        values[f"{col}_enc"] = float(enc)
 
+    return values
+
+
+def _build_row(raw: dict[str, Any], bundle: dict) -> np.ndarray:
+    """Convert a raw log dict into a scaled feature vector."""
+    scaler = bundle["scaler"]
+    values = _feature_values(raw, bundle)
+    row = [values[name] for name in ALL_FEATURES]
     X = np.array(row, dtype=np.float32).reshape(1, -1)
     return scaler.transform(X)
 
@@ -94,6 +99,80 @@ def _isolation_confidence(model: IsolationForest, X: np.ndarray) -> float:
     # Typical range is roughly [-0.5, 0.5]
     clamped = max(-0.5, min(0.5, raw_score))
     return float(0.5 - clamped)  # invert: more negative → higher anomaly score
+
+
+def _risk_signals(raw: dict[str, Any]) -> list[dict[str, Any]]:
+    """Knowledge-base-inspired signals that make the ML result explainable."""
+    signals: list[dict[str, Any]] = []
+
+    def number(name: str) -> float:
+        try:
+            return float(raw.get(name, 0) or 0)
+        except (TypeError, ValueError):
+            return 0.0
+
+    dst_port = int(number("dst_port"))
+    src_bytes = number("src_bytes")
+    dst_bytes = number("dst_bytes")
+    duration = number("duration")
+    src_pkts = number("src_pkts")
+    dst_pkts = number("dst_pkts")
+    http_status = int(number("http_status_code"))
+    request_body = number("http_request_body_len")
+    response_body = number("http_response_body_len")
+    proto = str(raw.get("proto", "")).lower()
+    service = str(raw.get("service", "")).lower()
+    conn_state = str(raw.get("conn_state", "")).upper()
+
+    suspicious_ports = {4444, 1337, 31337, 5555, 6666, 8888, 9999, 12345, 6667}
+    auth_ports = {21, 22, 23, 25, 80, 443, 3306, 3389, 5900}
+
+    if dst_port in suspicious_ports:
+        signals.append({"name": "backdoor_port", "severity": "critical", "evidence": f"destination port {dst_port} is commonly used by RAT/backdoor tooling"})
+    if duration > 30 and 0 < src_bytes + dst_bytes < 2048 and conn_state == "SF":
+        signals.append({"name": "long_low_volume_session", "severity": "high", "evidence": "long established connection with low byte volume resembles an idle command channel"})
+    if src_pkts > 1000 or dst_pkts > 1000:
+        signals.append({"name": "packet_flood", "severity": "critical", "evidence": f"high packet volume src_pkts={src_pkts:.0f}, dst_pkts={dst_pkts:.0f}"})
+    if src_bytes > 0 and dst_bytes == 0 and src_bytes > 100000:
+        signals.append({"name": "one_way_flood", "severity": "high", "evidence": "large source byte volume with no destination response"})
+    if dst_bytes > max(src_bytes * 50, 1) and dst_bytes > 10000:
+        signals.append({"name": "amplification_ratio", "severity": "critical", "evidence": "destination bytes exceed source bytes by more than 50x"})
+    if conn_state in {"S0", "REJ", "RSTO", "RSTR"} and duration <= 1 and src_bytes + dst_bytes < 512:
+        signals.append({"name": "scan_or_failed_probe", "severity": "medium", "evidence": f"short {conn_state} connection with minimal bytes"})
+    if proto == "udp" and duration <= 1 and src_bytes > 10000 and dst_bytes == 0:
+        signals.append({"name": "udp_flood_pattern", "severity": "high", "evidence": "short UDP flow with large source volume and no response"})
+    if service in {"http", "ssl"} or dst_port in {80, 443}:
+        if http_status >= 500:
+            signals.append({"name": "web_error_after_request", "severity": "medium", "evidence": f"HTTP status {http_status} may indicate malformed/injection input"})
+        if request_body > 4096:
+            signals.append({"name": "large_http_request_body", "severity": "medium", "evidence": f"large HTTP request body ({request_body:.0f} bytes)"})
+        if response_body > max(request_body * 20, 50000):
+            signals.append({"name": "large_http_response", "severity": "high", "evidence": "response body is unusually large compared with request"})
+    if dst_port in auth_ports and http_status in {401, 403}:
+        signals.append({"name": "authentication_failure", "severity": "medium", "evidence": f"auth-related port/status combination dst_port={dst_port}, status={http_status}"})
+
+    return signals[:8]
+
+
+def _top_features(model: Any, raw_log: dict[str, Any], bundle: dict, limit: int = 5) -> list[dict[str, Any]]:
+    importances = getattr(model, "feature_importances_", None)
+    if importances is None:
+        return []
+
+    values = _feature_values(raw_log, bundle)
+    ranked = sorted(
+        zip(ALL_FEATURES, importances),
+        key=lambda item: float(item[1]),
+        reverse=True,
+    )[:limit]
+    return [
+        {
+            "name": name,
+            "importance": round(float(importance), 4),
+            "value": round(float(values.get(name, 0.0)), 4),
+        }
+        for name, importance in ranked
+    ]
 
 
 def predict(raw_log: dict[str, Any]) -> dict[str, Any]:
@@ -152,4 +231,6 @@ def predict(raw_log: dict[str, Any]) -> dict[str, Any]:
         "attack_type": attack_type,
         "confidence": round(confidence, 4),
         "model_name": model_name,
+        "risk_signals": _risk_signals(raw_log),
+        "top_features": _top_features(model, raw_log, bundle),
     }

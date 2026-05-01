@@ -258,6 +258,7 @@ function AlertsTable({ alerts, savingAlertId, onStatusChange }) {
             <th>Source</th>
             <th>Classification</th>
             <th>Confidence</th>
+            <th>Evidence</th>
             <th>Recommended action</th>
           </tr>
         </thead>
@@ -285,6 +286,7 @@ function AlertsTable({ alerts, savingAlertId, onStatusChange }) {
               <td>{alert.source_ip || '-'}</td>
               <td>{alert.classification || '-'}</td>
               <td>{formatPercent(alert.final_confidence || alert.ml_confidence || alert.llm_confidence)}</td>
+              <td className="evidence-cell">{formatEvidence(alert)}</td>
               <td className="action-cell">{alert.recommended_action || alert.message || '-'}</td>
             </tr>
           ))}
@@ -347,6 +349,16 @@ function formatDate(value) {
 function formatPercent(value) {
   if (typeof value !== 'number') return '-';
   return `${Math.round(value * 100)}%`;
+}
+
+function formatEvidence(alert) {
+  const llmEvidence = Array.isArray(alert.evidence) ? alert.evidence : [];
+  const riskSignals = Array.isArray(alert.risk_signals)
+    ? alert.risk_signals.map((signal) => signal.evidence || signal.name).filter(Boolean)
+    : [];
+  const knowledge = Array.isArray(alert.knowledge_matches) ? alert.knowledge_matches : [];
+  const items = [...llmEvidence, ...riskSignals, ...knowledge].slice(0, 3);
+  return items.length > 0 ? items.join(' | ') : '-';
 }
 
 export default App;

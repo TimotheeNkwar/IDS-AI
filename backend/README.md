@@ -131,6 +131,15 @@ git branch --merged main
 | PATCH  | /api/alerts/{id}/status | Update alert workflow status |
 | GET    | /api/traffic  | Retrieve recent analyzed traffic |
 
+## ML + LLM Explainability
+
+`POST /analyze` now returns ML and LLM evidence fields:
+
+- `risk_signals`: rule-based network indicators derived from the knowledge base.
+- `top_features`: most influential model features when the selected ML model exposes feature importances.
+- `knowledge_matches`: knowledge-base sections selected for the LLM prompt.
+- `evidence`: short LLM-cited observations used in the final decision.
+
 ## Environment Variables
 
 Create a `.env` file in this directory:

@@ -168,8 +168,22 @@ Analyzes a network event through the full pipeline (ML + LLM if anomaly). Events
   "ml_model": "RandomForest",
   "is_anomaly": true,
   "attack_type": "backdoor",
+  "risk_signals": [
+    {
+      "name": "backdoor_port",
+      "severity": "critical",
+      "evidence": "destination port 4444 is commonly used by RAT/backdoor tooling"
+    }
+  ],
+  "top_features": [
+    { "name": "dst_port", "importance": 0.21, "value": 4444 }
+  ],
   "classification": "Malicious",
+  "llm_attack_type": "backdoor",
+  "llm_severity": "critical",
   "llm_confidence": 0.91,
+  "evidence": ["destination port 4444 is commonly associated with backdoors"],
+  "knowledge_matches": ["BACKDOOR / REMOTE ACCESS TROJAN (RAT)"],
   "explanation": "Connection on port 4444 with a high volume of source bytes — characteristic of a backdoor.",
   "recommended_action": "Isolate the source host and inspect recent outbound connections.",
   "needs_manual_review": true,
@@ -259,7 +273,7 @@ MongoDB is used to persist alerts and network traffic records. The `database/` m
 
 ## LLM Knowledge Base
 
-`knowledge_base.txt` contains reference descriptions for 12 attack types (SQLi, XSS, CSRF, Command Injection, Directory Traversal, DoS/DDoS, Brute Force, LFI/RFI, XXE, SSRF, Privilege Escalation, Malware Obfuscation). It is injected into every LLM prompt to guide classification.
+`knowledge_base.txt` contains reference descriptions for common attack types and their network indicators. At inference time, the backend now selects the most relevant knowledge-base sections using the ML prediction, risk signals, and raw log, then injects only those excerpts into the LLM prompt. The API also returns `knowledge_matches`, `evidence`, `risk_signals`, and `top_features` so analysts can see why the system reached its decision.
 
 ## Environment Variables
 

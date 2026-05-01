@@ -109,9 +109,15 @@ class AnalysisResult(BaseModel):
     ml_model: str
     is_anomaly: bool
     attack_type: str | None          # e.g. "ddos", "injection", None when normal
+    risk_signals: list[dict[str, Any]]
+    top_features: list[dict[str, Any]]
     # LLM layer (only when anomaly)
     classification: str              # "Normal" | "Suspicious" | "Malicious"
+    llm_attack_type: str | None = None
+    llm_severity: str | None = None
     llm_confidence: float
+    evidence: list[str] = Field(default_factory=list)
+    knowledge_matches: list[str] = Field(default_factory=list)
     explanation: str
     recommended_action: str
     needs_manual_review: bool
@@ -165,10 +171,16 @@ async def _save_alert(result: AnalysisResult) -> None:
         "severity": result.severity,
         "status": "open",
         "classification": result.classification,
+        "llm_attack_type": result.llm_attack_type,
+        "llm_severity": result.llm_severity,
         "ml_label": result.ml_label,
         "ml_confidence": result.ml_confidence,
         "llm_confidence": result.llm_confidence,
         "final_confidence": result.final_confidence,
+        "risk_signals": result.risk_signals,
+        "top_features": result.top_features,
+        "evidence": result.evidence,
+        "knowledge_matches": result.knowledge_matches,
         "recommended_action": result.recommended_action,
         "needs_manual_review": result.needs_manual_review,
     })
@@ -185,6 +197,9 @@ async def _save_traffic(event: LogEvent, result: AnalysisResult, raw_event: dict
         "is_anomaly": result.is_anomaly,
         "ml_confidence": result.ml_confidence,
         "severity": result.severity,
+        "risk_signals": result.risk_signals,
+        "top_features": result.top_features,
+        "knowledge_matches": result.knowledge_matches,
         "raw_event": raw_event,
     })
 
@@ -213,6 +228,8 @@ async def analyze(event: LogEvent) -> AnalysisResult:
     ml_conf: float = ml_result["confidence"]
     ml_model: str = ml_result["model_name"]
     attack_type: str | None = ml_result.get("attack_type")
+    risk_signals: list[dict[str, Any]] = ml_result.get("risk_signals", [])
+    top_features: list[dict[str, Any]] = ml_result.get("top_features", [])
 
     # Step 4: LLM analysis (only for anomalies)
     if is_anomaly:
@@ -224,12 +241,18 @@ async def analyze(event: LogEvent) -> AnalysisResult:
                 "ml_confidence": ml_conf,
                 "ml_model": ml_model,
                 "attack_type": attack_type,
+                "risk_signals": risk_signals,
+                "top_features": top_features,
             },
         )
     else:
         llm_result = {
             "classification": "Normal",
+            "attack_type": None,
+            "severity": "low",
             "llm_confidence": ml_conf,
+            "evidence": [],
+            "knowledge_matches": [],
             "explanation": "Traffic classified as normal by the ML model. No LLM analysis required.",
             "recommended_action": "No action required.",
             "needs_manual_review": False,
@@ -247,8 +270,14 @@ async def analyze(event: LogEvent) -> AnalysisResult:
         ml_model=ml_model,
         is_anomaly=is_anomaly,
         attack_type=attack_type,
+        risk_signals=risk_signals,
+        top_features=top_features,
         classification=classification,
+        llm_attack_type=llm_result.get("attack_type"),
+        llm_severity=llm_result.get("severity"),
         llm_confidence=llm_result["llm_confidence"],
+        evidence=llm_result.get("evidence", []),
+        knowledge_matches=llm_result.get("knowledge_matches", []),
         explanation=llm_result["explanation"],
         recommended_action=llm_result["recommended_action"],
         needs_manual_review=llm_result["needs_manual_review"],

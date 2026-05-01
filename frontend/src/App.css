@@ -319,8 +319,14 @@ tbody tr:hover {
   color: #126b3f;
 }
 
-.action-cell {
+.action-cell,
+.evidence-cell {
   max-width: 420px;
+}
+
+.evidence-cell {
+  color: #46566d;
+  font-size: 13px;
 }
 
 .empty-state {
