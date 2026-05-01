@@ -1,0 +1,22 @@
+# Web framework
+fastapi==0.110.0
+uvicorn[standard]==0.29.0
+
+# Data / ML
+pandas==2.2.2
+numpy==1.26.4
+scikit-learn==1.4.2
+xgboost==2.0.3
+joblib==1.4.2
+
+# LLM
+# Ollama is used through its local HTTP API, so no Python LLM runtime is required.
+# Install transformers/torch separately only if LLM_PROVIDER=huggingface is needed.
+
+# Database
+pymongo==4.6.1
+motor==3.3.2
+
+# Utilities
+pydantic==2.7.1
+python-dotenv==1.0.1
