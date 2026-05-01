@@ -156,6 +156,31 @@ Analyzes a network event through the full pipeline (ML + LLM if anomaly). Events
   "http_status_code": 0,
   "raw_log": null
 }
+{
+  "src_ip": "192.168.1.10",
+  "dst_ip": "10.0.0.1",
+  "src_port": 4444,
+  "dst_port": 80,
+  "proto": "tcp",
+  "service": "-",
+  "conn_state": "SF",
+  "duration": 12.5,
+  "src_bytes": 102,
+  "dst_bytes": 512,
+  "missed_bytes": 0,
+  "src_pkts": 20,
+  "src_ip_bytes": 0,
+  "dst_pkts": 6,
+  "dst_ip_bytes": 0,
+  "dns_qclass": 0,
+  "dns_qtype": 0,
+  "dns_rcode": 0,
+  "http_trans_depth": 0,
+  "http_request_body_len": 0,
+  "http_response_body_len": 0,
+  "http_status_code": 0,
+  "raw_log": null
+}
 ```
 
 **Response:**

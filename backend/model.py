@@ -45,35 +45,63 @@ LLM_DEVICE = os.getenv("LLM_DEVICE", "auto")
 LLM_ENABLED = os.getenv("LLM_ENABLED", "true").lower() not in ("false", "0", "no")
 
 _PROMPT_TEMPLATE = """\
-[INST] You are an intrusion detection system.
+[INST] You are an intrusion detection system assistant with expertise in network security analysis.
 
-Use only the following relevant knowledge-base excerpts to guide your analysis:
----
-{knowledge_base}
----
+Use ONLY the provided knowledge-base excerpts to guide your reasoning; do NOT invent facts.
 
-Classify the following network log entry into exactly one of:
-- Normal
-- Suspicious
-- Malicious
+Task: classify the provided network log entry into exactly one of: Normal, Suspicious, Malicious.
+Use the ML context as supporting evidence but correct it when the log contradicts the ML signal.
 
-Use the ML context as supporting evidence, but correct it if the log clearly contradicts it.
-Respond only with valid JSON matching this schema:
+Output requirements (STRICT):
+- Reply with a single, valid JSON object and nothing else (no commentary, no markdown).
+- JSON MUST match the schema below. Fields not applicable may be null or empty, but keep keys present.
+
+Schema:
 {{
-  "classification": "Normal|Suspicious|Malicious",
-  "attack_type": "best matching attack type or null",
-  "severity": "low|medium|high|critical",
-  "confidence": 0.0,
-  "evidence": ["specific observed signal", "specific observed signal"],
-  "explanation": "2-3 sentence reasoning",
-  "recommended_action": "specific next action for an analyst",
-  "needs_manual_review": true
+    "classification": "Normal|Suspicious|Malicious",
+    "attack_type": "string or null",
+    "severity": "low|medium|high|critical",
+    "confidence": 0.0,                # number between 0.0 and 1.0
+    "evidence": ["short evidence items (max 120 chars)"],
+    "explanation": "Concise 1-3 sentence justification (use specific log details)",
+    "recommended_action": "Short, actionable next step for an analyst",
+    "needs_manual_review": true|false
+}}
+
+Guidelines:
+- Prefer precise observations from the log or ML context for `evidence` (max 5 items).
+- Keep `explanation` concise and grounded; mention which fields in the log support your decision.
+- If uncertain, choose `"Suspicious"` with `confidence`: 0.5 and an empty `evidence` list.
+- Confidence should reflect the model's certainty (0-1); if you output percent values (0-100), convert to 0-1.
+- Do NOT hallucinate additional data (IPs, history, or external facts not in the prompt).
+
+Examples (JSON only):
+{{
+    "classification": "Normal",
+    "attack_type": null,
+    "severity": "low",
+    "confidence": 0.95,
+    "evidence": ["expected HTTP status 200", "small packet sizes"],
+    "explanation": "Traffic shows normal HTTP responses and low packet sizes consistent with benign browsing.",
+    "recommended_action": "No action required.",
+    "needs_manual_review": false
+}}
+
+{{
+    "classification": "Malicious",
+    "attack_type": "xss",
+    "severity": "high",
+    "confidence": 0.88,
+    "evidence": ["http_request_body contains '<script>'", "dst_port=80 and suspicious payload"],
+    "explanation": "Request body contains script tags and payload patterns indicative of XSS, correlated with abnormal feature values.",
+    "recommended_action": "Block source IP and investigate web application logs.",
+    "needs_manual_review": true
 }}
 
 ML context:
 {ml_context}
 
-Log:
+Log (truncate to relevant fields if long):
 {log}
 [/INST]"""
 
@@ -93,6 +121,37 @@ _ATTACK_KEYWORDS = {
 def _load_pipeline() -> Any | None:
     if not LLM_ENABLED:
         log.info("LLM disabled via LLM_ENABLED=false")
+        return None
+
+    if LLM_PROVIDER == "ollama":
+        log.info("Using Ollama LLM: %s (%s)", LLM_MODEL_NAME, OLLAMA_BASE_URL)
+        return {"provider": "ollama"}
+
+    if LLM_PROVIDER != "huggingface":
+        log.error("Unknown LLM_PROVIDER=%s; expected 'ollama' or 'huggingface'", LLM_PROVIDER)
+        return None
+
+    try:
+        import torch
+        from transformers import pipeline
+
+        device_map = LLM_DEVICE if LLM_DEVICE != "auto" else "auto"
+        dtype = torch.float16 if torch.cuda.is_available() else torch.float32
+
+        log.info("Loading LLM: %s  (device=%s)", LLM_MODEL_NAME, device_map)
+        pipe = pipeline(
+            "text-generation",
+            model=LLM_MODEL_NAME,
+            dtype=dtype,
+            device_map=device_map,
+        )
+        log.info("LLM loaded successfully")
+        return pipe
+    except ImportError:
+        log.warning("transformers/torch not installed — LLM disabled")
+        return None
+    except Exception as exc:
+        log.error("Failed to load LLM (%s): %s", LLM_MODEL_NAME, exc)
         return None
 
 
@@ -151,37 +210,6 @@ def _select_relevant_knowledge(log_entry: str, ml_context: dict[str, Any] | None
     titles = [section["title"] for section in selected]
     text = "\n\n".join(f"## {section['title']}\n{section['text']}" for section in selected)
     return text[:7000], titles
-
-    if LLM_PROVIDER == "ollama":
-        log.info("Using Ollama LLM: %s (%s)", LLM_MODEL_NAME, OLLAMA_BASE_URL)
-        return {"provider": "ollama"}
-
-    if LLM_PROVIDER != "huggingface":
-        log.error("Unknown LLM_PROVIDER=%s; expected 'ollama' or 'huggingface'", LLM_PROVIDER)
-        return None
-
-    try:
-        import torch
-        from transformers import pipeline
-
-        device_map = LLM_DEVICE if LLM_DEVICE != "auto" else "auto"
-        dtype = torch.float16 if torch.cuda.is_available() else torch.float32
-
-        log.info("Loading LLM: %s  (device=%s)", LLM_MODEL_NAME, device_map)
-        pipe = pipeline(
-            "text-generation",
-            model=LLM_MODEL_NAME,
-            dtype=dtype,
-            device_map=device_map,
-        )
-        log.info("LLM loaded successfully")
-        return pipe
-    except ImportError:
-        log.warning("transformers/torch not installed — LLM disabled")
-        return None
-    except Exception as exc:
-        log.error("Failed to load LLM (%s): %s", LLM_MODEL_NAME, exc)
-        return None
 
 
 def _generate_with_ollama(prompt: str) -> str:

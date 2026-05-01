@@ -18,8 +18,12 @@ from typing import Any
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
+from dotenv import load_dotenv
 
 sys.path.append(str(Path(__file__).resolve().parents[1]))
+
+load_dotenv(Path(__file__).with_name(".env"))
+load_dotenv(Path(__file__).resolve().parents[1] / ".env", override=False)
 
 import detector
 import model as llm_module

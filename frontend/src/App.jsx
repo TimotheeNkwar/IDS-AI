@@ -74,6 +74,7 @@ function App() {
         alert.destination_ip,
         alert.classification,
         alert.recommended_action,
+        alert.explanation,
         alert.message,
       ]
         .filter(Boolean)
@@ -259,6 +260,7 @@ function AlertsTable({ alerts, savingAlertId, onStatusChange }) {
             <th>Classification</th>
             <th>Confidence</th>
             <th>Evidence</th>
+            <th>Explanation</th>
             <th>Recommended action</th>
           </tr>
         </thead>
@@ -287,6 +289,7 @@ function AlertsTable({ alerts, savingAlertId, onStatusChange }) {
               <td>{alert.classification || '-'}</td>
               <td>{formatPercent(alert.final_confidence || alert.ml_confidence || alert.llm_confidence)}</td>
               <td className="evidence-cell">{formatEvidence(alert)}</td>
+              <td className="explanation-cell">{alert.explanation || alert.message || '-'}</td>
               <td className="action-cell">{alert.recommended_action || alert.message || '-'}</td>
             </tr>
           ))}

@@ -320,13 +320,20 @@ tbody tr:hover {
 }
 
 .action-cell,
-.evidence-cell {
+.evidence-cell,
+.explanation-cell {
   max-width: 420px;
 }
 
 .evidence-cell {
   color: #46566d;
   font-size: 13px;
+}
+
+.explanation-cell {
+  color: #2d3f59;
+  font-size: 13px;
+  line-height: 1.4;
 }
 
 .empty-state {
