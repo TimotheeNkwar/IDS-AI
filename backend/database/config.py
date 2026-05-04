@@ -17,8 +17,8 @@ if load_dotenv is not None:
 
 log = logging.getLogger(__name__)
 
-MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017/ids_ai")
-DATABASE_NAME = os.getenv("DATABASE_NAME", "ids_ai")
+MONGO_URI = os.getenv("MONGO_URI")
+MONGO_DB = os.getenv("MONGO_DB")
 MONGO_ENABLED = os.getenv("MONGO_ENABLED", "true").lower() not in ("false", "0", "no")
 
 try:
@@ -46,9 +46,9 @@ async def connect_db() -> bool:
     try:
         client = AsyncIOMotorClient(MONGO_URI, serverSelectionTimeoutMS=2000)
         await client.admin.command("ping")
-        db = client[DATABASE_NAME]
+        db = client[MONGO_DB]
         await ensure_indexes()
-        log.info("MongoDB connected: %s/%s", MONGO_URI, DATABASE_NAME)
+        log.info("MongoDB connected: %s/%s", MONGO_URI, MONGO_DB)
         return True
     except Exception as exc:
         client = None

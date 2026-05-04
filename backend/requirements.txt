@@ -1,6 +1,7 @@
 # Web framework
 fastapi==0.110.0
 uvicorn[standard]==0.29.0
+#pydantic==2.7.1  # Already included in Utilities section
 
 # Data / ML
 pandas==2.2.2
@@ -20,3 +21,13 @@ motor==3.3.2
 # Utilities
 pydantic==2.7.1
 python-dotenv==1.0.1
+
+# Auth
+python-jose[cryptography]
+passlib==1.7.4
+jwt==0.6.0
+
+#pwdlib argon
+pwdlib[argon2]
+
+python-multipart

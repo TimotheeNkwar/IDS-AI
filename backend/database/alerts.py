@@ -1,31 +1,20 @@
-# type: ignore
 """Alert repository functions backed by MongoDB."""
 
+# database/alerts.py
 from __future__ import annotations
-
 import logging
 from datetime import datetime, timezone
 from typing import Any
+from . import get_db
+from . import _get_alerts_col
 
-from . import config
-
+# ...
 try:
     from bson import ObjectId
 except ImportError:
     ObjectId = None
 
 log = logging.getLogger(__name__)
-
-
-def _collection():
-    db = config.get_db()
-    if db is None:
-        return None
-    return db.alerts
-
-
-def is_available() -> bool:
-    return _collection() is not None
 
 
 def serialize_alert(alert: dict[str, Any]) -> dict[str, Any]:
@@ -38,18 +27,18 @@ def serialize_alert(alert: dict[str, Any]) -> dict[str, Any]:
     return alert
 
 
-async def create_alert(alert: dict[str, Any]) -> str | None:
-    collection = _collection()
-    if collection is None:
-        return None
+def is_available() -> bool:
+    return _get_alerts_col() is not None
 
-    document = {
-        "timestamp": datetime.now(timezone.utc),
-        "status": "open",
-        **alert,
-    }
+
+async def create_alert(alert: dict[str, Any]) -> str | None:
+    col = _get_alerts_col()
+    log.warning("🔍 create_alert appelé — col=%s", col)
+    if col is None:
+        return None
+    document = {"timestamp": datetime.now(timezone.utc), "status": "open", **alert}
     try:
-        result = await collection.insert_one(document)
+        result = await col.insert_one(document)
         return str(result.inserted_id)
     except Exception as exc:
         log.warning("Failed to save alert: %s", exc)
@@ -57,21 +46,20 @@ async def create_alert(alert: dict[str, Any]) -> str | None:
 
 
 async def list_alerts(limit: int = 50) -> list[dict[str, Any]]:
-    collection = _collection()
-    if collection is None:
+    col = _get_alerts_col()
+    if col is None:
         return []
-
     try:
-        cursor = collection.find().sort("timestamp", -1).limit(limit)
-        return [serialize_alert(alert) async for alert in cursor]
+        cursor = col.find().sort("timestamp", -1).limit(limit)
+        return [serialize_alert(a) async for a in cursor]
     except Exception as exc:
         log.warning("Failed to list alerts: %s", exc)
         return []
 
 
 async def update_alert_status(alert_id: str, status: str) -> bool | None:
-    collection = _collection()
-    if collection is None:
+    col = _get_alerts_col()
+    if col is None:
         return None
 
     if ObjectId is None:
@@ -82,8 +70,17 @@ async def update_alert_status(alert_id: str, status: str) -> bool | None:
     except Exception as exc:
         raise ValueError("Invalid alert id") from exc
 
-    result = await collection.update_one(
+    result = await col.update_one(
         {"_id": object_id},
         {"$set": {"status": status, "updated_at": datetime.now(timezone.utc)}},
     )
     return result.matched_count > 0
+
+
+def _get_alerts_col():
+    import sys
+
+    log.warning("MODULE ID depuis alerts.py: %s", id(sys.modules.get("database")))
+    import database
+
+    return database.alerts_col

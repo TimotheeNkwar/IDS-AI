@@ -1,0 +1,6 @@
+#venv .env  
+
+# Ignore Python bytecode and virtual environment
+__pycache__/
+venv/
+.env

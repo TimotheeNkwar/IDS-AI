@@ -35,10 +35,11 @@ def _load_knowledge_base() -> str:
         log.warning("knowledge_base.txt not found — skipping")
         return ""
 
+
 LLM_PROVIDER = os.getenv("LLM_PROVIDER", "ollama").lower()
 LLM_MODEL_NAME = os.getenv(
     "LLM_MODEL_NAME",
-    "mistral" if LLM_PROVIDER == "ollama" else "mistralai/Mistral-7B-Instruct-v0.2",
+    "phi3" if LLM_PROVIDER == "ollama" else "mistralai/Mistral-7B-Instruct-v0.2",
 )
 OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434").rstrip("/")
 LLM_DEVICE = os.getenv("LLM_DEVICE", "auto")
@@ -105,16 +106,25 @@ Log (truncate to relevant fields if long):
 {log}
 [/INST]"""
 
-
 _ATTACK_KEYWORDS = {
-    "backdoor": {"backdoor", "rat", "remote", "4444", "1337", "31337", "5555", "6666", "8888", "9999", "12345"},
-    "ddos": {"ddos", "distributed", "flood", "amplification", "udp", "syn", "volumetric"},
-    "dos": {"dos", "denial", "flood", "slowloris", "icmp", "resource"},
-    "scan": {"scan", "scanning", "reconnaissance", "nmap", "s0", "rej", "probe"},
-    "injection": {"injection", "sqli", "sql", "command", "shell", "xss", "script", "traversal", "xxe", "ssrf"},
-    "bruteforce": {"brute", "credential", "password", "ssh", "rdp", "ftp", "401", "403"},
-    "malware": {"malware", "obfuscation", "encoded", "payload", "binary"},
+    "backdoor": {"backdoor", "rat", "remote access"},
+    "backdoor_ports": {4444, 1337, 31337},  # séparé, type int
+    "ddos": {"ddos", "flood", "amplification", "syn flood"},
+    "dos": {"denial of service", "slowloris"},
+    "scan": {"scanning", "reconnaissance", "nmap", "s0", "rej"},
+    "injection": {"sqli", "xss", "<script>", "union select", "cmd=", "../"},
+    "bruteforce": {"brute force", "credential stuffing", "ssh login"},
+    "malware": {"malware", "payload", "obfuscated"},
 }
+# _ATTACK_KEYWORDS = {
+#     "backdoor": {"backdoor", "rat", "remote", "4444", "1337", "31337", "5555", "6666", "8888", "9999", "12345"},
+#     "ddos": {"ddos", "distributed", "flood", "amplification", "udp", "syn", "volumetric"},
+#     "dos": {"dos", "denial", "flood", "slowloris", "icmp", "resource"},
+#     "scan": {"scan", "scanning", "reconnaissance", "nmap", "s0", "rej", "probe"},
+#     "injection": {"injection", "sqli", "sql", "command", "shell", "xss", "script", "traversal", "xxe", "ssrf"},
+#     "bruteforce": {"brute", "credential", "password", "ssh", "rdp", "ftp", "401", "403"},
+#     "malware": {"malware", "obfuscation", "encoded", "payload", "binary"},
+# }
 
 
 @lru_cache(maxsize=1)
@@ -128,7 +138,9 @@ def _load_pipeline() -> Any | None:
         return {"provider": "ollama"}
 
     if LLM_PROVIDER != "huggingface":
-        log.error("Unknown LLM_PROVIDER=%s; expected 'ollama' or 'huggingface'", LLM_PROVIDER)
+        log.error(
+            "Unknown LLM_PROVIDER=%s; expected 'ollama' or 'huggingface'", LLM_PROVIDER
+        )
         return None
 
     try:
@@ -166,9 +178,11 @@ def _knowledge_sections() -> tuple[dict[str, str], ...]:
         return ({"title": "Knowledge Base", "text": kb[:4000]},)
 
     sections: list[dict[str, str]] = []
-    intro = kb[:matches[0].start()].strip()
+    intro = kb[: matches[0].start()].strip()
     if intro:
-        sections.append({"title": "Log format and severity reference", "text": intro[:1600]})
+        sections.append(
+            {"title": "Log format and severity reference", "text": intro[:1600]}
+        )
 
     for idx, match in enumerate(matches):
         start = match.start()
@@ -179,15 +193,25 @@ def _knowledge_sections() -> tuple[dict[str, str], ...]:
 
 
 def _tokenize(text: str) -> set[str]:
-    return {token.lower() for token in re.findall(r"[a-zA-Z0-9_./:-]+", text) if len(token) >= 2}
+    return {
+        token.lower()
+        for token in re.findall(r"[a-zA-Z0-9_./:-]+", text)
+        if len(token) >= 2
+    }
 
 
-def _select_relevant_knowledge(log_entry: str, ml_context: dict[str, Any] | None) -> tuple[str, list[str]]:
+def _select_relevant_knowledge(
+    log_entry: str, ml_context: dict[str, Any] | None
+) -> tuple[str, list[str]]:
     context_text = json.dumps(ml_context or {}, ensure_ascii=False)
     query_text = f"{log_entry} {context_text}".lower()
     query_tokens = _tokenize(query_text)
 
-    attack_type = str((ml_context or {}).get("attack_type") or (ml_context or {}).get("ml_label") or "").lower()
+    attack_type = str(
+        (ml_context or {}).get("attack_type")
+        or (ml_context or {}).get("ml_label")
+        or ""
+    ).lower()
     expanded_tokens = set(query_tokens)
     for name, keywords in _ATTACK_KEYWORDS.items():
         if name in attack_type or any(keyword in query_tokens for keyword in keywords):
@@ -203,22 +227,30 @@ def _select_relevant_knowledge(log_entry: str, ml_context: dict[str, Any] | None
             score += 20
         ranked.append((score, section))
 
-    selected = [section for score, section in sorted(ranked, key=lambda item: item[0], reverse=True) if score > 0][:4]
+    selected = [
+        section
+        for score, section in sorted(ranked, key=lambda item: item[0], reverse=True)
+        if score > 0
+    ][:4]
     if not selected:
         selected = [section for _, section in ranked[:3]]
 
     titles = [section["title"] for section in selected]
-    text = "\n\n".join(f"## {section['title']}\n{section['text']}" for section in selected)
+    text = "\n\n".join(
+        f"## {section['title']}\n{section['text']}" for section in selected
+    )
     return text[:7000], titles
 
 
 def _generate_with_ollama(prompt: str) -> str:
-    payload = json.dumps({
-        "model": LLM_MODEL_NAME,
-        "prompt": prompt,
-        "stream": False,
-        "options": {"temperature": 0},
-    }).encode("utf-8")
+    payload = json.dumps(
+        {
+            "model": LLM_MODEL_NAME,
+            "prompt": prompt,
+            "stream": False,
+            "options": {"temperature": 0},
+        }
+    ).encode("utf-8")
     req = request.Request(
         f"{OLLAMA_BASE_URL}/api/generate",
         data=payload,
@@ -249,7 +281,7 @@ def _extract_json_object(text: str) -> dict[str, Any] | None:
         return None
 
     try:
-        return json.loads(text[start:end + 1])
+        return json.loads(text[start : end + 1])
     except json.JSONDecodeError:
         return None
 
@@ -282,9 +314,14 @@ def _parse_llm_output(text: str) -> dict[str, Any]:
             "evidence": _normalize_string_list(data.get("evidence", []), limit=5),
             "explanation": str(data.get("explanation", "")).strip()[:500],
             "recommended_action": str(
-                data.get("recommended_action", "Review the event and correlate with recent traffic.")
+                data.get(
+                    "recommended_action",
+                    "Review the event and correlate with recent traffic.",
+                )
             ).strip()[:300],
-            "needs_manual_review": _normalize_bool(data.get("needs_manual_review"), classification != "Normal"),
+            "needs_manual_review": _normalize_bool(
+                data.get("needs_manual_review"), classification != "Normal"
+            ),
         }
 
     classification = "Suspicious"
@@ -292,7 +329,9 @@ def _parse_llm_output(text: str) -> dict[str, Any]:
     explanation = text.strip()
     recommended_action = "Review the event and correlate with recent traffic."
 
-    m = re.search(r"Classification:\s*(Normal|Suspicious|Malicious)", text, re.IGNORECASE)
+    m = re.search(
+        r"Classification:\s*(Normal|Suspicious|Malicious)", text, re.IGNORECASE
+    )
     if m:
         classification = m.group(1).capitalize()
 
@@ -336,7 +375,9 @@ def _normalize_bool(value: Any, default: bool) -> bool:
     return default
 
 
-def analyze_with_llm(log_entry: str, ml_context: dict[str, Any] | None = None) -> dict[str, Any]:
+def analyze_with_llm(
+    log_entry: str, ml_context: dict[str, Any] | None = None
+) -> dict[str, Any]:
     """
     Classify a log entry with the LLM.
 
@@ -359,9 +400,12 @@ def analyze_with_llm(log_entry: str, ml_context: dict[str, Any] | None = None) -
             "attack_type": (ml_context or {}).get("attack_type"),
             "severity": "medium",
             "llm_confidence": 0.5,
-            "evidence": _normalize_string_list([
-                signal.get("evidence", "") for signal in (ml_context or {}).get("risk_signals", [])
-            ]),
+            "evidence": _normalize_string_list(
+                [
+                    signal.get("evidence", "")
+                    for signal in (ml_context or {}).get("risk_signals", [])
+                ]
+            ),
             "knowledge_matches": [],
             "explanation": (
                 "LLM analysis unavailable. The ML model flagged this traffic as anomalous. "
@@ -396,10 +440,15 @@ def analyze_with_llm(log_entry: str, ml_context: dict[str, Any] | None = None) -
             "attack_type": (ml_context or {}).get("attack_type"),
             "severity": "medium",
             "llm_confidence": 0.5,
-            "evidence": _normalize_string_list([
-                signal.get("evidence", "") for signal in (ml_context or {}).get("risk_signals", [])
-            ]),
-            "knowledge_matches": knowledge_matches if "knowledge_matches" in locals() else [],
+            "evidence": _normalize_string_list(
+                [
+                    signal.get("evidence", "")
+                    for signal in (ml_context or {}).get("risk_signals", [])
+                ]
+            ),
+            "knowledge_matches": (
+                knowledge_matches if "knowledge_matches" in locals() else []
+            ),
             "explanation": f"LLM inference failed: {exc}. Manual review recommended.",
             "recommended_action": "Review the event manually and check that the LLM service is healthy.",
             "needs_manual_review": True,
