@@ -43,12 +43,10 @@ class Alert(BaseModel):
 
 
 class NetworkTraffic(BaseModel):
-    """Enregistrement trafic — toutes les requêtes, normales ou non."""
 
     id: Optional[str] = Field(None, alias="_id")
     timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
-    # Réseau (même nommage que LogEvent)
     src_ip: str
     dst_ip: str
     src_port: int = 0
@@ -60,7 +58,6 @@ class NetworkTraffic(BaseModel):
     src_bytes: int = 0
     dst_bytes: int = 0
 
-    # Résultat ML uniquement
     ml_label: str
     is_anomaly: bool
     ml_confidence: float

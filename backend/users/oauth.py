@@ -6,7 +6,7 @@ from jose import jwt, JWTError
 from config.config import settings
 from pwdlib import PasswordHash
 
-password_hash = PasswordHash.recommended()  # utilise argon2 par défaut
+password_hash = PasswordHash.recommended()
 
 # pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -40,8 +40,8 @@ def decode_access_token(token: str) -> dict | None:
 
 def create_refresh_token(data: dict) -> str:
     to_encode = data.copy()
-    expire = datetime.now(timezone.utc) + timedelta(days=7)  # ← 7 jours
-    to_encode.update({"exp": expire, "type": "refresh"})  # ← type différent
+    expire = datetime.now(timezone.utc) + timedelta(days=7)
+    to_encode.update({"exp": expire, "type": "refresh"})
     return jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
 
 

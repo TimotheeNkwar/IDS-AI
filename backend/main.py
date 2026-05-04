@@ -63,7 +63,7 @@ async def lifespan(app: FastAPI):
         log.info("Pre-loading LLM …")
         llm_module._load_pipeline()
 
-    await database.connect_db()  # ← appelle __init__.py directement
+    await database.connect_db()
 
     yield
     await database.close_db()
