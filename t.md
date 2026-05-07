@@ -1,4 +1,6 @@
-{
+curl -v -X POST "http://SERVER_IP:8000/api/analyse" \
+  -H "Content-Type: application/json" \
+  -d '{
     "src_ip": "10.0.2.8",
     "dst_ip": "10.0.2.9",
     "src_port": 22,
@@ -23,4 +25,4 @@
     "http_status_code": 0,
     "raw_log": null,
     "timestamp": 1778140879.0671341
-  }
+  }'
