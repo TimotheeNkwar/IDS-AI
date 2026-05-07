@@ -20,6 +20,9 @@ from schemas.schemas import AlertStatusUpdate, AnalysisResult, LogEvent
 from ml import model as llm_module
 from config.config import settings
 from database import traffic as traffic_repo, alerts as alert_repo
+from fastapi.responses import JSONResponse
+from bson import json_util
+import json
 
 log = logging.getLogger(__name__)
 
@@ -299,3 +302,22 @@ async def api_traffic(limit: int = Query(default=50, ge=1, le=200)) -> dict[str,
         "traffic":           await traffic_repo.list_traffic(limit),
         "storage_available": True,
     }
+    
+@analyse_router.get("/stats/traffic/summary")
+async def get_traffic_summary(
+    hours: int = Query(default=24, ge=1, le=720)
+) -> JSONResponse:
+    """Vue globale du trafic — normal vs suspicious vs malicious."""
+    
+    normal     = await traffic_repo.count_by_label(hours=hours)
+    anomalies  = await traffic_repo.count_suspicious_malicious(hours=hours)
+    
+    total_normal = normal[0]["total_normal"] if normal else 0
+    
+    data = {
+        "period_hours":  hours,
+        "normal":        total_normal,
+        "anomalies":     anomalies,  # [{"_id": "high", "count": 3}, ...]
+        "total":         total_normal + sum(a["count"] for a in anomalies),
+    }
+    return JSONResponse(content=json.loads(json_util.dumps(data)))

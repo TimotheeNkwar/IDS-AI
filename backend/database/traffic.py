@@ -170,3 +170,43 @@ async def top_talkers(limit: int = 10) -> list[dict[str, Any]]:
     except Exception as exc:
         log.warning("Failed to get top talkers: %s", exc)
         return []
+    
+
+async def count_by_label(hours: int = 24) -> list[dict[str, Any]]:
+    """Nombre de traffic par label — normal/suspicious/malicious."""
+    col = _get_traffic_stats_col()
+    if col is None:
+        return []
+    try:
+        since = datetime.now(timezone.utc) - timedelta(hours=hours)
+        pipeline = [
+            {"$match": {"window": {"$gte": since}}},
+            {"$group": {
+                "_id": None,
+                "total_normal": {"$sum": "$count"} 
+            }}
+        ]
+        results = await col.aggregate(pipeline).to_list(None)
+        return json.loads(json_util.dumps(results))
+    except Exception as exc:
+        log.warning("Failed to count by label: %s", exc)
+        return []
+
+
+async def count_suspicious_malicious(hours: int = 24) -> list[dict[str, Any]]:
+    """Nombre de suspicious/malicious depuis network_traffic."""
+    col = _get_traffic_col()
+    if col is None:
+        return []
+    try:
+        since = datetime.now(timezone.utc) - timedelta(hours=hours)
+        pipeline = [
+            {"$match": {"timestamp": {"$gte": since}}},
+            {"$group": {"_id": "$severity", "count": {"$sum": 1}}},
+            {"$sort": {"count": -1}}
+        ]
+        results = await col.aggregate(pipeline).to_list(None)
+        return json.loads(json_util.dumps(results))
+    except Exception as exc:
+        log.warning("Failed to count suspicious/malicious: %s", exc)
+        return []
