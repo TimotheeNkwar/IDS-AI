@@ -25,9 +25,11 @@ python-dotenv==1.0.1
 # Auth
 python-jose[cryptography]
 passlib==1.7.4
-jwt==0.6.0
+PyJWT 
+cryptography
 
 #pwdlib argon
 pwdlib[argon2]
 
 python-multipart
+requests==2.31.0

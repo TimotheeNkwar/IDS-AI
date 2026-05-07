@@ -1,0 +1,81 @@
+@import "tailwindcss";
+
+:root {
+  --my-font: "Inter", "Trebuchet MS" sans-serif;
+}
+
+#root {
+  position: relative;
+  z-index: 1;
+  width: 100vw;
+  height: 100vh;
+}
+body {
+  font-family: var(--my-font);
+  position: relative;
+}
+
+/* body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background-image: url("./assets/images/background/bg.png");
+  background-size: cover;
+  background-position: center;
+  filter: blur(10px);
+  scale: 1.05;
+  z-index: -3;
+} */
+
+.logo {
+  font-size: 52px;
+  font-weight: 700;
+  letter-spacing: 10px;
+  color: #e0eeff;
+  text-shadow: 0 0 40px rgba(74, 158, 255, 0.4);
+}
+.subtitle {
+  font-size: 12px;
+  letter-spacing: 4px;
+  color: rgba(74, 158, 255, 0.5);
+  text-transform: uppercase;
+}
+.badges {
+  display: flex;
+  gap: 16px;
+  margin-top: 8px;
+}
+.badge {
+  font-size: 10px;
+  letter-spacing: 2px;
+  padding: 4px 16px;
+  border-radius: 20px;
+}
+.badge-ids {
+  background: rgba(239, 68, 68, 0.1);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+.badge-ml {
+  background: rgba(74, 158, 255, 0.1);
+  color: #7ab8ff;
+  border: 1px solid rgba(74, 158, 255, 0.3);
+}
+
+@keyframes blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}
+
+.hud-blink {
+  animation: blink 1s step-end infinite;
+}
+
+#bg {
+  pointer-events: none;
+}

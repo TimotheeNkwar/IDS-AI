@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 from typing import Any
 
 
@@ -32,6 +32,7 @@ class LogEvent(BaseModel):
     http_request_body_len: int = Field(default=0, ge=0)
     http_response_body_len: int = Field(default=0, ge=0)
     http_status_code: int = Field(default=0, ge=0)
+    timestamp: datetime
     # Raw log string forwarded to the LLM when anomaly is detected
     raw_log: str | None = Field(
         default=None, description="Optional raw log text for LLM analysis"
@@ -92,11 +93,16 @@ class UserLogin(BaseModel):
 
 
 class UserRead(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
     id: str | None = Field(default=None, alias="_id")
     username: str
     email: str
     is_active: bool = True
 
+class UserMe(UserRead):
+    model_config = ConfigDict(populate_by_name=True) 
+
+    
 
 class Token(BaseModel):
     access_token: str

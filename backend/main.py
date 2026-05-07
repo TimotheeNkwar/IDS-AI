@@ -6,6 +6,8 @@ GET  /health   — system status
 """
 
 from __future__ import annotations
+import sys
+import os 
 
 import logging
 import os
@@ -19,6 +21,7 @@ from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 
+sys.path.append(str(Path(__file__).resolve().parents[1]))
 # from helpers.helper import (
 #     _severity,
 #     _build_raw_log,
@@ -81,9 +84,9 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=os.getenv("CORS_ORIGINS", "http://localhost:3000").split(","),
+    allow_origins=os.getenv("CORS_ORIGINS", "http://localhost:5173").split(","),
     allow_credentials=True,
-    allow_methods=["GET", "POST", "PATCH"],
+    allow_methods=["GET", "POST", "PATCH", "PUT", "DELETE"],
     allow_headers=["Content-Type", "Authorization"],
 )
 

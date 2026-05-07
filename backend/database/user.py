@@ -42,15 +42,14 @@ async def list_users() -> list[dict[str, Any]]:
 
 
 async def get_user_by_id(user_id: str) -> dict[str, Any] | None:
-    if database.user_col is None or ObjectId is None:
+    if database.user_col is None:
         return None
     try:
-        user = await database.user_col.find_one({"_id": ObjectId(user_id)})
+        user = await database.user_col.find_one({"_id": user_id})  # ← pas de ObjectId()
         return serialize_user(user) if user else None
     except Exception as exc:
         log.warning("Failed to get user by ID: %s", exc)
         return None
-
 
 async def get_user_by_email(email: str) -> dict[str, Any] | None:
     if database.user_col is None:
@@ -96,3 +95,4 @@ async def update_user(user_id: str, update_data: dict[str, Any]) -> bool:
     except Exception as exc:
         log.warning("Failed to update user: %s", exc)
         return False
+

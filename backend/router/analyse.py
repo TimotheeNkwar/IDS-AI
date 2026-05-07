@@ -28,6 +28,7 @@ analyse_router = APIRouter()
 
 # ── Constants ──────────────────────────────────────────────────────────────────
 _MAX_RAW_LOG_LEN = 2048
+ALLOWED_IPS = {"127.0.0.1", "::1"}
 
 _PROMPT_INJECTION_PATTERNS: list[str] = [
     r"ignore\s+(previous|above|all)\s+instructions?",
@@ -102,7 +103,7 @@ def _should_force_llm(event: LogEvent) -> bool:
     "/analyze", response_model=AnalysisResult, summary="Analyze a network log event"
 )
 async def analyze(
-    event: LogEvent, current_user: dict = Depends(get_current_user)  # ← type annoté
+    event: LogEvent,  # ← type annoté
 ) -> AnalysisResult:
     """
     Full IDS pipeline:
@@ -115,6 +116,9 @@ async def analyze(
        → raw_log is sanitized and checked for prompt injection before LLM call
     4. Return combined result with severity and explanation
     """
+    
+    if event.src_ip not in ALLOWED_IPS:
+        raise HTTPException(status_code=403, detail="Forbidden: IP not allowed")
     raw = event.model_dump()
 
     # ── Step 1-3: ML prediction (includes payload inspection override) ─────────
@@ -251,7 +255,7 @@ async def health() -> dict[str, Any]:
     }
 
 
-@analyse_router.get("/api/status")
+@analyse_router.get("/status")
 async def api_status() -> dict[str, Any]:
     return {
         "status": "operational",
@@ -259,14 +263,14 @@ async def api_status() -> dict[str, Any]:
     }
 
 
-@analyse_router.get("/api/alerts")
+@analyse_router.get("/alerts")
 async def api_alerts(limit: int = Query(default=50, ge=1, le=200)) -> dict[str, Any]:
     if not alert_repo.is_available():
         return {"alerts": [], "storage_available": False}
     return {"alerts": await alert_repo.list_alerts(limit), "storage_available": True}
 
 
-@analyse_router.patch("/api/alerts/{alert_id}/status")
+@analyse_router.patch("/alerts/{alert_id}/status")
 async def update_alert_status(
     alert_id: str, payload: AlertStatusUpdate
 ) -> dict[str, Any]:
@@ -281,7 +285,7 @@ async def update_alert_status(
     return {"id": alert_id, "status": payload.status}
 
 
-@analyse_router.get("/api/traffic")
+@analyse_router.get("/traffic")
 async def api_traffic(limit: int = Query(default=50, ge=1, le=200)) -> dict[str, Any]:
     if not traffic_repo.is_available():
         return {"traffic": [], "storage_available": False}
