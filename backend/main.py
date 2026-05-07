@@ -42,7 +42,7 @@ from ml import model as llm_module
 
 
 import database
-from database import config as db_config
+from config.config import settings
 
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s  %(levelname)s  %(message)s"

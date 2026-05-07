@@ -1,5 +1,5 @@
 import uuid
-from schemas.schemas import User, UserCreate, UserRead
+from schemas.schemas import _UserBase, UserCreate, UserRead
 from .oauth import get_password_hash
 from database import user as user_repo
 from motor.motor_asyncio import AsyncIOMotorClient

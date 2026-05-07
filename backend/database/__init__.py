@@ -10,57 +10,50 @@ from motor.motor_asyncio import (
     AsyncIOMotorDatabase,
     AsyncIOMotorCollection,
 )
-from config.config import settings
+from config.config import settings  # ← settings vient d'ici
 
 log = logging.getLogger(__name__)
 
-client: AsyncIOMotorClient | None = None
-db: AsyncIOMotorDatabase | None = None
-
-
-alerts_col: AsyncIOMotorCollection | None = None
-traffic_col: AsyncIOMotorCollection | None = None
-user_col: AsyncIOMotorCollection | None = None
+client:            AsyncIOMotorClient | None = None
+db:                AsyncIOMotorDatabase | None = None
+alerts_col:        AsyncIOMotorCollection | None = None
+traffic_col:       AsyncIOMotorCollection | None = None
+traffic_stats_col: AsyncIOMotorCollection | None = None
+user_col:          AsyncIOMotorCollection | None = None
 
 
 async def connect_db() -> bool:
-    global client, db, alerts_col, traffic_col, user_col
+    global client, db, alerts_col, traffic_col, traffic_stats_col, user_col
+    
+    if not settings.MONGO_ENABLED:
+        log.info("MongoDB disabled via MONGO_ENABLED=false")
+        return False
+    
     try:
         client = AsyncIOMotorClient(settings.MONGO_URI, serverSelectionTimeoutMS=2000)
         await client.admin.command("ping")
         db = client[settings.MONGO_DB]
 
-        alerts_col = db.alerts
-        traffic_col = db.network_traffic
-        user_col = db.users
+        alerts_col        = db.alerts
+        traffic_col       = db.network_traffic
+        traffic_stats_col = db.network_traffic_stats
+        user_col          = db.users
 
         await _ensure_indexes()
-
-        import sys
-
-        log.info("✅ alerts_col: %s", alerts_col)
-        log.info("✅ traffic_col: %s", traffic_col)
-        log.info("✅ MODULE ID: %s", id(sys.modules["database"]))  # ← diagnostic clé
         log.info("MongoDB connecté: %s/%s", settings.MONGO_URI, settings.MONGO_DB)
         return True
 
     except Exception as exc:
-        client = None
-        db = None
-        alerts_col = None
-        traffic_col = None
+        client = db = alerts_col = traffic_col = traffic_stats_col = user_col = None
         log.warning("MongoDB indisponible: %s", exc)
         return False
 
 
 async def close_db() -> None:
-    global client, db, alerts_col, traffic_col, user_col
+    global client, db, alerts_col, traffic_col, traffic_stats_col, user_col
     if client:
         client.close()
-    client = None
-    db = None
-    alerts_col = None
-    traffic_col = None
+    client = db = alerts_col = traffic_col = traffic_stats_col = user_col = None
 
 
 def get_db() -> AsyncIOMotorDatabase | None:
@@ -68,23 +61,25 @@ def get_db() -> AsyncIOMotorDatabase | None:
 
 
 def is_connected() -> bool:
-    return db is not None
+    return all([db, alerts_col, traffic_col, traffic_stats_col])
 
 
 async def _ensure_indexes() -> None:
     if db is None:
         return
-    await db.alerts.create_index("timestamp")
-    await db.alerts.create_index("severity")
-    await db.alerts.create_index("status")
-    await db.alerts.create_index("src_ip")
-    await db.network_traffic.create_index("timestamp")
-    await db.network_traffic.create_index("src_ip")
+    await db.alerts.create_index([("timestamp", -1)])
+    await db.alerts.create_index([("severity", 1)])
+    await db.alerts.create_index([("status", 1)])
+    await db.alerts.create_index([("src_ip", 1)])
+    await db.network_traffic.create_index([("timestamp", -1)])
+    await db.network_traffic.create_index([("src_ip", 1)])
+    await db.network_traffic_stats.create_index(
+        [("window", 1), ("proto", 1), ("service", 1)],
+        unique=True,
+    )
 
 
-def _get_alerts_col():
-    return alerts_col
-
-
-def _get_traffic_col():
-    return traffic_col
+def _get_alerts_col()        -> AsyncIOMotorCollection | None: return alerts_col
+def _get_traffic_col()       -> AsyncIOMotorCollection | None: return traffic_col
+def _get_traffic_stats_col() -> AsyncIOMotorCollection | None: return traffic_stats_col
+def _get_user_col()          -> AsyncIOMotorCollection | None: return user_col

@@ -306,7 +306,7 @@ def build_payload(traffic_type: str) -> dict:
 def send_payload(url: str, payload: dict, verbose: bool = True) -> bool:
     """Envoie un payload à l'endpoint et retourne True si succès."""
     try:
-        resp = requests.post(url, json=payload, timeout=10)
+        resp = requests.post(url, json=payload, timeout=25)
         if verbose:
             status = "✅" if resp.status_code < 400 else "❌"
             print(f"  {status} [{resp.status_code}] {payload['_id']}")
