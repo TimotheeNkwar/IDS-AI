@@ -251,7 +251,7 @@ async def health() -> dict[str, Any]:
     }
 
 
-@analyse_router.get("/api/status")
+@analyse_router.get("/status")
 async def api_status() -> dict[str, Any]:
     return {
         "status": "operational",
@@ -259,14 +259,14 @@ async def api_status() -> dict[str, Any]:
     }
 
 
-@analyse_router.get("/api/alerts")
+@analyse_router.get("/alerts")
 async def api_alerts(limit: int = Query(default=50, ge=1, le=200)) -> dict[str, Any]:
     if not alert_repo.is_available():
         return {"alerts": [], "storage_available": False}
     return {"alerts": await alert_repo.list_alerts(limit), "storage_available": True}
 
 
-@analyse_router.patch("/api/alerts/{alert_id}/status")
+@analyse_router.patch("/alerts/{alert_id}/status")
 async def update_alert_status(
     alert_id: str, payload: AlertStatusUpdate
 ) -> dict[str, Any]:
@@ -281,7 +281,7 @@ async def update_alert_status(
     return {"id": alert_id, "status": payload.status}
 
 
-@analyse_router.get("/api/traffic")
+@analyse_router.get("/traffic")
 async def api_traffic(limit: int = Query(default=50, ge=1, le=200)) -> dict[str, Any]:
     if not traffic_repo.is_available():
         return {"traffic": [], "storage_available": False}

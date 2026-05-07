@@ -32,6 +32,7 @@ class LogEvent(BaseModel):
     http_request_body_len: int = Field(default=0, ge=0)
     http_response_body_len: int = Field(default=0, ge=0)
     http_status_code: int = Field(default=0, ge=0)
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     # Raw log string forwarded to the LLM when anomaly is detected
     raw_log: str | None = Field(
         default=None, description="Optional raw log text for LLM analysis"

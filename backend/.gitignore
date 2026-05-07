@@ -1,6 +1,7 @@
-#venv .env  
-
-# Ignore Python bytecode and virtual environment
+# Python cache
 __pycache__/
+
+# Virtual environments and env files
 venv/
+.venv/
 .env

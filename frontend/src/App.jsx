@@ -20,7 +20,7 @@ function App() {
   const loadDashboard = useCallback(async () => {
     try {
       const [healthResponse, alertsResponse, trafficResponse] = await Promise.all([
-        fetch(`${API_BASE}/health`),
+        fetch(`${API_BASE}/api/health`),
         fetch(`${API_BASE}/api/alerts?limit=100`),
         fetch(`${API_BASE}/api/traffic?limit=100`),
       ]);

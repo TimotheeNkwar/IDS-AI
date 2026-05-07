@@ -140,7 +140,7 @@ Analyzes a network event through the full pipeline (ML + LLM if anomaly). Events
   "service": "-",
   "conn_state": "SF",
   "duration": 12.5,
-  "src_bytes": 102,
+  "src_bytes": 102,"
   "dst_bytes": 512,
   "missed_bytes": 0,
   "src_pkts": 20,
