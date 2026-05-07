@@ -1,6 +1,8 @@
 # ── Endpoints ──────────────────────────────────────────────────────────────────
 from datetime import datetime, timezone
 from typing import Any
+import asyncio
+import os
 import re
 import urllib.parse
 import logging
@@ -25,6 +27,12 @@ from database import traffic as traffic_repo, alerts as alert_repo
 log = logging.getLogger(__name__)
 
 analyse_router = APIRouter()
+
+_ANALYSIS_QUEUE_MAXSIZE = int(os.getenv("ANALYSIS_QUEUE_MAXSIZE", "1000"))
+_analysis_queue: asyncio.Queue[tuple[LogEvent, asyncio.Future[AnalysisResult]]] = (
+    asyncio.Queue(maxsize=_ANALYSIS_QUEUE_MAXSIZE)
+)
+_analysis_worker_task: asyncio.Task[None] | None = None
 
 # ── Constants ──────────────────────────────────────────────────────────────────
 _MAX_RAW_LOG_LEN = 2048
@@ -95,26 +103,8 @@ def _should_force_llm(event: LogEvent) -> bool:
     return is_web and has_body and status_ok
 
 
-# ── Main endpoint ──────────────────────────────────────────────────────────────
-
-
-@analyse_router.post(
-    "/analyze", response_model=AnalysisResult, summary="Analyze a network log event"
-)
-async def analyze(
-    event: LogEvent, current_user: dict = Depends(get_current_user)  # ← type annoté
-) -> AnalysisResult:
-    """
-    Full IDS pipeline:
-    1. Preprocess input features
-    2. ML model predicts normal / attack + confidence
-       → Payload inspection overrides ML if raw_log contains known patterns
-    3. LLM classifies: Normal / Suspicious / Malicious
-       → Always called for anomalies
-       → Also called for HTTP/S traffic even if ML says normal (raw_log="" bypass defense)
-       → raw_log is sanitized and checked for prompt injection before LLM call
-    4. Return combined result with severity and explanation
-    """
+async def _run_analysis_pipeline(event: LogEvent) -> AnalysisResult:
+    """Run the existing IDS pipeline for a single event."""
     raw = event.model_dump()
 
     # ── Step 1-3: ML prediction (includes payload inspection override) ─────────
@@ -132,10 +122,6 @@ async def analyze(
     top_features: list[dict[str, Any]] = ml_result.get("top_features", [])
 
     # ── Step 4: LLM analysis ───────────────────────────────────────────────────
-    # force_llm: even if ML says normal, invoke LLM for HTTP/S traffic.
-    # A hacker can set raw_log="" to hide a payload from regex inspection,
-    # but they cannot fake network-level features. The LLM receives a
-    # reconstructed log via _build_raw_log() and can still catch anomalies.
     force_llm = _should_force_llm(event)
 
     if is_anomaly or force_llm:
@@ -157,7 +143,6 @@ async def analyze(
             },
         )
 
-        # If LLM escalates a ML-normal verdict → sync is_anomaly
         if (
             force_llm
             and not is_anomaly
@@ -228,6 +213,93 @@ async def analyze(
     return result
 
 
+async def _analysis_worker() -> None:
+    while True:
+        event, future = await _analysis_queue.get()
+        try:
+            result = await _run_analysis_pipeline(event)
+            if not future.cancelled():
+                future.set_result(result)
+        except Exception as exc:
+            if not future.cancelled():
+                future.set_exception(exc)
+        finally:
+            _analysis_queue.task_done()
+
+
+async def start_analysis_worker() -> None:
+    global _analysis_worker_task
+    if _analysis_worker_task and not _analysis_worker_task.done():
+        return
+    _analysis_worker_task = asyncio.create_task(
+        _analysis_worker(), name="analysis-queue-worker"
+    )
+    log.info("Analysis worker started (max queue size=%s)", _ANALYSIS_QUEUE_MAXSIZE)
+
+
+async def stop_analysis_worker() -> None:
+    global _analysis_worker_task
+    if _analysis_worker_task is None:
+        return
+    _analysis_worker_task.cancel()
+    try:
+        await _analysis_worker_task
+    except asyncio.CancelledError:
+        pass
+    _analysis_worker_task = None
+    log.info("Analysis worker stopped")
+
+
+def analysis_queue_size() -> int:
+    return _analysis_queue.qsize()
+
+
+# ── Main endpoint ──────────────────────────────────────────────────────────────
+
+
+@analyse_router.post(
+    "/analyze", response_model=AnalysisResult, summary="Analyze a network log event"
+)
+async def analyze(
+    event: LogEvent, current_user: dict = Depends(get_current_user)  # ← type annoté
+) -> AnalysisResult:
+    """
+    Full IDS pipeline:
+    1. Preprocess input features
+    2. ML model predicts normal / attack + confidence
+       → Payload inspection overrides ML if raw_log contains known patterns
+    3. LLM classifies: Normal / Suspicious / Malicious
+       → Always called for anomalies
+       → Also called for HTTP/S traffic even if ML says normal (raw_log="" bypass defense)
+       → raw_log is sanitized and checked for prompt injection before LLM call
+    4. Return combined result with severity and explanation
+    """
+    if _analysis_queue.full():
+        raise HTTPException(
+            status_code=429,
+            detail="Analysis queue is full. Retry later.",
+        )
+
+    if _analysis_worker_task is None or _analysis_worker_task.done():
+        await start_analysis_worker()
+
+    loop = asyncio.get_running_loop()
+    future: asyncio.Future[AnalysisResult] = loop.create_future()
+    await _analysis_queue.put((event, future))
+
+    return await future
+
+
+# Alias endpoint to accept clients using the French spelling '/analyse'
+@analyse_router.post(
+    "/analyse", response_model=AnalysisResult, summary="Alias for /api/analyze"
+)
+async def analyse_alias(
+    event: LogEvent, current_user: dict = Depends(get_current_user)
+) -> AnalysisResult:
+    return await analyze(event, current_user)
+
+
 # ── Legacy endpoints (kept for backward compatibility) ─────────────────────────
 
 
@@ -248,6 +320,9 @@ async def health() -> dict[str, Any]:
         "alert_storage_enabled": db_config.MONGO_ENABLED,
         "alert_storage_connected": alert_repo.is_available(),
         "traffic_storage_connected": traffic_repo.is_available(),
+        "analysis_queue_size": analysis_queue_size(),
+        "analysis_worker_running": _analysis_worker_task is not None
+        and not _analysis_worker_task.done(),
     }
 
 

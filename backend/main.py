@@ -26,7 +26,7 @@ from dotenv import load_dotenv
 #     _save_alert,
 #     _save_traffic,
 # )
-from router.analyse import analyse_router
+from router.analyse import analyse_router, start_analysis_worker, stop_analysis_worker
 from router.user import router as user_router
 
 sys.path.append(str(Path(__file__).resolve().parents[1]))
@@ -64,8 +64,10 @@ async def lifespan(app: FastAPI):
         llm_module._load_pipeline()
 
     await database.connect_db()
+    await start_analysis_worker()
 
     yield
+    await stop_analysis_worker()
     await database.close_db()
     log.info("IDS-AI shutting down")
 
