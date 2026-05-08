@@ -261,7 +261,7 @@ def analysis_queue_size() -> int:
     "/analyze", response_model=AnalysisResult, summary="Analyze a network log event"
 )
 async def analyze(
-    event: LogEvent, current_user: dict = Depends(get_current_user)  # ← type annoté
+    event: LogEvent,  # ← type annoté
 ) -> AnalysisResult:
     """
     Full IDS pipeline:
