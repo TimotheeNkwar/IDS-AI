@@ -99,4 +99,4 @@ app.include_router(user_router, prefix="/api/users", tags=["users"])
 if __name__ == "__main__":
     import uvicorn
 
-    uvicorn.run(app, host="localhost", port=int(os.getenv("PORT", "8000")))
+    uvicorn.run(app, host="10.30.199.223", port=int(os.getenv("PORT", "8000")))

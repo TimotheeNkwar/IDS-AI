@@ -1,0 +1,1085 @@
+% ================================================================
+% report.tex -- IDS-AI: Hybrid Intrusion Detection System
+% Cyprus International University
+% Compile: pdflatex report.tex (run twice for TOC/refs)
+% ================================================================
+
+\documentclass[11pt,a4paper]{report}
+
+% -- Encoding and Language ---------------------------------------
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[english]{babel}
+\usepackage{lmodern}
+
+% -- Page Layout --------------------------------------------------
+\usepackage{geometry}
+\geometry{margin=2.5cm}
+
+% -- Graphics and Diagrams ---------------------------------------
+\usepackage{graphicx}
+\usepackage{tikz}
+\usetikzlibrary{positioning,shapes,arrows.meta,calc}
+
+% -- Colours ------------------------------------------------------
+\usepackage{xcolor}
+\definecolor{codeblue}{RGB}{0,0,160}
+\definecolor{codegray}{RGB}{105,105,105}
+\definecolor{codegreen}{RGB}{0,115,65}
+\definecolor{backcolour}{RGB}{250,250,250}
+\definecolor{ciublue}{RGB}{0,70,140}
+\definecolor{alertred}{RGB}{180,35,35}
+\definecolor{safegreen}{RGB}{25,135,84}
+
+% -- Hyperlinks ---------------------------------------------------
+\usepackage{hyperref}
+\hypersetup{
+  colorlinks = true,
+  linkcolor  = ciublue,
+  urlcolor   = ciublue,
+  citecolor  = codegreen,
+  pdftitle   = {IDS-AI -- Hybrid Intrusion Detection System Report},
+  pdfauthor  = {CIU Students},
+  pdfsubject = {AI-powered Cybersecurity System Report}
+}
+
+% -- Code Listings ------------------------------------------------
+\usepackage{listings}
+
+\lstdefinestyle{pythonstyle}{
+  language        = Python,
+  basicstyle      = \ttfamily\footnotesize,
+  keywordstyle    = \color{codeblue}\bfseries,
+  commentstyle    = \color{codegray}\itshape,
+  stringstyle     = \color{red!70!black},
+  numbers         = left,
+  numberstyle     = \tiny\color{codegray},
+  numbersep       = 8pt,
+  frame           = single,
+  rulecolor       = \color{gray!40},
+  backgroundcolor = \color{backcolour},
+  breaklines      = true,
+  tabsize         = 4,
+  showstringspaces = false,
+  captionpos      = b
+}
+
+\lstdefinestyle{jsonstyle}{
+  basicstyle      = \ttfamily\footnotesize,
+  keywordstyle    = \color{codeblue}\bfseries,
+  commentstyle    = \color{codegray}\itshape,
+  stringstyle     = \color{red!70!black},
+  numbers         = left,
+  numberstyle     = \tiny\color{codegray},
+  numbersep       = 8pt,
+  frame           = single,
+  rulecolor       = \color{gray!40},
+  backgroundcolor = \color{backcolour},
+  breaklines      = true,
+  tabsize         = 2,
+  showstringspaces = false,
+  captionpos      = b
+}
+
+\lstdefinestyle{bashstyle}{
+  language        = bash,
+  basicstyle      = \ttfamily\footnotesize,
+  keywordstyle    = \color{codeblue}\bfseries,
+  commentstyle    = \color{codegray}\itshape,
+  stringstyle     = \color{red!70!black},
+  numbers         = left,
+  numberstyle     = \tiny\color{codegray},
+  numbersep       = 8pt,
+  frame           = single,
+  rulecolor       = \color{gray!40},
+  backgroundcolor = \color{backcolour},
+  breaklines      = true,
+  tabsize         = 2,
+  showstringspaces = false,
+  captionpos      = b
+}
+
+\lstset{basicstyle=\ttfamily\footnotesize, breaklines=true,
+        frame=single, showstringspaces=false}
+
+% -- Tables -------------------------------------------------------
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{multirow}
+
+% -- Headers / Footers -------------------------------------------
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\textit{Cyprus International University}}
+\fancyhead[R]{\small\textit{IDS-AI -- Intrusion Detection Report}}
+\fancyfoot[L]{\small\textit{AI-Powered Cybersecurity Project}}
+\fancyfoot[R]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0.4pt}
+
+% -- Chapter / Section Titles ------------------------------------
+\usepackage{titlesec}
+\titleformat{\chapter}[display]
+  {\normalfont\huge\bfseries\color{ciublue}}
+  {\chaptertitlename\ \thechapter}{16pt}{\Huge}
+\titlespacing*{\chapter}{0pt}{0pt}{20pt}
+
+% -- Captions and Paragraphs -------------------------------------
+\usepackage{caption}
+\captionsetup{font=small, labelfont=bf}
+\usepackage{enumitem}
+\usepackage{parskip}
+
+% -- Screenshot placeholder helper -------------------------------
+\newcommand{\screenshot}[2]{%
+  \begin{figure}[htbp]
+    \centering
+    \fbox{\parbox{0.82\textwidth}{%
+      \centering\vspace{1.2cm}%
+      \textcolor{orange}{\large\textbf{[SCREENSHOT PLACEHOLDER]}}\\[8pt]%
+      \texttt{\small screenshots/#1}\\[8pt]%
+      \small\textit{Place the screenshot file in a \texttt{screenshots/}
+      folder next to this report.}%
+      \vspace{1.2cm}%
+    }}%
+    \caption{#2}%
+    \label{fig:#1}%
+  \end{figure}%
+}
+
+% ================================================================
+\begin{document}
+% ================================================================
+
+% -- Title Page ---------------------------------------------------
+\begin{titlepage}
+  \centering
+  \vspace*{0.6cm}
+
+  \IfFileExists{ciu_logo.png}{%
+    \includegraphics[width=5cm]{ciu_logo.png}
+  }{%
+    \fbox{\parbox{5cm}{\centering\vspace{0.6cm}
+      \textbf{CIU LOGO}\\[2pt]
+      \small Add \texttt{ciu\_logo.png} here
+      \vspace{0.6cm}}}%
+  }
+
+  \vspace{0.8cm}
+  {\Large\bfseries\color{ciublue} Cyprus International University}\\[6pt]
+  {\large Faculty of Engineering and Architecture}\\[4pt]
+  {\large School of Applied Sciences}\\[4pt]
+  {\large Data Science and Cybersecurity Project}\\[0.4cm]
+
+  \noindent\rule{\linewidth}{0.6pt}\\[0.5cm]
+
+  {\LARGE\bfseries IDS-AI}\\[8pt]
+  {\Large Hybrid Machine Learning and LLM Intrusion Detection System}\\[0.3cm]
+
+  \noindent\rule{\linewidth}{0.6pt}\\[0.8cm]
+
+  {\large\bfseries Capstone Project Report}\[1.2cm]
+
+  {\large\bfseries Submitted by (Capstone Team of 6):}\[0.5cm]
+  \begin{tabular}{ll}
+    	oprule
+    	extbf{Student ID} & \textbf{Full Name} \\
+    \midrule
+    Student ID & Timothee Nkwar \\
+    Student ID & Team Member 2 \\
+    Student ID & Team Member 3 \\
+    Student ID & Team Member 4 \\
+    Student ID & Team Member 5 \\
+    Student ID & Team Member 6 \\
+    \bottomrule
+  \end{tabular}
+  \vspace{1.2cm}
+  {\large\bfseries Instructor:}\\[0.4cm]
+  {\large Instructor Name}
+
+  \vfill
+  {\large May 2026}
+\end{titlepage}
+
+% -- Front Matter -------------------------------------------------
+\pagenumbering{roman}
+\setcounter{page}{1}
+\tableofcontents
+\clearpage
+\listoffigures
+\listoftables
+\clearpage
+\pagenumbering{arabic}
+
+% ================================================================
+% CHAPTER 1
+% ================================================================
+\chapter{Introduction}
+
+\section{Project Overview}
+
+IDS-AI is a full-stack intrusion detection system designed to classify network
+traffic, identify malicious behaviour, and provide security analysts with
+clear explanations and operational recommendations. The system is organized
+around three decision layers: the Machine Learning layer, the Large Language
+Model layer, and the Human-in-the-Loop layer. The ML layer performs fast
+statistical detection from structured traffic features, the LLM layer adds
+contextual cybersecurity reasoning and explanations, and the human analyst
+keeps final authority over incident decisions after reviewing all generated
+evidence.
+
+The software platform contains three major technical layers. The backend is implemented with
+FastAPI and exposes REST endpoints for analysis, job monitoring, alerts,
+traffic history, and health checks. The frontend is a React single-page
+dashboard that displays system status, recent alerts, analyzed traffic, and
+live queued analysis requests. The persistence layer uses MongoDB through the
+Motor asynchronous driver to store alert and traffic records.
+
+\section{Problem Statement}
+
+Network intrusion detection systems must operate under high load while still
+providing meaningful results. A simple synchronous API design can become
+unreliable when many analysis requests arrive at the same time, especially
+when some requests trigger slower LLM-based classification. Without a queue,
+large bursts of traffic can block the backend, degrade the user interface,
+and hide the real state of pending analyses.
+
+IDS-AI addresses this problem by introducing an asynchronous analysis queue.
+Incoming network events are accepted as jobs, each job receives a status, and
+worker tasks process the queue one request at a time or according to a
+configurable concurrency limit. This design improves stability and gives the
+frontend enough information to show waiting, processing, completed, and
+failed requests in real time.
+
+\section{Objectives}
+
+The main objectives of the project are:
+
+\begin{itemize}[leftmargin=1.5em]
+  \item Build an AI-powered intrusion detection pipeline combining ML and LLM
+    reasoning.
+  \item Keep a Human-in-the-Loop decision layer so the analyst makes the final
+    operational decision after ML and LLM analysis.
+  \item Classify network traffic as normal, suspicious, or malicious.
+  \item Detect attack categories such as SQL injection, XSS, DDoS,
+    brute-force attempts, scans, botnet activity, and backdoors.
+  \item Store analyzed traffic and generated alerts in MongoDB.
+  \item Provide a React dashboard for monitoring alerts, traffic, and system
+    health.
+  \item Add a robust queue mechanism for high-volume concurrent requests.
+  \item Display live request progress from 0\% to 100\% in the Traffic view.
+  \item Generate synthetic test datasets to validate the queue and detection
+    behaviour.
+\end{itemize}
+
+\section{Scope}
+
+The current implementation focuses on host-to-service network event analysis.
+It does not replace a full SIEM platform or a production network sensor, but
+it provides a practical architecture for receiving normalized flow records,
+performing AI-assisted classification, and presenting security findings to a
+user. The project includes test utilities for generating synthetic attacks
+and stress-testing the analysis queue.
+
+% ================================================================
+% CHAPTER 2
+% ================================================================
+\chapter{System Architecture}
+
+\section{High-Level Architecture}
+
+Figure~\ref{fig:architecture} shows the main components of IDS-AI. Network
+events are sent to the FastAPI backend, queued as analysis jobs, processed by
+worker tasks, classified by the ML and LLM components, then stored and
+presented in the React dashboard. The final decision is made by the
+Human-in-the-Loop analyst, who reviews the alert, evidence, severity, and
+recommended action before closing or escalating the incident.
+
+\begin{figure}[htbp]
+  \centering
+  \begin{tikzpicture}[
+    node distance=1.45cm,
+    block/.style={rectangle, draw=ciublue, fill=blue!6, thick,
+      rounded corners, minimum width=3.2cm, minimum height=0.9cm,
+      align=center, font=\small\bfseries},
+    db/.style={cylinder, draw=ciublue, fill=green!8, thick,
+      shape border rotate=90, aspect=0.25, minimum height=1.2cm,
+      minimum width=2.6cm, align=center, font=\small\bfseries},
+    arrow/.style={-{Latex[length=2.5mm]}, thick, draw=gray!70}
+  ]
+    \node[block] (client) {Network Event\\Generator / Sensor};
+    \node[block, right=of client] (api) {FastAPI Backend\\REST API};
+    \node[block, right=of api] (queue) {Analysis Queue\\Job Registry};
+    \node[block, below=of queue] (worker) {Worker Tasks\\Concurrency Limit};
+    \node[block, left=of worker] (ml) {ML Detector\\XGBoost Bundle};
+    \node[block, right=of worker] (llm) {Local LLM\\Ollama};
+    \node[db, below=of worker] (mongo) {MongoDB\\Alerts + Traffic};
+    \node[block, below=of api] (frontend) {React Dashboard\\Traffic + Alerts};
+    \node[block, below=of frontend] (human) {Human-in-the-Loop\\Final Decision};
+
+    \draw[arrow] (client) -- (api);
+    \draw[arrow] (api) -- (queue);
+    \draw[arrow] (queue) -- (worker);
+    \draw[arrow] (worker) -- (ml);
+    \draw[arrow] (worker) -- (llm);
+    \draw[arrow] (worker) -- (mongo);
+    \draw[arrow] (mongo) -- (frontend);
+    \draw[arrow] (api) -- (frontend);
+    \draw[arrow] (frontend) -- (human);
+  \end{tikzpicture}
+  \caption{High-level architecture of IDS-AI}
+  \label{fig:architecture}
+\end{figure}
+
+\section{Three-Layer Decision Model}
+
+IDS-AI is designed around a three-layer decision model:
+
+\begin{enumerate}[leftmargin=1.5em]
+  \item \textbf{Machine Learning Layer:} receives structured network features
+    and produces a fast prediction, confidence score, attack label, risk
+    signals, and top feature indicators.
+  \item \textbf{LLM Layer:} reviews suspicious or high-risk traffic using the
+    raw log, ML context, and cybersecurity knowledge base. It produces a
+    human-readable explanation, severity, evidence, and recommended action.
+  \item \textbf{Human-in-the-Loop Layer:} the security analyst reviews the ML
+    and LLM outputs in the dashboard and makes the final operational decision,
+    such as confirming the alert, marking it as false positive, escalating it,
+    or initiating response actions.
+\end{enumerate}
+
+This structure prevents the system from blindly trusting automation. ML and
+LLM components assist the analyst, but the human remains responsible for the
+final decision after all analysis is complete.
+
+\section{Repository Structure}
+
+\begin{lstlisting}[style=bashstyle, caption={Project directory structure}]
+IDS-AI/
+|-- backend/
+|   |-- main.py                 # FastAPI application entry point
+|   |-- router/analyse.py       # Analysis endpoints and queue workers
+|   |-- schemas/schemas.py      # Pydantic request and response models
+|   |-- ml/detector.py          # Machine learning inference pipeline
+|   |-- ml/model.py             # LLM analysis integration
+|   |-- ml/best_model.joblib    # Trained model bundle
+|   |-- helpers/helper.py       # Result persistence and helper logic
+|   `-- database/               # MongoDB repositories
+|-- frontend/
+|   |-- src/App.jsx             # React dashboard
+|   `-- src/App.css             # Dashboard styles
+|-- load_tests/
+|   |-- attack_requests_100.json
+|   |-- synthetic_intrusion_dataset_450.json
+|   `-- run_attack_queue_test.py
+|-- test.py                     # Flow parser / traffic sender utility
+`-- report.tex
+\end{lstlisting}
+
+\section{Technology Stack}
+
+\begin{table}[htbp]
+  \centering
+  \caption{Technology stack used in IDS-AI}
+  \label{tab:stack}
+  \begin{tabular}{lll}
+    \toprule
+    \textbf{Layer} & \textbf{Technology} & \textbf{Purpose} \\
+    \midrule
+    Frontend & React 18 & Single-page monitoring dashboard \\
+    Backend & FastAPI & REST API and application orchestration \\
+    Data validation & Pydantic & Request and response schemas \\
+    ML & XGBoost / scikit-learn & Traffic classification \\
+    LLM & Ollama & Local natural-language security analysis \\
+    Database & MongoDB + Motor & Async storage for alerts and traffic \\
+    Testing & Python scripts & Synthetic load and queue testing \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+% ================================================================
+% CHAPTER 3
+% ================================================================
+\chapter{Backend Design}
+
+\section{FastAPI Application}
+
+The backend application is initialized in \texttt{backend/main.py}. On
+startup, the application loads environment variables, preloads the ML model
+bundle, optionally preloads the LLM pipeline, connects to MongoDB, and starts
+the analysis workers. On shutdown, workers are cancelled and the database
+connection is closed cleanly.
+
+\begin{lstlisting}[style=pythonstyle, caption={Backend startup lifecycle summary}]
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    bundle = detector._load_bundle()
+    if os.getenv("LLM_PRELOAD", "false").lower() in ("true", "1"):
+        llm_module._load_pipeline()
+
+    await database.connect_db()
+    await start_analysis_worker()
+
+    yield
+
+    await stop_analysis_worker()
+    await database.close_db()
+\end{lstlisting}
+
+\section{Analysis Queue}
+
+The analysis queue is implemented in \texttt{backend/router/analyse.py}. Each
+incoming event can be submitted as an analysis job. A job stores the original
+event, status, progress, queue position, timestamps, result, and possible
+error message.
+
+The supported job states are:
+
+\begin{itemize}[leftmargin=1.5em]
+  \item \texttt{waiting}: the request has been accepted and is waiting in the
+    queue.
+  \item \texttt{processing}: a worker is currently analyzing the request.
+  \item \texttt{completed}: the request finished successfully and contains an
+    \texttt{AnalysisResult}.
+  \item \texttt{failed}: an exception or timeout occurred during analysis.
+  \item \texttt{cancelled}: a waiting job was cancelled before processing.
+\end{itemize}
+
+\begin{lstlisting}[style=pythonstyle, caption={Configurable queue settings}]
+_ANALYSIS_QUEUE_MAXSIZE = int(os.getenv("ANALYSIS_QUEUE_MAXSIZE", "1000"))
+_ANALYSIS_CONCURRENCY = max(1, int(os.getenv("ANALYSIS_CONCURRENCY", "1")))
+_ANALYSIS_TIMEOUT_SECONDS = max(1, int(os.getenv("ANALYSIS_TIMEOUT_SECONDS", "180")))
+_ANALYSIS_HISTORY_LIMIT = max(10, int(os.getenv("ANALYSIS_HISTORY_LIMIT", "500")))
+\end{lstlisting}
+
+\section{Queue Endpoints}
+
+\begin{table}[htbp]
+  \centering
+  \caption{Main analysis and queue endpoints}
+  \label{tab:endpoints}
+  \begin{tabular}{lll}
+    \toprule
+    \textbf{Method} & \textbf{Path} & \textbf{Description} \\
+    \midrule
+    POST & \texttt{/api/analyze} & Backward-compatible synchronous analysis \\
+    POST & \texttt{/api/analysis/jobs} & Create a queued analysis job \\
+    GET & \texttt{/api/analysis/jobs} & List queued and recent jobs \\
+    GET & \texttt{/api/analysis/jobs/\{id\}} & Retrieve one job status \\
+    DELETE & \texttt{/api/analysis/jobs/\{id\}} & Cancel a waiting job \\
+    GET & \texttt{/api/health} & Backend, model, storage, and queue health \\
+    GET & \texttt{/api/alerts} & Retrieve recent IDS alerts \\
+    GET & \texttt{/api/traffic} & Retrieve persisted traffic records \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\section{Error Handling and Timeouts}
+
+Each worker wraps analysis execution in \texttt{asyncio.wait\_for}. If an
+analysis exceeds \texttt{ANALYSIS\_TIMEOUT\_SECONDS}, the job is marked
+\texttt{failed}. Exceptions from the ML or LLM pipeline are captured and
+stored in the job error field instead of crashing the worker loop.
+
+CPU-heavy and blocking analysis calls are executed with
+\texttt{asyncio.to\_thread}. This prevents the FastAPI event loop from being
+blocked while model inference or LLM calls are running.
+
+% ================================================================
+% CHAPTER 4
+% ================================================================
+\chapter{Detection Pipeline}
+
+\section{Input Event Schema}
+
+IDS-AI receives normalized network event records inspired by Zeek and
+CTU-style flow features. The main request schema is represented by the
+\texttt{LogEvent} Pydantic model.
+
+\begin{lstlisting}[style=jsonstyle, caption={Example network event}]
+{
+  "_id": "attack-001-sql_injection",
+  "src_ip": "198.51.100.10",
+  "dst_ip": "10.0.0.20",
+  "src_port": 20000,
+  "dst_port": 80,
+  "proto": "tcp",
+  "service": "http",
+  "conn_state": "SF",
+  "duration": 0.02,
+  "src_bytes": 600,
+  "dst_bytes": 80,
+  "src_pkts": 5,
+  "dst_pkts": 1,
+  "http_trans_depth": 1,
+  "http_request_body_len": 56,
+  "http_status_code": 200,
+  "raw_log": "SQL injection payload with UNION SELECT"
+}
+\end{lstlisting}
+
+\section{Machine Learning Stage}
+
+The ML detector loads the trained model bundle from
+\texttt{backend/ml/best\_model.joblib}. The project supports models such as
+Random Forest, XGBoost, and Isolation Forest. The best model is selected by
+F1-score during training and saved for runtime inference. In the tested
+environment, the active model was XGBoost with an F1-score around 0.989.
+
+The ML result includes:
+
+\begin{itemize}[leftmargin=1.5em]
+  \item predicted label;
+  \item anomaly flag;
+  \item confidence score;
+  \item inferred attack type;
+  \item risk signals;
+  \item top model features when available.
+\end{itemize}
+
+\subsection{How the ML layer works (detail)}
+
+The ML layer operates on structured, pre-processed features extracted from
+the incoming \texttt{LogEvent}. Typical preprocessing steps include
+categorical encoding, numeric normalization, missing-value handling, and
+feature engineering (e.g. byte/packet ratios, request size buckets, port
+signatures). At inference time the pipeline performs the same deterministic
+transformations used during training and feeds the feature vector to the
+selected model. The model outputs a label and a confidence/probability score;
+when available, feature importances and per-feature contributions are also
+returned to aid explainability.
+
+Key properties:
+\begin{itemize}[leftmargin=1.5em]
+  \item Low latency: suitable for first-line filtering of high-volume events.
+  \item Deterministic outputs: same input yields same prediction (no randomness
+    at inference unless explicit sampling is used).
+  \item Explainability: top features and risk signals provide quick hints to
+    analysts and help the LLM when constructing explanations.
+\end{itemize}
+
+\subsection{Operational considerations}
+
+To remain reliable under load the ML layer should run in a way that does not
+block the event loop (e.g. via `asyncio.to_thread`) and can be scaled or
+quantized if CPU becomes the bottleneck. Periodic re-training and monitoring
+for data drift are recommended to preserve detection quality.
+
+\subsection{Training process}
+
+The ML model training pipeline follows standard supervised learning methodology
+to ensure reproducible and robust detection performance:
+
+\subsubsection{Data preparation}
+
+Training data is collected from network flow records, each labeled as normal or
+belonging to an attack category. The raw features (byte counts, packet counts,
+port numbers, protocol types, HTTP status codes, etc.) are extracted from each
+flow record. Categorical features such as protocol name, service name, and
+connection state are encoded using one-hot encoding or ordinal encoding to make
+them suitable for tree-based models. Numeric features are normalized to zero
+mean and unit variance to improve convergence during training. Missing or
+anomalous values are imputed using sensible defaults (e.g. zero bytes, no
+service).
+
+\subsubsection{Class imbalance handling}
+
+Real-world intrusion datasets are often imbalanced: normal traffic vastly
+outnumbers attack traffic. To mitigate this, SMOTE (Synthetic Minority
+Over-sampling Technique) is applied on the training set only. SMOTE generates
+synthetic samples of the minority class (attacks) by interpolating between
+existing minority samples and their neighbours. This balancing is applied only
+to the training split to avoid data leakage into the test set.
+
+\subsubsection{Train-test split and cross-validation}
+
+The dataset is split into training (typically 70--80\%) and test (20--30\%)
+subsets using stratified random splitting to preserve class proportions. During
+hyperparameter tuning, stratified k-fold cross-validation (k=5) is used on the
+training set to select the best combination of hyperparameters for each model
+type (max depth, learning rate, number of estimators, etc.). The final model
+is retrained on the entire training set with the selected hyperparameters.
+
+\subsubsection{Model training and selection}
+
+Three candidate models are trained: Random Forest, XGBoost, and Isolation
+Forest. Each is evaluated on the held-out test set using Accuracy, Precision,
+Recall, and F1-score. The model with the highest F1-score is selected for
+production deployment and serialized using joblib into
+\texttt{backend/ml/best\_model.joblib}.
+
+The trained model bundle is re-used for all inference requests and is loaded
+once at application startup to minimize latency. Periodic retraining is
+recommended (weekly or monthly) when new labeled attack data becomes available,
+especially if data drift is detected through monitoring metrics on production
+traffic.
+
+\subsection{Models used and evaluation metrics}
+
+During development IDS-AI evaluated three primary detection approaches:
+Random Forest (supervised), XGBoost (supervised) and Isolation Forest
+(unsupervised anomaly detection). Models were compared using a held-out test
+split and F1-score drove the final model selection. SMOTE-based
+oversampling was applied on the training set to mitigate class imbalance when
+training supervised classifiers.
+
+Table~\ref{tab:ml-metrics} summarises the evaluation metrics observed on the
+test set for the comparative experiments used to choose the runtime model.
+
+\begin{table}[htbp]
+  \centering
+  \caption{ML models and test metrics (example evaluation)}
+  \label{tab:ml-metrics}
+  \begin{tabular}{lrrrr}
+    \toprule
+    \textbf{Model} & \textbf{Accuracy} & \textbf{Precision} & \textbf{Recall} & \textbf{F1} \\
+    \midrule
+    RandomForest & 0.9912 & 0.9934 & 0.9928 & 0.9931 \\
+    XGBoost      & 0.9905 & 0.9921 & 0.9919 & 0.9920 \\
+    IsolationForest & 0.7841 & 0.8102 & 0.7630 & 0.7859 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\subsection{Metric explanations}
+
+To interpret Table~\ref{tab:ml-metrics} correctly, the main classification
+metrics are defined as follows, where:
+\textit{TP} = true positives, \textit{TN} = true negatives,
+\textit{FP} = false positives, and \textit{FN} = false negatives.
+
+\begin{itemize}[leftmargin=1.5em]
+  \item \textbf{Accuracy:} proportion of correctly classified samples among all
+    samples.
+    \[
+      \mathrm{Accuracy} = \frac{TP + TN}{TP + TN + FP + FN}
+    \]
+  \item \textbf{Precision:} among events predicted as attacks, the fraction that
+    are truly attacks.
+    \[
+      \mathrm{Precision} = \frac{TP}{TP + FP}
+    \]
+  \item \textbf{Recall:} among real attacks, the fraction correctly detected.
+    \[
+      \mathrm{Recall} = \frac{TP}{TP + FN}
+    \]
+  \item \textbf{F1-score:} harmonic mean of Precision and Recall; useful when
+    classes are imbalanced.
+    \[
+      \mathrm{F1} = 2 \times \frac{\mathrm{Precision} \times \mathrm{Recall}}{\mathrm{Precision} + \mathrm{Recall}}
+    \]
+\end{itemize}
+
+In an intrusion detection context, high Recall is important to reduce missed
+attacks (low FN), while high Precision reduces alert fatigue caused by false
+alarms (low FP). The F1-score is therefore a practical selection metric
+because it balances both objectives.
+
+\subsection{Interpretation of the observed metric values}
+
+Based on the metric definitions above, the values in
+Table~\ref{tab:ml-metrics} can be interpreted as follows:
+
+\begin{itemize}[leftmargin=1.5em]
+  \item \textbf{RandomForest (F1 = 0.9931):} this model achieves an F1-score of
+    0.9931, combining Precision of 0.9934 and Recall of 0.9928. In practical
+    terms, Precision 0.9934 means that of all events predicted as attacks,
+    approximately 99.34\% are truly attacks, leaving only 0.66\% false alarms.
+    Recall 0.9928 means that approximately 99.28\% of real attacks are
+    correctly detected, missing only 0.72\%. The overall Accuracy of 0.9912
+    confirms strong global performance across all classes.
+  \item \textbf{XGBoost (F1 = 0.9920):} performance is very close to
+    RandomForest. Precision 0.9921 yields 0.79\% false alarms, while Recall
+    0.9919 captures 99.19\% of true attacks (missing 0.81\%). The F1-score of
+    0.9920 is only 0.0011 lower than RandomForest, making this model practically
+    equivalent for IDS use in this evaluation. Accuracy 0.9905 also demonstrates
+    strong overall classification ability.
+  \item \textbf{IsolationForest (F1 = 0.7859):} this unsupervised model achieves
+    lower performance. Precision 0.8102 produces 18.98\% false alarms, and Recall
+    0.7630 misses 23.70\% of real attacks. Although Accuracy 0.7841 is
+    acceptable for a baseline, the F1-score of 0.7859 shows significantly weaker
+    balance between minimizing false alerts and catching true attacks. This
+    reflects the inherent challenge of unsupervised anomaly detection on imbalanced
+    data.
+\end{itemize}
+
+From an operational IDS perspective, the RandomForest or XGBoost models are
+strongly preferred. Recall is usually prioritized when the cost of a missed
+attack is high (e.g. ransomware, data exfiltration), while Precision is
+prioritized when analyst capacity is limited and alert fatigue must be reduced.
+For RandomForest and XGBoost at recall $>$ 99.19\%, the system misses fewer
+than 1 in 100 real attacks, which is operationally acceptable for most
+environments. F1-score remains a useful compromise metric to select a model
+that is robust on both dimensions.
+
+These numbers are illustrative of the development experiments. The
+supervised models (RandomForest and XGBoost) achieved very high F1-scores on
+the curated test split; the unsupervised Isolation Forest performs worse on
+the same metrics but can detect novel anomaly patterns without labelled data.
+For production, we recommend continuous evaluation, monitoring for data
+drift, and re-training (or calibration) when metrics degrade.
+
+\section{LLM Stage}
+
+When the ML model identifies an anomaly, or when HTTP/S traffic requires
+additional review, IDS-AI invokes the local LLM through Ollama. The LLM is
+given sanitized raw log text, ML metadata, risk signals, and selected
+knowledge-base context. It returns a structured classification containing:
+
+\begin{itemize}[leftmargin=1.5em]
+  \item \texttt{classification}: Normal, Suspicious, or Malicious;
+  \item \texttt{attack\_type};
+  \item \texttt{severity};
+  \item evidence and knowledge-base matches;
+  \item explanation;
+  \item recommended action;
+  \item manual-review flag.
+\end{itemize}
+
+\subsection{How the LLM layer works (detail)}
+
+The LLM receives a tightly controlled prompt constructed from a sanitized
+raw log (or a fallback reconstruction), a compact ML summary (label,
+confidence, top features, risk signals) and short snippets from the
+knowledge-base. The prompt template enforces a JSON-only structured reply to
+make downstream parsing reliable. The backend enforces length limits and
+detects prompt-injection patterns; suspect inputs are redacted before being
+sent to the model.
+
+Key properties:
+\begin{itemize}[leftmargin=1.5em]
+  \item Contextual reasoning: the LLM provides human-readable explanations
+    and can correlate indicators that the ML layer misses.
+  \item Higher latency and resource use compared to ML — calls must be
+    guarded by timeouts and executed off the event loop.
+  \item Structured output: the LLM returns classification, evidence items,
+    suggested severity, and recommended mitigation steps.
+\end{itemize}
+
+\subsection{Safety and reliability}
+
+To limit misuse and instability the system:
+\begin{itemize}[leftmargin=1.5em]
+  \item sanitizes and truncates raw logs;
+  \item applies prompt-injection detection rules and redaction policies;
+  \item enforces an `ANALYSIS_TIMEOUT_SECONDS` for each LLM call and marks
+    long-running jobs as failed to avoid blocking the queue;
+  \item isolates LLM calls in threads or worker processes when necessary.
+\end{itemize}
+
+\section{Prompt Injection Protection}
+
+The backend sanitizes raw logs before sending them to the LLM. It truncates
+long input, removes control characters, decodes URL-encoded strings, and
+checks for prompt-injection patterns such as instructions to ignore previous
+rules, system-role markers, or requests to override the model's behaviour.
+If such a pattern is found, the raw log is redacted before LLM analysis.
+
+\section{Final Classification}
+
+The final output combines ML confidence and LLM confidence into a single
+result. Anomalies are saved as alerts, while all analyzed events are saved as
+traffic records when MongoDB is available.
+
+\section{Human-in-the-Loop Decision Layer}
+
+The final operational decision is not made automatically by the ML model or
+the LLM. Instead, IDS-AI follows a Human-in-the-Loop approach. After the ML
+layer predicts the traffic label and the LLM layer produces explanations,
+evidence, severity, and recommended action, the security analyst reviews the
+complete result in the dashboard.
+
+\subsection{How the Human-in-the-Loop works (detail)}
+
+The dashboard aggregates ML outputs, LLM explanations, and persisted traffic
+history for each analyzed event. An analyst inspects the combined context and
+can change alert workflow status (open, reviewing, resolved, false positive)
+via the UI. All analyst actions are recorded with timestamps to create an
+audit trail. The human reviewer is responsible for final operational
+decisions, which reduces the risk associated with automated false positives
+or LLM hallucinations.
+
+\subsection{UX and operational recommendations}
+
+Presenting clear, concise evidence helps analysts decide quickly. Recommended
+UX features include:
+\begin{itemize}[leftmargin=1.5em]
+  \item a live queue view showing waiting and processing jobs with progress
+    percentages and per-job spinners;
+  \item an action history log for each alert (who changed what and when);
+  \item one-click escalation workflows that attach relevant logs to tickets;
+  \item role-based access control so only authorized users can resolve alerts.
+\end{itemize}
+
+The human analyst can then decide whether the alert is a real incident, a
+false positive, or a case requiring further investigation. This is important
+because automated systems can misclassify ambiguous traffic, and LLM output
+may require human validation before response actions are taken. In IDS-AI,
+automation accelerates analysis, but the human analyst remains the final
+decision-maker.
+
+% ================================================================
+% CHAPTER 5
+% ================================================================
+\chapter{Database and Persistence}
+
+\section{MongoDB Collections}
+
+The persistence layer stores operational data in MongoDB. The main
+collections are:
+
+\begin{itemize}[leftmargin=1.5em]
+  \item \texttt{alerts}: IDS alerts generated when traffic is classified as
+    anomalous.
+  \item \texttt{network\_traffic}: analyzed traffic records and classification
+    summaries.
+\end{itemize}
+
+\section{Alert Workflow}
+
+Alerts include severity, classification, source and destination IP addresses,
+recommended actions, evidence, and workflow status. The dashboard allows an
+operator to update alert status using values such as \texttt{open},
+\texttt{reviewing}, \texttt{resolved}, and \texttt{false\_positive}.
+This workflow represents the Human-in-the-Loop layer: the system provides
+analysis, but the analyst decides how the alert should be handled.
+
+\section{Traffic Storage}
+
+Each completed analysis is stored as a traffic record. This allows the
+dashboard to display a history of analyzed events even after the live queue
+entry has completed. Live queue entries are displayed together with persisted
+traffic so the user can see both current and historical activity.
+
+% ================================================================
+% CHAPTER 6
+% ================================================================
+\chapter{Frontend Dashboard}
+
+\section{Dashboard Overview}
+
+The frontend is implemented as a React application in
+\texttt{frontend/src/App.jsx}. It provides a monitoring interface with system
+metrics, model status, storage status, alert tables, and traffic tables.
+Polling is used to keep the interface updated.
+
+\section{Traffic View}
+
+The Traffic view displays both live analysis jobs and persisted network
+traffic. Live jobs are shown with:
+
+\begin{itemize}[leftmargin=1.5em]
+  \item a row number starting from 1;
+  \item job state;
+  \item source and destination addresses;
+  \item protocol and byte counters;
+  \item current label or queue position;
+  \item severity when available;
+  \item numeric progress between 0\% and 100\%;
+  \item a circular cyan progress spinner;
+  \item a cancel button for jobs still waiting in the queue.
+\end{itemize}
+
+\screenshot{traffic_queue.png}{Traffic view with live queued attacks and percentage progress}
+
+\section{Human Analyst Review}
+
+The dashboard is also the interface for the Human-in-the-Loop layer. It
+centralizes ML predictions, LLM explanations, evidence, confidence, severity,
+and recommended actions so the analyst can make a final decision with all
+available context. The analyst can monitor live traffic, inspect completed
+results, and update alert status after review.
+
+\section{Alerts View}
+
+The Alerts view displays recent IDS alerts, including severity badges,
+classification, confidence, evidence, explanation, and recommended action.
+Security analysts can update the alert workflow status from the table.
+
+\screenshot{alerts_dashboard.png}{Alerts dashboard with severity and status controls}
+
+\section{System Health}
+
+The dashboard also displays health indicators for the ML model, LLM,
+MongoDB storage, analysis queue, active workers, and configured concurrency.
+This makes operational issues visible without opening backend logs.
+
+% ================================================================
+% CHAPTER 7
+% ================================================================
+\chapter{Testing and Evaluation}
+
+\section{Synthetic Attack Dataset}
+
+The project includes a generated synthetic intrusion dataset:
+\texttt{load\_tests/synthetic\_intrusion\_dataset\_450.json}. It contains 450
+events: 25 entries for each of 18 labels. The labels are:
+
+\begin{center}
+\begin{tabular}{llll}
+\toprule
+normal & backdoor & ddos & dos \\
+injection & portscan & nmap & ipsweep \\
+ftp\_write & guess\_passwd & buffer\_overflow & neptune \\
+smurf & teardrop & bruteforce & xss \\
+sql\_injection & botnet & & \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Each record follows the same JSON schema as the backend \texttt{LogEvent}
+model. Normal records use benign user IP addresses from
+\texttt{192.168.1.0/24}, while attack records use source addresses from
+\texttt{198.51.100.0/24}. Target hosts use \texttt{10.0.0.0/24}.
+
+\section{Queue Load Test}
+
+The file \texttt{load\_tests/run\_attack\_queue\_test.py} generates and
+submits 100 attack events to the queue endpoint. The script writes
+\texttt{attack\_requests\_100.json}, sends each entry to
+\texttt{/api/analysis/jobs}, then polls the queue status.
+
+\begin{lstlisting}[style=bashstyle, caption={Running the queue load test}]
+python3 load_tests/run_attack_queue_test.py \
+  --api-base http://127.0.0.1:8001 \
+  --wait-seconds 60
+\end{lstlisting}
+
+\section{Observed Test Result}
+
+During testing, all 100 generated attacks were accepted by the backend queue.
+With \texttt{ANALYSIS\_CONCURRENCY=1} and LLM analysis enabled, jobs were
+processed one at a time. The queue status after the observation window was:
+
+\begin{table}[htbp]
+  \centering
+  \caption{Queue load test result}
+  \label{tab:queue-result}
+  \begin{tabular}{lr}
+    \toprule
+    \textbf{Status} & \textbf{Count} \\
+    \midrule
+    Completed & 3 \\
+    Processing & 1 \\
+    Waiting & 96 \\
+    Failed & 0 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+This result confirms that the backend accepts burst traffic without dropping
+requests and keeps them visible to the frontend. The slow completion rate is
+expected because only one worker was configured and several attack samples
+triggered LLM classification.
+
+\section{Build Verification}
+
+The following commands were used to verify the modified project:
+
+\begin{lstlisting}[style=bashstyle, caption={Verification commands}]
+python3 -m py_compile backend/main.py backend/router/analyse.py backend/schemas/schemas.py
+npm run build
+\end{lstlisting}
+
+The React production build completed successfully, and the FastAPI application
+started correctly on the test port \texttt{8001}.
+
+% ================================================================
+% CHAPTER 8
+% ================================================================
+\chapter{Security Considerations}
+
+\section{Local LLM Deployment}
+
+Using Ollama keeps LLM processing local, which avoids sending sensitive raw
+network logs to external cloud services. This is important because intrusion
+logs may contain IP addresses, internal paths, request bodies, or other
+security-sensitive metadata.
+
+\section{Input Sanitization}
+
+Raw logs are treated as untrusted data. The backend truncates and sanitizes
+raw input before it is used in an LLM prompt. Prompt-injection detection
+reduces the risk of malicious traffic logs manipulating the LLM.
+
+\section{Queue Protection}
+
+The queue has a configurable maximum size. If the queue is full, the backend
+returns HTTP 429 instead of accepting unlimited work. This avoids uncontrolled
+memory growth under extreme load.
+
+\section{Operational Limitations}
+
+The in-memory queue is suitable for a single-process deployment and project
+demonstration. For production use, a durable external queue such as Redis,
+RabbitMQ, or Kafka would be recommended so jobs survive process restarts and
+can be distributed across multiple workers or machines.
+
+% ================================================================
+% CHAPTER 9
+% ================================================================
+\chapter{Conclusion}
+
+IDS-AI demonstrates a practical three-layer approach to intrusion detection.
+The machine learning model provides fast classification from structured
+network features, the LLM adds interpretability, evidence, and recommended
+actions for suspicious or malicious events, and the Human-in-the-Loop layer
+keeps the final decision under analyst control. The FastAPI backend, MongoDB
+persistence layer, and React dashboard work together to provide both analysis
+and operational visibility.
+
+The most important architectural improvement is the asynchronous job queue.
+Instead of blocking the whole system when many requests arrive, the backend
+stores each analysis request as a job, assigns it a status, and processes it
+according to a configurable concurrency limit. The frontend then displays live
+traffic progress, making waiting and processing requests visible to the user.
+
+Future improvements could include a durable distributed queue, WebSocket or
+Server-Sent Events for lower-latency updates, richer model metrics, role-based
+dashboard access, and automated report export for incident response.
+
+% ================================================================
+% APPENDIX
+% ================================================================
+\appendix
+
+\chapter{Environment Variables}
+
+\begin{lstlisting}[style=bashstyle, caption={Recommended backend environment variables}]
+LLM_PROVIDER=ollama
+LLM_MODEL_NAME=phi3
+OLLAMA_BASE_URL=http://localhost:11434
+LLM_ENABLED=true
+MONGO_ENABLED=true
+MONGO_URI=mongodb://localhost:27017/ids_ai
+DATABASE_NAME=ids_ai
+ANALYSIS_QUEUE_MAXSIZE=1000
+ANALYSIS_CONCURRENCY=1
+ANALYSIS_TIMEOUT_SECONDS=180
+ANALYSIS_HISTORY_LIMIT=500
+\end{lstlisting}
+
+\chapter{Example API Response}
+
+\begin{lstlisting}[style=jsonstyle, caption={Example completed analysis result}]
+{
+  "status": "completed",
+  "progress": 100,
+  "result": {
+    "ml_label": "injection",
+    "ml_confidence": 0.4885,
+    "ml_model": "XGBoost",
+    "is_anomaly": true,
+    "classification": "Malicious",
+    "llm_attack_type": "SQL Injection",
+    "llm_severity": "critical",
+    "final_confidence": 0.63,
+    "severity": "high",
+    "recommended_action": "Block source IP and investigate web logs."
+  }
+}
+\end{lstlisting}
+
+\end{document}
