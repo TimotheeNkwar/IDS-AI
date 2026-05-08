@@ -3,10 +3,13 @@ import './App.css';
 
 const API_BASE = process.env.REACT_APP_API_BASE || '';
 const REFRESH_MS = 15000;
+const QUEUE_REFRESH_MS = 2000;
 
 function App() {
   const [alerts, setAlerts] = useState([]);
   const [traffic, setTraffic] = useState([]);
+  const [analysisJobs, setAnalysisJobs] = useState([]);
+  const [cancellingJobId, setCancellingJobId] = useState('');
   const [health, setHealth] = useState(null);
   const [activeView, setActiveView] = useState('alerts');
   const [severityFilter, setSeverityFilter] = useState('all');
@@ -45,11 +48,34 @@ function App() {
     }
   }, []);
 
+  const loadAnalysisJobs = useCallback(async () => {
+    try {
+      const response = await fetch(`${API_BASE}/api/analysis/jobs?limit=500`);
+      if (!response.ok) {
+        throw new Error('Queue load failed');
+      }
+      const data = await response.json();
+      setAnalysisJobs(Array.isArray(data) ? data.reverse() : []);
+    } catch {
+      setError('Analysis queue unavailable');
+    }
+  }, []);
+
   useEffect(() => {
     loadDashboard();
     const timer = setInterval(loadDashboard, REFRESH_MS);
     return () => clearInterval(timer);
   }, [loadDashboard]);
+
+  useEffect(() => {
+    loadAnalysisJobs();
+  }, [loadAnalysisJobs]);
+
+  useEffect(() => {
+    const hasActiveJobs = analysisJobs.some((job) => ['waiting', 'processing'].includes(job.status));
+    const timer = setInterval(loadAnalysisJobs, hasActiveJobs ? QUEUE_REFRESH_MS : REFRESH_MS);
+    return () => clearInterval(timer);
+  }, [analysisJobs, loadAnalysisJobs]);
 
   const counts = useMemo(() => {
     return alerts.reduce(
@@ -95,6 +121,17 @@ function App() {
       .slice(0, 5);
   }, [alerts]);
 
+  const queueCounts = useMemo(() => {
+    return analysisJobs.reduce(
+      (acc, job) => {
+        acc.total += 1;
+        acc[job.status] = (acc[job.status] || 0) + 1;
+        return acc;
+      },
+      { total: 0, waiting: 0, processing: 0, completed: 0, failed: 0, cancelled: 0 }
+    );
+  }, [analysisJobs]);
+
   async function updateAlertStatus(alertId, status) {
     setSavingAlertId(alertId);
     try {
@@ -111,6 +148,23 @@ function App() {
       setError('Unable to update alert status');
     } finally {
       setSavingAlertId('');
+    }
+  }
+
+  async function cancelAnalysis(jobId) {
+    setCancellingJobId(jobId);
+    try {
+      const response = await fetch(`${API_BASE}/api/analysis/jobs/${jobId}`, {
+        method: 'DELETE',
+      });
+      if (!response.ok) {
+        throw new Error('Cancel failed');
+      }
+      await loadAnalysisJobs();
+    } catch {
+      setError('Unable to cancel analysis');
+    } finally {
+      setCancellingJobId('');
     }
   }
 
@@ -134,7 +188,7 @@ function App() {
       <section className="metric-grid" aria-label="Alert metrics">
         <Metric label="Total alerts" value={counts.total} />
         <Metric label="High severity" value={counts.high} tone="danger" />
-        <Metric label="Open" value={counts.open} tone="warning" />
+        <Metric label="Queue active" value={queueCounts.waiting + queueCounts.processing} tone="warning" />
         <Metric label="Traffic events" value={traffic.length} tone="neutral" />
       </section>
 
@@ -146,6 +200,8 @@ function App() {
             <SystemItem label="LLM" value={`${health?.llm_provider || 'unknown'} / ${health?.llm_model || 'unknown'}`} state={health?.llm_loaded} />
             <SystemItem label="Alert storage" value={health?.alert_storage_connected ? 'Connected' : 'Unavailable'} state={health?.alert_storage_connected} />
             <SystemItem label="Traffic storage" value={health?.traffic_storage_connected ? 'Connected' : 'Unavailable'} state={health?.traffic_storage_connected} />
+            <SystemItem label="Queue" value={`${health?.analysis_active_count || 0} active / ${health?.analysis_queue_size || 0} waiting`} state={health?.analysis_worker_running} />
+            <SystemItem label="Concurrency" value={`${health?.analysis_concurrency || 1} worker(s)`} state={health?.analysis_worker_running} />
           </div>
         </div>
 
@@ -205,10 +261,25 @@ function App() {
         {activeView === 'alerts' ? (
           <AlertsTable alerts={filteredAlerts} savingAlertId={savingAlertId} onStatusChange={updateAlertStatus} />
         ) : (
-          <TrafficTable traffic={traffic} />
+          <TrafficTable
+            traffic={traffic}
+            jobs={analysisJobs}
+            cancellingJobId={cancellingJobId}
+            onCancel={cancelAnalysis}
+            counts={queueCounts}
+          />
         )}
       </section>
     </main>
+  );
+}
+
+function QueueSummaryItem({ label, value }) {
+  return (
+    <div>
+      <span>{label}</span>
+      <strong>{value}</strong>
+    </div>
   );
 }
 
@@ -299,45 +370,132 @@ function AlertsTable({ alerts, savingAlertId, onStatusChange }) {
   );
 }
 
-function TrafficTable({ traffic }) {
-  if (traffic.length === 0) {
+function TrafficTable({ traffic, jobs, cancellingJobId, onCancel, counts }) {
+  if (traffic.length === 0 && jobs.length === 0) {
     return <EmptyState text="No analyzed traffic has been persisted yet." />;
   }
 
   return (
-    <div className="table-wrap">
-      <table>
-        <thead>
-          <tr>
-            <th>Time</th>
-            <th>Source</th>
-            <th>Destination</th>
-            <th>Protocol</th>
-            <th>Bytes</th>
-            <th>Duration</th>
-            <th>Label</th>
-            <th>Severity</th>
-          </tr>
-        </thead>
-        <tbody>
-          {traffic.map((record) => (
-            <tr key={record.id}>
-              <td>{formatDate(record.timestamp)}</td>
-              <td>{record.source_ip || '-'}</td>
-              <td>{record.destination_ip || '-'}</td>
-              <td>{record.protocol || '-'}</td>
-              <td>{record.packet_size ?? '-'}</td>
-              <td>{typeof record.duration === 'number' ? `${record.duration}s` : '-'}</td>
-              <td>{record.label || '-'}</td>
-              <td>
-                <span className={`severity-badge ${record.severity || 'low'}`}>{record.severity || 'low'}</span>
-              </td>
+    <div className="traffic-stack">
+      <div className="queue-summary compact" aria-label="Live traffic summary">
+        <QueueSummaryItem label="Waiting" value={counts.waiting} />
+        <QueueSummaryItem label="Processing" value={counts.processing} />
+        <QueueSummaryItem label="Completed" value={counts.completed} />
+        <QueueSummaryItem label="Failed" value={counts.failed} />
+      </div>
+
+      <div className="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>State</th>
+              <th>No.</th>
+              <th>Time</th>
+              <th>Source</th>
+              <th>Destination</th>
+              <th>Protocol</th>
+              <th>Bytes</th>
+              <th>Duration</th>
+              <th>Label</th>
+              <th>Severity</th>
+              <th>Progress</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {jobs.map((job, index) => (
+              <TrafficJobRow
+                key={job.id}
+                job={job}
+                rowNumber={index + 1}
+                cancelling={cancellingJobId === job.id}
+                onCancel={onCancel}
+              />
+            ))}
+            {traffic.map((record, index) => (
+              <tr key={record.id}>
+                <td>
+                  <span className="traffic-state done">Stored</span>
+                </td>
+                <td>{jobs.length + index + 1}</td>
+                <td>{formatDate(record.timestamp)}</td>
+                <td>{record.source_ip || '-'}</td>
+                <td>{record.destination_ip || '-'}</td>
+                <td>{record.protocol || '-'}</td>
+                <td>{record.packet_size ?? '-'}</td>
+                <td>{typeof record.duration === 'number' ? `${record.duration}s` : '-'}</td>
+                <td>{record.label || '-'}</td>
+                <td>
+                  <span className={`severity-badge ${record.severity || 'low'}`}>{record.severity || 'low'}</span>
+                </td>
+                <td>
+                  <div className="progress-track table-progress" aria-label="Progress 100%">
+                    <span style={{ width: '100%' }} />
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
+}
+
+function TrafficJobRow({ job, rowNumber, cancelling, onCancel }) {
+  const active = ['waiting', 'processing'].includes(job.status);
+  const result = job.result;
+  const event = job.event || {};
+  const progress = clampPercent(job.progress);
+
+  return (
+    <tr className={`live-traffic-row ${job.status}`}>
+      <td>
+        <span className={`traffic-state ${job.status}`}>
+          {active ? <PercentSpinner value={progress} /> : null}
+          {job.status}
+        </span>
+      </td>
+      <td>{rowNumber}</td>
+      <td>{formatDate(job.submitted_at)}</td>
+      <td>{event.src_ip || '-'}</td>
+      <td>{event.dst_ip || '-'}</td>
+      <td>{event.proto || '-'}</td>
+      <td>{event.src_bytes || event.dst_bytes ? `${event.src_bytes}/${event.dst_bytes}` : '-'}</td>
+      <td>{typeof event.duration === 'number' ? `${event.duration}s` : '-'}</td>
+      <td>{result?.ml_label || (job.queue_position ? `Queue #${job.queue_position}` : job.status)}</td>
+      <td>
+        <span className={`severity-badge ${result?.severity || 'low'}`}>{result?.severity || '-'}</span>
+      </td>
+      <td>
+        <div className="traffic-progress-cell">
+          <div className="progress-track table-progress" aria-label={`Progress ${progress}%`}>
+            <span style={{ width: `${progress}%` }} />
+          </div>
+          <span>{progress}%</span>
+          {job.status === 'waiting' ? (
+            <button className="inline-button compact-button" type="button" disabled={cancelling} onClick={() => onCancel(job.id)}>
+              {cancelling ? '...' : 'Cancel'}
+            </button>
+          ) : null}
+        </div>
+        {job.error ? <div className="job-error">{job.error}</div> : null}
+      </td>
+    </tr>
+  );
+}
+
+function PercentSpinner({ value }) {
+  const percent = clampPercent(value);
+  return (
+    <span className="percent-spinner" style={{ '--progress': `${percent * 3.6}deg` }} aria-label={`${percent}%`}>
+      {percent}%
+    </span>
+  );
+}
+
+function clampPercent(value) {
+  const percent = Math.round(Number(value) || 0);
+  return Math.max(0, Math.min(100, percent));
 }
 
 function EmptyState({ text }) {

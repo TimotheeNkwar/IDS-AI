@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 
 from pydantic import BaseModel, Field
-from typing import Any
+from typing import Any, Literal
 
 
 class LogEvent(BaseModel):
@@ -67,6 +67,32 @@ class AnalysisResult(BaseModel):
     dst_ip: str
     proto: str
     service: str
+
+
+AnalysisJobState = Literal["waiting", "processing", "completed", "failed", "cancelled"]
+
+
+class AnalysisJobCreateResponse(BaseModel):
+    id: str
+    status: AnalysisJobState
+    queue_position: int | None = None
+    progress: int = Field(default=0, ge=0, le=100)
+    submitted_at: datetime
+
+
+class AnalysisJobStatus(BaseModel):
+    id: str
+    status: AnalysisJobState
+    progress: int = Field(default=0, ge=0, le=100)
+    queue_position: int | None = None
+    submitted_at: datetime
+    started_at: datetime | None = None
+    completed_at: datetime | None = None
+    updated_at: datetime
+    timeout_seconds: int | None = None
+    error: str | None = None
+    event: LogEvent
+    result: AnalysisResult | None = None
 
 
 class AlertStatusUpdate(BaseModel):
