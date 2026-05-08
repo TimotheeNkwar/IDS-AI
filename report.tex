@@ -454,6 +454,75 @@ _ANALYSIS_TIMEOUT_SECONDS = max(1, int(os.getenv("ANALYSIS_TIMEOUT_SECONDS", "18
 _ANALYSIS_HISTORY_LIMIT = max(10, int(os.getenv("ANALYSIS_HISTORY_LIMIT", "500")))
 \end{lstlisting}
 
+\subsection{Queue Flow and System Workflow}
+
+The queue system follows a standard asynchronous request-response pattern
+optimized for high-throughput analysis:
+
+\subsubsection{Request submission phase}
+
+When a client submits a network event for analysis via \texttt{POST /api/analysis/jobs},
+the backend immediately creates a new \texttt{AnalysisJobStatus} object with:
+\begin{itemize}[leftmargin=1.5em]
+  \item Unique job ID (UUID hex).
+  \item Status: \texttt{waiting}.
+  \item Progress: 0\%.
+  \item Timestamps: submitted\_at (current time).
+  \item Original event: stored in the job for later processing.
+\end{itemize}
+
+The job is added to the in-memory queue and stored in a registry. The API
+immediately returns a 202 Accepted response with the job ID and queue position,
+allowing the client to poll for results without blocking.
+
+\subsubsection{Queue processing and worker lifecycle}
+
+A background worker task continuously monitors the queue:
+\begin{enumerate}[leftmargin=1.5em]
+  \item Worker reads job IDs from the queue FIFO.
+  \item For each job, worker updates status to \texttt{processing} and starts\_at
+    timestamp.
+  \item Worker respects the concurrency limit: if $n$ jobs are already processing,
+    the worker waits before taking the next job.
+  \item Each analysis is wrapped in \texttt{asyncio.wait\_for} with
+    \texttt{ANALYSIS\_TIMEOUT\_SECONDS}. If analysis exceeds the timeout,
+    the job is marked \texttt{failed}.
+\end{enumerate}
+
+\subsubsection{Analysis execution}
+
+During processing, the ML detector and LLM modules are invoked off the event loop
+using \texttt{asyncio.to\_thread}. This ensures blocking calls (model inference,
+LLM prompts) do not freeze the FastAPI event loop. All exceptions are caught and
+stored in the job error field instead of crashing the worker.
+
+\subsubsection{Result storage and completion}
+
+Upon successful analysis, the job is updated with:
+\begin{itemize}[leftmargin=1.5em]
+  \item Status: \texttt{completed}.
+  \item Result: full \texttt{AnalysisResult} object.
+  \item Progress: 100\%.
+  \item Completed\_at: timestamp.
+\end{itemize}
+
+Anomalies are saved to MongoDB \texttt{alerts} collection, and all events are
+saved to \texttt{network\_traffic} collection for audit and historical analysis.
+
+\subsubsection{Client polling and result retrieval}
+
+Clients poll \texttt{GET /api/analysis/jobs/\{job\_id\}} to check job status.
+Responses include current progress (0--100\%), queue position (if waiting),
+and the full result when completed. The frontend uses these responses to display
+real-time progress bars and spinner animations.
+
+\subsubsection{History trimming}
+
+The queue maintains a rolling history (default: last 500 jobs). When the limit
+is reached, oldest completed, failed, or cancelled jobs are removed to prevent
+unbounded memory growth. Jobs are retained in order (FIFO cleanup) so recent
+events are always visible.
+
 \section{Queue Endpoints}
 
 \begin{table}[htbp]

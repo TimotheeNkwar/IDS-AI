@@ -14,7 +14,7 @@ from typing import Any
 
 ROOT = Path(__file__).resolve().parent
 DEFAULT_ATTACKS_FILE = ROOT / "attack_requests_100.json"
-DEFAULT_API_BASE = "http://127.0.0.1:8001"
+DEFAULT_API_BASE = "http://10.30.199.223:8000"
 
 
 ATTACK_TEMPLATES = [
