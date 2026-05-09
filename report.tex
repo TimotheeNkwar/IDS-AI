@@ -790,6 +790,41 @@ the same metrics but can detect novel anomaly patterns without labelled data.
 For production, we recommend continuous evaluation, monitoring for data
 drift, and re-training (or calibration) when metrics degrade.
 
+\subsection{Example ML Output}
+
+The following example illustrates the runtime output returned by the ML layer
+for a suspicious HTTP event. The values are representative of the backend
+schema and show how the model result is interpreted by the rest of the
+pipeline.
+
+\begin{lstlisting}[style=jsonstyle, caption={Example ML layer output}]
+{
+  "ml_label": "injection",
+  "ml_confidence": 0.987,
+  "ml_model": "XGBoost",
+  "is_anomaly": true,
+  "attack_type": "sql_injection",
+  "risk_signals": [
+    {"name": "suspicious_http_body", "score": 0.91},
+    {"name": "abnormal_request_size", "score": 0.84}
+  ],
+  "top_features": [
+    {"feature": "http_request_body_len", "importance": 0.32},
+    {"feature": "src_bytes", "importance": 0.21},
+    {"feature": "dst_bytes", "importance": 0.17}
+  ]
+}
+\end{lstlisting}
+
+In this output, \texttt{ml\_label} is the class predicted by the model,
+\texttt{ml\_confidence} expresses how sure the model is about that
+prediction, and \texttt{is\_anomaly} indicates whether the event should be
+treated as suspicious. The \texttt{attack\_type} field gives the predicted
+attack family, while \texttt{risk\_signals} and \texttt{top\_features}
+explain which patterns pushed the model toward that decision. Together, these
+fields give the analyst a fast first-line verdict and a short technical
+explanation of why the event was flagged.
+
 \section{LLM Stage}
 
 When the ML model identifies an anomaly, or when HTTP/S traffic requires
@@ -816,6 +851,42 @@ knowledge-base. The prompt template enforces a JSON-only structured reply to
 make downstream parsing reliable. The backend enforces length limits and
 detects prompt-injection patterns; suspect inputs are redacted before being
 sent to the model.
+
+\subsection{Example LLM Output}
+
+The LLM output extends the ML verdict with a human-readable security
+assessment. It is especially useful when the model suspects malicious
+behaviour and the analyst needs a concise explanation of the incident.
+
+\begin{lstlisting}[style=jsonstyle, caption={Example LLM layer output}]
+{
+  "classification": "Malicious",
+  "attack_type": "sql_injection",
+  "severity": "high",
+  "llm_confidence": 0.964,
+  "evidence": [
+    "UNION SELECT pattern detected",
+    "Suspicious HTTP payload and body length"
+  ],
+  "knowledge_matches": [
+    "SQL injection often targets HTTP parameters and form fields"
+  ],
+  "explanation": "The request contains a SQL injection payload and matches known attack behaviour.",
+  "recommended_action": "Block the source IP, alert the analyst, and inspect related sessions.",
+  "needs_manual_review": true,
+  "llm_available": true
+}
+\end{lstlisting}
+
+In this output, \texttt{classification} is the final natural-language verdict
+returned by the LLM, \texttt{severity} summarizes the operational risk, and
+\texttt{llm\_confidence} gives the LLM's own confidence estimate. The
+\texttt{evidence} and \texttt{knowledge\_matches} fields justify the verdict
+with observed indicators and knowledge-base matches, while
+\texttt{explanation} and \texttt{recommended\_action} translate the
+technical analysis into an actionable message for the security analyst. The
+\texttt{needs\_manual\_review} flag makes it explicit when the case should be
+reviewed before any response is taken.
 
 Key properties:
 \begin{itemize}[leftmargin=1.5em]
