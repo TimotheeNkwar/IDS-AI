@@ -27,7 +27,8 @@ from dotenv import load_dotenv
 #     _save_traffic,
 # )
 from router.analyse import analyse_router, start_analysis_worker, stop_analysis_worker
-from router.user import router as user_router
+from router.users import router as user_router
+from router.websockets_router import socket_router
 
 sys.path.append(str(Path(__file__).resolve().parents[1]))
 
@@ -39,7 +40,6 @@ from ml import model as llm_module
 
 
 import database
-from database import config as db_config
 
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s  %(levelname)s  %(message)s"
@@ -91,6 +91,7 @@ app.add_middleware(
 
 app.include_router(analyse_router, prefix="/api", tags=["analysis"])
 app.include_router(user_router, prefix="/api/users", tags=["users"])
+app.include_router(socket_router, prefix="/api", tags=["websockets"])
 
 
 # ── Request / Response models ──────────────────────────────────────────────────

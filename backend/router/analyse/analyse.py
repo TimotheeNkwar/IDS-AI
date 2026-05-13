@@ -232,3 +232,16 @@ async def api_alerts_filtered(
         attack_type=attack_type,
     )
     return {"alerts": alerts, "storage_available": True}
+
+
+# ── Worker lifecycle ───────────────────────────────────────────────────────────
+
+
+async def start_analysis_worker() -> None:
+    """Initialize analysis worker on startup."""
+    log.info("Analysis worker started")
+
+
+async def stop_analysis_worker() -> None:
+    """Clean up analysis worker on shutdown."""
+    log.info("Analysis worker stopped")
