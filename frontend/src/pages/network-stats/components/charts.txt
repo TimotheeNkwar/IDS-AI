@@ -1,0 +1,37 @@
+ttacks_by_type      → Bar Chart horizontal  (comparaison de catégories)
+attacks_by_severity  → Pie / Donut Chart     (distribution high/medium/low)
+attacks_by_status    → Pie / Donut Chart     (open/closed/investigating)
+alerts_over_time     → Area / Line Chart     (time series)
+top_attacker_ips     → Bar Chart horizontal  (top 10 ranking)
+
+
+/stats/traffic
+traffic_by_protocol  → Pie / Donut Chart     (TCP/UDP/ICMP distribution)
+traffic_by_service   → Bar Chart horizontal  (HTTP/SSH/FTP...)
+traffic_over_time    → Area Chart            (time series, volume)
+top_talker_ips       → Bar Chart horizontal  (top 10 ranking)
+
+
+/stats/traffic/summary
+normal vs anomalies  → Donut Chart           (proportion normal/suspect/malicious)
+total over period    → Stat Card             (juste un chiffre affiché)
+period_hours         → Stat Card             (24h / 48h...)
+
+┌──────────┬──────────┬──────────┐
+│  Total   │ Normaux  │Anomalies │  ← useTrafficSummary
+└──────────┴──────────┴──────────┘
+
+┌─────────────────┬──────────────┐
+│ attacks_by_type │  severity    │  ← useStats
+│  (Bar horiz)    │  (Donut)     │
+└─────────────────┴──────────────┘
+
+┌──────────────────────────────────┐
+│        alerts_over_time          │  ← useStats (pleine largeur)
+│          (Area Chart)            │
+└──────────────────────────────────┘
+
+┌─────────────────┬──────────────┐
+│ Normal/Susp/Mal │  protocol    │  ← useTrafficSummary + useStats
+│    (Donut)      │  (Donut)     │
+└─────────────────┴──────────────┘

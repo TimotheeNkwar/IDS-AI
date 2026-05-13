@@ -1,14 +1,18 @@
-# ── Helper ─────────────────────────────────────────────────────────────────────
-from cmath import log
-from datetime import datetime, timezone
+"""Helper functions for the IDS-AI pipeline."""
+
+from __future__ import annotations
+
 import logging
+from datetime import datetime, timezone
 from typing import Any
-import database
-from database import alerts as alert_repo, traffic as traffic_repo
+
+from database import alerts as alert_repo, traffic as traffic_repo, traffic_stats_col
 from schemas.schemas import AnalysisResult, LogEvent
-    
 
 log = logging.getLogger(__name__)
+
+
+# ── Severity ───────────────────────────────────────────────────────────────────
 
 
 def _severity(is_anomaly: bool, classification: str, ml_conf: float) -> str:
@@ -21,15 +25,7 @@ def _severity(is_anomaly: bool, classification: str, ml_conf: float) -> str:
     return "low"
 
 
-def _build_raw_log(event: LogEvent) -> str:
-    """Construct a human-readable log string for the LLM."""
-    return (
-        f"src={event.src_ip}:{event.src_port} dst={event.dst_ip}:{event.dst_port} "
-        f"proto={event.proto} service={event.service} conn_state={event.conn_state} "
-        f"duration={event.duration}s src_bytes={event.src_bytes} dst_bytes={event.dst_bytes} "
-        f"missed={event.missed_bytes} src_pkts={event.src_pkts} dst_pkts={event.dst_pkts} "
-        f"http_status={event.http_status_code}"
-    )
+# ── Confidence ─────────────────────────────────────────────────────────────────
 
 
 def _final_confidence(
@@ -40,12 +36,33 @@ def _final_confidence(
     return round((0.7 * ml_confidence) + (0.3 * llm_confidence), 2)
 
 
-async def _save_alert(result: AnalysisResult) -> None:
-    log.warning(
-        "🔍 _save_alert — alerts_col=%s, is_available=%s",
-        database.alerts_col,
-        alert_repo.is_available(),
+# ── Raw log builder ────────────────────────────────────────────────────────────
+
+
+def _build_raw_log(event: LogEvent) -> str:
+    return (
+        f"src={event.src_ip}:{event.src_port} dst={event.dst_ip}:{event.dst_port} "
+        f"protocol={event.protocol} service={event.service} conn_state={event.conn_state} "
+        f"duration={event.duration}s src_bytes={event.src_bytes} dst_bytes={event.dst_bytes} "
+        f"missed={event.missed_bytes} src_pkts={event.src_pkts} dst_pkts={event.dst_pkts} "
+        f"http_status={event.http_status_code}"
     )
+
+
+# ── LLM force check ────────────────────────────────────────────────────────────
+
+
+def _should_force_llm(event: LogEvent) -> bool:
+    is_web = event.service in {"http", "ssl"} or event.dst_port in {80, 443, 8080, 8443}
+    has_body = event.http_request_body_len > 0 or event.src_bytes > 100
+    status_ok = event.http_status_code == 200
+    return is_web and has_body and status_ok
+
+
+# ── Persistence ────────────────────────────────────────────────────────────────
+
+
+async def _save_alert(result: AnalysisResult) -> None:
     await alert_repo.create_alert(
         {
             "type": result.attack_type or result.ml_label,
@@ -78,7 +95,8 @@ async def _save_traffic(
         {
             "source_ip": event.src_ip,
             "destination_ip": event.dst_ip,
-            "protocol": event.proto,
+            "protocol": event.protocol,
+            "service": event.service,
             "packet_size": event.src_bytes + event.dst_bytes,
             "duration": event.duration,
             "label": result.ml_label,
@@ -89,23 +107,34 @@ async def _save_traffic(
             "top_features": result.top_features,
             "knowledge_matches": result.knowledge_matches,
             "raw_event": raw_event,
+            # ── Nouveaux ──────────────────────────────────
+            "explanation": result.explanation,
+            "evidence": result.evidence,
+            "recommended_action": result.recommended_action,
+            "classification": result.classification,
+            "needs_review": result.needs_manual_review,
+            "ml_model": result.ml_model,
+            "llm_severity": result.llm_severity,
+            "llm_confidence": result.llm_confidence,
+            "final_confidence": result.final_confidence,
+            "attack_type": result.attack_type or result.llm_attack_type,
         }
     )
 
 
-# Dans helpers/helper.py
-def _should_force_llm(event: LogEvent) -> bool:
-    """
-    Force LLM analysis even if ML says normal, when:
-    - It's HTTP/HTTPS traffic (layer 7 — payload matters)
-    - AND http_status is 200 (request succeeded — payload was processed)
-    - AND there's a non-trivial request body
-    """
-    is_web = event.service in {"http", "ssl"} or event.dst_port in {80, 443, 8080, 8443}
-    has_body = event.http_request_body_len > 0 or event.src_bytes > 100
-    status_ok = event.http_status_code == 200
+async def _save_traffic_stats(event: LogEvent) -> None:
 
-    return is_web and has_body and status_ok
+    if not traffic_repo.is_stats_available():
+        return
 
+    now = datetime.now(timezone.utc)
+    window = now.replace(second=0, microsecond=0, minute=(now.minute // 5) * 5)
 
-# User
+    await traffic_repo.upsert_stats(
+        window=window,
+        protocol=event.protocol,
+        service=event.service,
+        src_ip=event.src_ip,
+        src_bytes=event.src_bytes,
+        dst_bytes=event.dst_bytes,
+    )
