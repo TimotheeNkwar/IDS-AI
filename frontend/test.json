@@ -1,0 +1,38 @@
+{
+	"alert": {
+		"src_ip": "127.0.0.1",
+		"dst_ip": "151.101.1.69",
+		"classification": "Suspicious",
+		"severity": "medium",
+		"attack_type": "mitm",
+		"confidence": 0.48,
+		"explanation": "LLM analysis unavailable. The ML model flagged this traffic as anomalous. Manual review is recommended.",
+		"recommended_action": "Review the event manually and correlate with source IP history.",
+		"needs_review": true,
+		"ml_label": "mitm",
+		"ml_confidence": 0.4824,
+		"ml_model": "XGBoost",
+		"llm_severity": "medium",
+		"llm_confidence": 0.5,
+		"risk_signals": [
+			{
+				"name": "amplification_ratio",
+				"severity": "critical",
+				"evidence": "destination bytes exceed source bytes by more than 50x"
+			}
+		],
+		"top_features": [
+			{ "name": "proto_enc", "importance": 0.3258, "value": -1.0 },
+			{ "name": "conn_state_enc", "importance": 0.1022, "value": 10.0 },
+			{ "name": "service_enc", "importance": 0.1014, "value": 8.0 },
+			{ "name": "src_bytes", "importance": 0.0751, "value": 2231.0 },
+			{ "name": "dst_port", "importance": 0.0718, "value": 443.0 }
+		],
+		"evidence": [
+			"destination bytes exceed source bytes by more than 50x"
+		],
+		"knowledge_matches": [],
+		"protocol": "tcp",
+		"service": "ssl"
+	}
+}

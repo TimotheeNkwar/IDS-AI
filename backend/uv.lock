@@ -97,6 +97,7 @@ dependencies = [
     { name = "requests" },
     { name = "scikit-learn" },
     { name = "uvicorn", extra = ["standard"] },
+    { name = "websockets" },
     { name = "xgboost" },
 ]
 
@@ -119,6 +120,7 @@ requires-dist = [
     { name = "requests", specifier = "==2.31.0" },
     { name = "scikit-learn", specifier = "==1.4.2" },
     { name = "uvicorn", extras = ["standard"], specifier = "==0.29.0" },
+    { name = "websockets", specifier = ">=16.0" },
     { name = "xgboost", specifier = "==2.0.3" },
 ]
 

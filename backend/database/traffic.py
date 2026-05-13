@@ -69,7 +69,7 @@ async def list_traffic_by_ip(src_ip: str, limit: int = 50) -> list[dict[str, Any
 
 async def upsert_stats(
     window: datetime,
-    proto: str,
+    protocol: str,
     service: str,
     src_ip: str,
     src_bytes: int,
@@ -80,7 +80,7 @@ async def upsert_stats(
         return
     try:
         await col.update_one(
-            {"window": window, "proto": proto, "service": service},
+            {"window": window, "protocol": protocol, "service": service},
             {
                 "$inc": {"count": 1, "total_bytes": src_bytes + dst_bytes},
                 "$set": {"last_seen": datetime.now(timezone.utc)},
@@ -101,7 +101,7 @@ async def count_by_protocol() -> list[dict[str, Any]]:
         return []
     try:
         pipeline = [
-            {"$group": {"_id": "$proto", "total": {"$sum": "$count"}}},
+            {"$group": {"_id": "$protocol", "total": {"$sum": "$count"}}},
             {"$sort": {"total": -1}}
         ]
         results = await col.aggregate(pipeline).to_list(None)
@@ -140,7 +140,7 @@ async def traffic_over_time(hours: int = 24) -> list[dict[str, Any]]:
             {"$sort": {"window": 1}},
             {"$project": {
                 "window": 1,
-                "proto": 1,
+                "protocol": 1,
                 "service": 1,
                 "count": 1,
                 "total_bytes": 1,

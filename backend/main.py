@@ -7,7 +7,7 @@ GET  /health   — system status
 
 from __future__ import annotations
 import sys
-import os 
+import os
 
 import logging
 import os
@@ -15,22 +15,20 @@ import sys
 from contextlib import asynccontextmanager
 
 from pathlib import Path
-from typing import Any
 
-from fastapi import FastAPI, HTTPException, Query
+
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
+from llm_queue.llm_queue import llm_queue
 
 sys.path.append(str(Path(__file__).resolve().parents[1]))
-# from helpers.helper import (
-#     _severity,
-#     _build_raw_log,
-#     _final_confidence,
-#     _save_alert,
-#     _save_traffic,
-# )
-from router.analyse import analyse_router
-from router.user import router as user_router
+
+from backend.router.analyse.analyse import analyse_router
+from backend.router.users.user import user_router
+from router.websockets_router import socket_router
+from router.health import health_router
+from router.stats import stats_router
 
 sys.path.append(str(Path(__file__).resolve().parents[1]))
 
@@ -67,8 +65,10 @@ async def lifespan(app: FastAPI):
         llm_module._load_pipeline()
 
     await database.connect_db()
+    await llm_queue.start()
 
     yield
+    await llm_queue.stop()
     await database.close_db()
     log.info("IDS-AI shutting down")
 
@@ -86,12 +86,14 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=os.getenv("CORS_ORIGINS", "http://localhost:5173").split(","),
     allow_credentials=True,
-    allow_methods=["GET", "POST", "PATCH", "PUT", "DELETE"],
-    allow_headers=["Content-Type", "Authorization"],
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
-
 app.include_router(analyse_router, prefix="/api", tags=["analysis"])
 app.include_router(user_router, prefix="/api/users", tags=["users"])
+app.include_router(socket_router, prefix="/api", tags=["websockets"])
+app.include_router(stats_router, prefix="/api", tags=["stats"])
+app.include_router(health_router, prefix="/api", tags=["health"])
 
 
-# ── Request / Response models ──────────────────────────────────────────────────
+# ── Request / Response models ─────────────────────────────────────────────────

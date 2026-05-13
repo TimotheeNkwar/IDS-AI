@@ -43,7 +43,7 @@ LLM_MODEL_NAME = os.getenv(
 )
 OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434").rstrip("/")
 LLM_DEVICE = os.getenv("LLM_DEVICE", "auto")
-LLM_ENABLED = os.getenv("LLM_ENABLED", "false").lower() not in ("false", "0", "no")
+LLM_ENABLED = os.getenv("LLM_ENABLED", "true").lower() not in ("false", "0", "no")
 
 _PROMPT_TEMPLATE = """\
 [INST] You are an intrusion detection system assistant with expertise in network security analysis.

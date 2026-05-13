@@ -33,3 +33,5 @@ pwdlib[argon2]
 
 python-multipart
 requests==2.31.0
+
+websockets

@@ -1,5 +1,5 @@
 @import "tailwindcss";
-
+@plugin "daisyui";
 :root {
   --my-font: "Inter", "Trebuchet MS" sans-serif;
 }
@@ -26,7 +26,20 @@ body {
   scale: 1.05;
   z-index: -3;
 } */
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
 
+.accordion-row {
+  animation: slideDown 0.2s ease-out;
+}
 .logo {
   font-size: 52px;
   font-weight: 700;

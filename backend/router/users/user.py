@@ -3,7 +3,7 @@ from typing import List
 
 from fastapi.security import OAuth2PasswordRequestForm
 import database
-from database import user
+
 
 from schemas.schemas import Token, Token, UserCreate, UserLogin, UserRead, UserRead
 from users.crud import create_user as crud_create_user
@@ -20,25 +20,17 @@ from database.models import User as DBUser
 from bson import ObjectId
 import logging
 
-router = APIRouter()
+user_router = APIRouter()
 log = logging.getLogger(__name__)
 
 
-@router.post("/", response_model=UserRead)
+@user_router.post("/", response_model=UserRead)
 async def create_user_endpoint(user_create: UserCreate) -> UserRead:
     return await crud_create_user(user_create)
 
 
-# @router.post("/login", response_model=Token)
-# async def login_endpoint(form_data: OAuth2PasswordRequestForm = Depends()):
-#     db_user = await get_user_by_email(form_data.username)  # username = email ici
-#     if not db_user or not verify_password(form_data.password, db_user["password_hash"]):
-#         raise HTTPException(status_code=401, detail="Incorrect email or password")
 
-#     access_token = create_access_token(data={"sub": db_user["id"]})
-#     return Token(access_token=access_token, token_type="bearer")
-
-@router.get("/me", response_model=UserRead)
+@user_router.get("/me", response_model=UserRead)
 async def read_users_me(current_user: dict = Depends(get_current_user)):
     user_id = current_user.get("sub")
     
@@ -50,7 +42,7 @@ async def read_users_me(current_user: dict = Depends(get_current_user)):
     user["_id"] = str(user["_id"])  # juste convertir _id en str
     return UserRead.model_validate(user)
 
-@router.post("/login", response_model=Token)
+@user_router.post("/login", response_model=Token)
 async def login_endpoint(form_data: OAuth2PasswordRequestForm = Depends()):
     db_user = await get_user_by_email(form_data.username)
     
