@@ -64,11 +64,28 @@ export interface TrafficRecord {
   llm_severity?: string;
   llm_confidence?: number;
   final_confidence?: number;
+  source_port?: number;
+  destination_port?: number;
 }
 
 export interface TrafficResponse {
   traffic: TrafficRecord[];
   storage_available: boolean;
+}
+
+export interface AlertResponse {
+  alerts: Alert[];
+  total: number;
+  page: number;
+  limit: number;
+}
+
+export interface AlertFilters {
+  severity?: "low" | "medium" | "high" | "critical";
+  status?: "open" | "resolved" | "ignored";
+  type?: string;
+  from?: string; // ISO date
+  to?: string;
 }
 
 // ── WebSocket ──────────────────────────────────────────────────
@@ -80,30 +97,41 @@ export interface WsMeta {
   dst_ip: string;
 }
 
-export interface WsAlert {
-  src_ip: string;
-  dst_ip: string;
+export interface Alert {
+  // ── Rest side ──────
+  id?: string;
+  status?: "open" | "resolved" | "ignored";
 
-  classification: string;
-  severity: "low" | "medium" | "high";
-  attack_type: string | null;
-  confidence: number;
-  explanation: string;
-  recommended_action: string;
-  needs_review: boolean;
-  // Classification details
-  ml_label: string;
-  ml_confidence: number;
-  ml_model: string;
-  llm_severity: string | null;
-  llm_confidence: number;
-  risk_signals: RiskSignal[];
-  top_features: TopFeature[];
-  evidence: string[];
-  knowledge_matches: string[];
+  // ── common ────────────────────────────
+  timestamp: string;
+  source_ip: string;
+  destination_ip: string;
   protocol: string;
   service: string;
+  type: string;
+  classification: string;
+  severity: "low" | "medium" | "high" | "critical";
+  ml_label: string;
+  ml_confidence: number;
+  ml_model?: string;
+  llm_severity: string | null;
+  llm_confidence: number;
+  llm_attack_type: string | null;
+  final_confidence: number;
+  message?: string;
+  explanation?: string;
+  evidence: string[];
+  recommended_action: string;
+  needs_manual_review: boolean;
+  risk_signals: RiskSignal[];
+  top_features: TopFeature[];
+  knowledge_matches: string[];
+  source_port: number;
+  destination_port: number;
 }
+
+// ── WebSocket payloads ─────────────────────────────────────────
+export type WsAlert = Alert;
 
 export interface WsDashboardUpdate {
   type: "dashboard_update";
@@ -127,4 +155,8 @@ export interface AlertFeedItem {
   is_anomaly: boolean;
   risk_signals: RiskSignal[];
   top_features: TopFeature[];
+  source_port: number;
+  destination_port: number;
 }
+
+// types/types.ts

@@ -49,6 +49,7 @@ class AnalysisResult(BaseModel):
     attack_type: str | None
     risk_signals: list[dict[str, Any]]
     top_features: list[dict[str, Any]]
+
     # LLM layer
     classification: str
     llm_attack_type: str | None = None
@@ -65,6 +66,8 @@ class AnalysisResult(BaseModel):
     severity: str
     src_ip: str
     dst_ip: str
+    src_port: int
+    dst_port: int
     protocol: str
     service: str
 

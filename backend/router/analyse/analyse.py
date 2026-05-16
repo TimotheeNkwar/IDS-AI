@@ -143,6 +143,8 @@ async def analyze(event: LogEvent) -> AnalysisResult:
         dst_ip=event.dst_ip,
         protocol=event.protocol,  #
         service=event.service,
+        src_port=event.src_port,
+        dst_port=event.dst_port,
     )
 
     if is_anomaly:
@@ -193,7 +195,7 @@ async def api_traffic(limit: int = Query(default=50, ge=1, le=200)) -> dict[str,
     }
 
 
-@analyse_router.get("/api/alerts/{alert_id}", summary="Get alert detail")
+@analyse_router.get("/alerts/{alert_id}", summary="Get alert detail")
 async def get_alert(alert_id: str) -> dict[str, Any]:
     """Full detail of a single alert — for Threats Analysis drill-down."""
     if not alert_repo.is_available():
@@ -205,7 +207,7 @@ async def get_alert(alert_id: str) -> dict[str, Any]:
     return alert
 
 
-@analyse_router.get("/api/alerts", summary="List alerts with optional filters")
+@analyse_router.get("/alerts", summary="List alerts with optional filters")
 async def api_alerts_filtered(
     limit: int = Query(default=50, ge=1, le=200),
     severity: Literal["low", "medium", "high"] | None = Query(default=None),

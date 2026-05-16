@@ -17,21 +17,11 @@ import type { SortingState, ColumnFiltersState } from "@tanstack/react-table";
 import TablePagination from "../../components/TablePagination.tsx";
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
-import {
-  ChevronUp,
-  ChevronDown,
-  Clock,
-  Shield,
-  MonitorSmartphone,
-  Network,
-  Activity,
-  Radio,
-  AlertTriangle,
-  Search,
-} from "lucide-react";
+import { ChevronUp, ChevronDown } from "lucide-react";
 import { columns } from "./components/TrafficColumns";
 import TrafficRowDetail from "./components/TrafficRowDetail";
 import { Fragment } from "react";
+import IPFilterInput from "../../components/IPFilterInput.tsx";
 
 const columnHelper = createColumnHelper<TrafficRecord>();
 
@@ -139,34 +129,11 @@ export default function TrafficMonitorPage() {
               live via WebSocket.
             </p>
           </div>
-          <div className="relative">
-            {/* <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-base-content/40 pointer-events-none" /> */}
-            <div>
-              <label className="input input-sm input-bordered rounded-full flex items-center gap-2 w-64 ">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 16 16"
-                  fill="currentColor"
-                  className="h-4 w-4 opacity-70"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M9.965 11.026a5.5 5.5 0 1 1 1.06-1.06l3.754 3.754a.75.75 0 1 1-1.06 1.06l-3.754-3.754ZM11 6.5a4.5 4.5 0 1 1-9 0a4.5 4.5 0 0 1 9 0Z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-
-                <input
-                  type="text"
-                  className="grow"
-                  placeholder="Filter by IP..."
-                  onChange={(e) =>
-                    table.getColumn("source_ip")?.setFilterValue(e.target.value)
-                  }
-                />
-              </label>
-            </div>
-          </div>
+          <IPFilterInput
+            table={table}
+            column="source_ip"
+            placeholder="Filter by IP..."
+          />
         </div>
         <table className="table">
           <thead className="bg-slate-800/50 text-white">

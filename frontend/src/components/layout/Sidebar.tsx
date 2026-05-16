@@ -64,7 +64,7 @@ export default function Sidebar({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden">
+    <div className="flex h-screen w-screen overflow-hidden bg-gray-950">
       {/* ── Sidebar ── */}
       <div
         className={`
@@ -140,7 +140,7 @@ export default function Sidebar({ children }: { children: React.ReactNode }) {
         </div>
 
         {/* Page content */}
-        <div className="flex-1 container mx-auto overflow-y-auto text-gray-100 bg-gray-950 px-10 py-6">
+        <div className="flex-1 container mx-auto overflow-y-auto text-gray-100  px-10 py-6">
           {children}
         </div>
       </div>

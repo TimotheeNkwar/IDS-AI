@@ -9,10 +9,9 @@ import {
   Radio,
   AlertTriangle,
 } from "lucide-react";
-import type { TrafficRecord } from "../../../types/types";
-import { formatDate } from "../../../lib/utils";
+import type { Alert } from "../../../types/types";
 
-const columnHelper = createColumnHelper<TrafficRecord>();
+const columnHelper = createColumnHelper<Alert>();
 
 export const SEVERITY_BADGE: Record<string, string> = {
   high: "badge badge-error",
@@ -27,9 +26,9 @@ export const columns = [
         <Clock className="w-3.5 h-3.5" /> Time
       </div>
     ),
-    cell: (info) => formatDate(info.getValue()),
+    cell: (info) => new Date(info.getValue()).toLocaleTimeString(),
   }),
-  columnHelper.accessor("label", {
+  columnHelper.accessor("type", {
     header: () => (
       <div className="flex items-center gap-1">
         <Shield className="w-3.5 h-3.5" /> Type

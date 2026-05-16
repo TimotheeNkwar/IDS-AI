@@ -7,7 +7,7 @@ import {
   Cell,
 } from "recharts";
 
-const COLORS = ["#c23ecb", "#930aef"]; // violet + bleu
+const COLORS = ["oklch(52.5% 0.223 3.958)", "oklch(75% 0.183 55.934)"]; // violet + bleu
 
 export default function SeverityChart({ data }: { data: any[] }) {
   return (
