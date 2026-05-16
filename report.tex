@@ -1031,9 +1031,116 @@ This makes operational issues visible without opening backend logs.
 % ================================================================
 \chapter{Testing and Evaluation}
 
-\section{Synthetic Attack Dataset}
+\section{Training Dataset and Preprocessing}
 
-The project includes a generated synthetic intrusion dataset:
+\subsection{Dataset Source and Size}
+
+The ML model is trained on network flow records loaded from
+\texttt{backend/ml/data.csv}. The full dataset contains flow-level features
+inspired by Zeek and CTU datasets. Each row represents a single network flow
+and includes TCP/UDP statistics, HTTP metadata, DNS queries, and a label
+indicating the attack type or normal classification.
+
+The complete dataset contains over 40,000 network flows across 10 attack
+classes plus normal traffic. These are split into:
+
+\begin{itemize}[leftmargin=1.5em]
+  \item \textbf{Training set (80\%):} Approximately 32,000 flows used to fit
+    the model parameters, class encoders, and feature scalers.
+  \item \textbf{Test set (20\%):} Approximately 8,000 flows held back to
+    evaluate final model performance without any data leakage.
+\end{itemize}
+
+Stratified splitting is used to preserve class proportions in both splits,
+ensuring the test set reflects the real-world class imbalance.
+
+\subsection{Feature Engineering}
+
+The model operates on 20 numeric features and 3 categorical features:
+
+\begin{itemize}[leftmargin=1.5em]
+  \item \textbf{Numeric features:} \texttt{src\_port, dst\_port, duration,
+    src\_bytes, dst\_bytes, missed\_bytes, src\_pkts, src\_ip\_bytes,
+    dst\_pkts, dst\_ip\_bytes, dns\_qclass, dns\_qtype, dns\_rcode,
+    http\_request\_body\_len, http\_response\_body\_len, http\_status\_code,
+    http\_trans\_depth}.
+  \item \textbf{Categorical features:} \texttt{proto} (TCP, UDP, ICMP),
+    \texttt{service} (HTTP, FTP, SSH, DNS, etc.), \texttt{conn\_state}
+    (connection state codes).
+\end{itemize}
+
+Numeric features are standardized to zero mean and unit variance using a
+\texttt{StandardScaler} fitted on the training set. Categorical features are
+ordinal-encoded using \texttt{LabelEncoder}. Missing numeric values are
+imputed as zero; unknown categorical values are mapped to $-1$.
+
+\subsection{Class Distribution and Imbalance}
+
+Table~\ref{tab:class-distribution} summarizes the attack type distribution
+in the full dataset before any augmentation:
+
+\begin{table}[htbp]
+  \centering
+  \caption{Attack type distribution in full training dataset (before SMOTE)}
+  \label{tab:class-distribution}
+  \begin{tabular}{lrr}
+    \toprule
+    \textbf{Attack Type} & \textbf{Count} & \textbf{Percentage} \\
+    \midrule
+    normal      & 13000 & 32.3\% \\
+    ddos        & 8000  & 19.9\% \\
+    dos         & 7800  & 19.4\% \\
+    backdoor    & 4000  & 10.0\% \\
+    ransomware  & 2000  & 5.0\% \\
+    injection   & 2000  & 5.0\% \\
+    password    & 1000  & 2.5\% \\
+    xss         & 1000  & 2.5\% \\
+    scanning    & 1000  & 2.5\% \\
+    mitm        & 200   & 0.5\% \\
+    \midrule
+    \textbf{Total} & \textbf{40000} & \textbf{100\%} \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+The dataset exhibits significant class imbalance: MITM represents only 0.5\%
+of samples while normal traffic represents 32.3\%. Without correction, the
+model would overfit to majority classes and fail to detect rare attack types.
+
+\subsection{SMOTE Augmentation on Training Set}
+
+To mitigate class imbalance, SMOTE (Synthetic Minority Over-sampling Technique)
+is applied exclusively to the training set. SMOTE generates synthetic samples
+by interpolating between minority class samples and their $k=5$ nearest
+neighbors in feature space. The sampling strategy is set to
+\texttt{``not\_majority''}, meaning all attack types are upsampled to match
+the size of the most frequent attack class within the training split.
+
+Example augmentation results from one training run:
+
+\begin{table}[htbp]
+  \centering
+  \caption{Dataset size growth due to SMOTE augmentation (training set only)}
+  \label{tab:smote-augmentation}
+  \begin{tabular}{lrrr}
+    \toprule
+    \textbf{Phase} & \textbf{Dataset Size} & \textbf{Normal:Attack Ratio} & \textbf{Note} \\
+    \midrule
+    Original training split & 32,000 & 2.4:1 & Before SMOTE \\
+    After SMOTE            & 48,000 & 1.3:1 & Synthetic samples added \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+By increasing the training set from 32,000 to 48,000 samples with balanced
+attack class representation, the model learns discriminative features for all
+attack types without being overwhelmed by normal traffic. Importantly, SMOTE
+is \textbf{not} applied to the test set, keeping it genuinely imbalanced and
+realistic for unbiased evaluation.
+
+\section{Synthetic Attack Dataset for Queue Testing}
+
+The project includes a generated synthetic intrusion dataset for load testing:
 \texttt{load\_tests/synthetic\_intrusion\_dataset\_450.json}. It contains 450
 events: 25 entries for each of 18 labels. The labels are:
 
@@ -1052,7 +1159,9 @@ sql\_injection & botnet & & \\
 Each record follows the same JSON schema as the backend \texttt{LogEvent}
 model. Normal records use benign user IP addresses from
 \texttt{192.168.1.0/24}, while attack records use source addresses from
-\texttt{198.51.100.0/24}. Target hosts use \texttt{10.0.0.0/24}.
+\texttt{198.51.100.0/24}. Target hosts use \texttt{10.0.0.0/24}. This dataset
+is used primarily for stress-testing the analysis queue, not for model
+training.
 
 \section{Queue Load Test}
 
