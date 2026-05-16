@@ -18,6 +18,7 @@
 
 % -- Graphics and Diagrams ---------------------------------------
 \usepackage{graphicx}
+\graphicspath{{./}{./screenshots/}}
 \usepackage{tikz}
 \usetikzlibrary{positioning,shapes,arrows.meta,calc}
 
@@ -42,6 +43,9 @@
   pdfauthor  = {CIU Students},
   pdfsubject = {AI-powered Cybersecurity System Report}
 }
+
+% -- Math ---------------------------------------------------------
+\usepackage{amsmath}
 
 % -- Code Listings ------------------------------------------------
 \usepackage{listings}
@@ -118,6 +122,7 @@
 \fancyfoot[R]{\thepage}
 \renewcommand{\headrulewidth}{0.4pt}
 \renewcommand{\footrulewidth}{0.4pt}
+\setlength{\headheight}{14pt}
 
 % -- Chapter / Section Titles ------------------------------------
 \usepackage{titlesec}
@@ -136,22 +141,21 @@
 \newcommand{\screenshot}[2]{%
   \begin{figure}[htbp]
     \centering
-    \fbox{\parbox{0.82\textwidth}{%
-      \centering\vspace{1.2cm}%
-      \textcolor{orange}{\large\textbf{[SCREENSHOT PLACEHOLDER]}}\\[8pt]%
-      \texttt{\small screenshots/#1}\\[8pt]%
+    \begin{minipage}{0.82\textwidth}
+      \centering
+      \vspace{1.0cm}
+      \textcolor{orange}{\large\textbf{[SCREENSHOT PLACEHOLDER]}}\\[8pt]
+      \texttt{\detokenize{screenshots/}#1}\\[8pt]
       \small\textit{Place the screenshot file in a \texttt{screenshots/}
-      folder next to this report.}%
-      \vspace{1.2cm}%
-    }}%
-    \caption{#2}%
-    \label{fig:#1}%
-  \end{figure}%
+      folder next to this report.}
+      \vspace{1.0cm}
+    \end{minipage}
+    \caption{#2}
+  \end{figure}
 }
 
 % ================================================================
 \begin{document}
-% ================================================================
 
 % -- Title Page ---------------------------------------------------
 \begin{titlepage}
@@ -180,14 +184,14 @@
 
   \noindent\rule{\linewidth}{0.6pt}\\[0.8cm]
 
-  {\large\bfseries Capstone Project Report}\[1.2cm]
+  {\large\bfseries Capstone Project Report}\\[1.2cm]
 
-  {\large\bfseries Submitted by (Capstone Team of 6):}\[0.5cm]
+  {\large\bfseries Submitted by (Capstone Team of 6):}\\[0.5cm]
   \begin{tabular}{ll}
-    	oprule
-    	extbf{Student ID} & \textbf{Full Name} \\
+    \toprule
+    \textbf{Student ID} & \textbf{Full Name} \\
     \midrule
-    Student ID & Timothee Nkwar \\
+    22205731 & Timothee Kabongo Nkwar \\
     Student ID & Team Member 2 \\
     Student ID & Team Member 3 \\
     Student ID & Team Member 4 \\
@@ -195,6 +199,7 @@
     Student ID & Team Member 6 \\
     \bottomrule
   \end{tabular}
+
   \vspace{1.2cm}
   {\large\bfseries Instructor:}\\[0.4cm]
   {\large Instructor Name}
@@ -214,8 +219,6 @@
 \pagenumbering{arabic}
 
 % ================================================================
-% CHAPTER 1
-% ================================================================
 \chapter{Introduction}
 
 \section{Project Overview}
@@ -230,12 +233,13 @@ contextual cybersecurity reasoning and explanations, and the human analyst
 keeps final authority over incident decisions after reviewing all generated
 evidence.
 
-The software platform contains three major technical layers. The backend is implemented with
-FastAPI and exposes REST endpoints for analysis, job monitoring, alerts,
-traffic history, and health checks. The frontend is a React single-page
-dashboard that displays system status, recent alerts, analyzed traffic, and
-live queued analysis requests. The persistence layer uses MongoDB through the
-Motor asynchronous driver to store alert and traffic records.
+The software platform contains three major technical layers. The backend is
+implemented with FastAPI and exposes REST endpoints for analysis, job
+monitoring, alerts, traffic history, and health checks. The frontend is a
+React single-page dashboard that displays system status, recent alerts,
+analyzed traffic, and live queued analysis requests. The persistence layer
+uses MongoDB through the Motor asynchronous driver to store alert and traffic
+records.
 
 \section{Problem Statement}
 
@@ -284,8 +288,6 @@ user. The project includes test utilities for generating synthetic attacks
 and stress-testing the analysis queue.
 
 % ================================================================
-% CHAPTER 2
-% ================================================================
 \chapter{System Architecture}
 
 \section{High-Level Architecture}
@@ -309,24 +311,24 @@ recommended action before closing or escalating the incident.
       minimum width=2.6cm, align=center, font=\small\bfseries},
     arrow/.style={-{Latex[length=2.5mm]}, thick, draw=gray!70}
   ]
-    \node[block] (client) {Network Event\\Generator / Sensor};
-    \node[block, right=of client] (api) {FastAPI Backend\\REST API};
-    \node[block, right=of api] (queue) {Analysis Queue\\Job Registry};
-    \node[block, below=of queue] (worker) {Worker Tasks\\Concurrency Limit};
-    \node[block, left=of worker] (ml) {ML Detector\\XGBoost Bundle};
-    \node[block, right=of worker] (llm) {Local LLM\\Ollama};
-    \node[db, below=of worker] (mongo) {MongoDB\\Alerts + Traffic};
-    \node[block, below=of api] (frontend) {React Dashboard\\Traffic + Alerts};
-    \node[block, below=of frontend] (human) {Human-in-the-Loop\\Final Decision};
+    \node[block] (client)   {Network Event\\Generator / Sensor};
+    \node[block, right=of client]   (api)      {FastAPI Backend\\REST API};
+    \node[block, right=of api]      (queue)    {Analysis Queue\\Job Registry};
+    \node[block, below=of queue]    (worker)   {Worker Tasks\\Concurrency Limit};
+    \node[block, left=of worker]    (ml)       {ML Detector\\XGBoost Bundle};
+    \node[block, right=of worker]   (llm)      {Local LLM\\Ollama};
+    \node[db,    below=of worker]   (mongo)    {MongoDB\\Alerts + Traffic};
+    \node[block, below=of api]      (frontend) {React Dashboard\\Traffic + Alerts};
+    \node[block, below=of frontend] (human)    {Human-in-the-Loop\\Final Decision};
 
-    \draw[arrow] (client) -- (api);
-    \draw[arrow] (api) -- (queue);
-    \draw[arrow] (queue) -- (worker);
-    \draw[arrow] (worker) -- (ml);
-    \draw[arrow] (worker) -- (llm);
-    \draw[arrow] (worker) -- (mongo);
-    \draw[arrow] (mongo) -- (frontend);
-    \draw[arrow] (api) -- (frontend);
+    \draw[arrow] (client)   -- (api);
+    \draw[arrow] (api)      -- (queue);
+    \draw[arrow] (queue)    -- (worker);
+    \draw[arrow] (worker)   -- (ml);
+    \draw[arrow] (worker)   -- (llm);
+    \draw[arrow] (worker)   -- (mongo);
+    \draw[arrow] (mongo)    -- (frontend);
+    \draw[arrow] (api)      -- (frontend);
     \draw[arrow] (frontend) -- (human);
   \end{tikzpicture}
   \caption{High-level architecture of IDS-AI}
@@ -388,19 +390,17 @@ IDS-AI/
     \toprule
     \textbf{Layer} & \textbf{Technology} & \textbf{Purpose} \\
     \midrule
-    Frontend & React 18 & Single-page monitoring dashboard \\
-    Backend & FastAPI & REST API and application orchestration \\
-    Data validation & Pydantic & Request and response schemas \\
-    ML & XGBoost / scikit-learn & Traffic classification \\
-    LLM & Ollama & Local natural-language security analysis \\
-    Database & MongoDB + Motor & Async storage for alerts and traffic \\
-    Testing & Python scripts & Synthetic load and queue testing \\
+    Frontend      & React 18              & Single-page monitoring dashboard \\
+    Backend       & FastAPI               & REST API and application orchestration \\
+    Data validation & Pydantic            & Request and response schemas \\
+    ML            & XGBoost / scikit-learn & Traffic classification \\
+    LLM           & Ollama                & Local natural-language security analysis \\
+    Database      & MongoDB + Motor       & Async storage for alerts and traffic \\
+    Testing       & Python scripts        & Synthetic load and queue testing \\
     \bottomrule
   \end{tabular}
 \end{table}
 
-% ================================================================
-% CHAPTER 3
 % ================================================================
 \chapter{Backend Design}
 
@@ -454,75 +454,6 @@ _ANALYSIS_TIMEOUT_SECONDS = max(1, int(os.getenv("ANALYSIS_TIMEOUT_SECONDS", "18
 _ANALYSIS_HISTORY_LIMIT = max(10, int(os.getenv("ANALYSIS_HISTORY_LIMIT", "500")))
 \end{lstlisting}
 
-\subsection{Queue Flow and System Workflow}
-
-The queue system follows a standard asynchronous request-response pattern
-optimized for high-throughput analysis:
-
-\subsubsection{Request submission phase}
-
-When a client submits a network event for analysis via \texttt{POST /api/analysis/jobs},
-the backend immediately creates a new \texttt{AnalysisJobStatus} object with:
-\begin{itemize}[leftmargin=1.5em]
-  \item Unique job ID (UUID hex).
-  \item Status: \texttt{waiting}.
-  \item Progress: 0\%.
-  \item Timestamps: submitted\_at (current time).
-  \item Original event: stored in the job for later processing.
-\end{itemize}
-
-The job is added to the in-memory queue and stored in a registry. The API
-immediately returns a 202 Accepted response with the job ID and queue position,
-allowing the client to poll for results without blocking.
-
-\subsubsection{Queue processing and worker lifecycle}
-
-A background worker task continuously monitors the queue:
-\begin{enumerate}[leftmargin=1.5em]
-  \item Worker reads job IDs from the queue FIFO.
-  \item For each job, worker updates status to \texttt{processing} and starts\_at
-    timestamp.
-  \item Worker respects the concurrency limit: if $n$ jobs are already processing,
-    the worker waits before taking the next job.
-  \item Each analysis is wrapped in \texttt{asyncio.wait\_for} with
-    \texttt{ANALYSIS\_TIMEOUT\_SECONDS}. If analysis exceeds the timeout,
-    the job is marked \texttt{failed}.
-\end{enumerate}
-
-\subsubsection{Analysis execution}
-
-During processing, the ML detector and LLM modules are invoked off the event loop
-using \texttt{asyncio.to\_thread}. This ensures blocking calls (model inference,
-LLM prompts) do not freeze the FastAPI event loop. All exceptions are caught and
-stored in the job error field instead of crashing the worker.
-
-\subsubsection{Result storage and completion}
-
-Upon successful analysis, the job is updated with:
-\begin{itemize}[leftmargin=1.5em]
-  \item Status: \texttt{completed}.
-  \item Result: full \texttt{AnalysisResult} object.
-  \item Progress: 100\%.
-  \item Completed\_at: timestamp.
-\end{itemize}
-
-Anomalies are saved to MongoDB \texttt{alerts} collection, and all events are
-saved to \texttt{network\_traffic} collection for audit and historical analysis.
-
-\subsubsection{Client polling and result retrieval}
-
-Clients poll \texttt{GET /api/analysis/jobs/\{job\_id\}} to check job status.
-Responses include current progress (0--100\%), queue position (if waiting),
-and the full result when completed. The frontend uses these responses to display
-real-time progress bars and spinner animations.
-
-\subsubsection{History trimming}
-
-The queue maintains a rolling history (default: last 500 jobs). When the limit
-is reached, oldest completed, failed, or cancelled jobs are removed to prevent
-unbounded memory growth. Jobs are retained in order (FIFO cleanup) so recent
-events are always visible.
-
 \section{Queue Endpoints}
 
 \begin{table}[htbp]
@@ -533,14 +464,14 @@ events are always visible.
     \toprule
     \textbf{Method} & \textbf{Path} & \textbf{Description} \\
     \midrule
-    POST & \texttt{/api/analyze} & Backward-compatible synchronous analysis \\
-    POST & \texttt{/api/analysis/jobs} & Create a queued analysis job \\
-    GET & \texttt{/api/analysis/jobs} & List queued and recent jobs \\
-    GET & \texttt{/api/analysis/jobs/\{id\}} & Retrieve one job status \\
+    POST   & \texttt{/api/analyze}              & Synchronous analysis (backward-compatible) \\
+    POST   & \texttt{/api/analysis/jobs}         & Create a queued analysis job \\
+    GET    & \texttt{/api/analysis/jobs}         & List queued and recent jobs \\
+    GET    & \texttt{/api/analysis/jobs/\{id\}} & Retrieve one job status \\
     DELETE & \texttt{/api/analysis/jobs/\{id\}} & Cancel a waiting job \\
-    GET & \texttt{/api/health} & Backend, model, storage, and queue health \\
-    GET & \texttt{/api/alerts} & Retrieve recent IDS alerts \\
-    GET & \texttt{/api/traffic} & Retrieve persisted traffic records \\
+    GET    & \texttt{/api/health}                & Backend, model, storage, and queue health \\
+    GET    & \texttt{/api/alerts}                & Retrieve recent IDS alerts \\
+    GET    & \texttt{/api/traffic}               & Retrieve persisted traffic records \\
     \bottomrule
   \end{tabular}
 \end{table}
@@ -556,8 +487,6 @@ CPU-heavy and blocking analysis calls are executed with
 \texttt{asyncio.to\_thread}. This prevents the FastAPI event loop from being
 blocked while model inference or LLM calls are running.
 
-% ================================================================
-% CHAPTER 4
 % ================================================================
 \chapter{Detection Pipeline}
 
@@ -608,12 +537,12 @@ The ML result includes:
   \item top model features when available.
 \end{itemize}
 
-\subsection{How the ML layer works (detail)}
+\subsection{How the ML Layer Works}
 
 The ML layer operates on structured, pre-processed features extracted from
 the incoming \texttt{LogEvent}. Typical preprocessing steps include
 categorical encoding, numeric normalization, missing-value handling, and
-feature engineering (e.g. byte/packet ratios, request size buckets, port
+feature engineering (e.g.\ byte/packet ratios, request size buckets, port
 signatures). At inference time the pipeline performs the same deterministic
 transformations used during training and feeds the feature vector to the
 selected model. The model outputs a label and a confidence/probability score;
@@ -623,55 +552,64 @@ returned to aid explainability.
 Key properties:
 \begin{itemize}[leftmargin=1.5em]
   \item Low latency: suitable for first-line filtering of high-volume events.
-  \item Deterministic outputs: same input yields same prediction (no randomness
-    at inference unless explicit sampling is used).
+  \item Deterministic outputs: same input yields same prediction.
   \item Explainability: top features and risk signals provide quick hints to
     analysts and help the LLM when constructing explanations.
 \end{itemize}
 
-\subsection{Operational considerations}
-
-To remain reliable under load the ML layer should run in a way that does not
-block the event loop (e.g. via `asyncio.to_thread`) and can be scaled or
-quantized if CPU becomes the bottleneck. Periodic re-training and monitoring
-for data drift are recommended to preserve detection quality.
-
-\subsection{Training process}
+\subsection{Training Process}
 
 The ML model training pipeline follows standard supervised learning methodology
-to ensure reproducible and robust detection performance:
+to ensure reproducible and robust detection performance.
 
-\subsubsection{Data preparation}
+\subsubsection{Data Preparation}
 
 Training data is collected from network flow records, each labeled as normal or
-belonging to an attack category. The raw features (byte counts, packet counts,
-port numbers, protocol types, HTTP status codes, etc.) are extracted from each
-flow record. Categorical features such as protocol name, service name, and
-connection state are encoded using one-hot encoding or ordinal encoding to make
-them suitable for tree-based models. Numeric features are normalized to zero
-mean and unit variance to improve convergence during training. Missing or
-anomalous values are imputed using sensible defaults (e.g. zero bytes, no
-service).
+belonging to an attack category. Categorical features such as protocol name,
+service name, and connection state are encoded using one-hot or ordinal
+encoding. Numeric features are normalized to zero mean and unit variance.
+Missing or anomalous values are imputed using sensible defaults (e.g.\ zero
+bytes, no service).
 
-\subsubsection{Class imbalance handling}
+\subsubsection{Class Imbalance Handling}
 
 Real-world intrusion datasets are often imbalanced: normal traffic vastly
-outnumbers attack traffic. To mitigate this, SMOTE (Synthetic Minority
-Over-sampling Technique) is applied on the training set only. SMOTE generates
-synthetic samples of the minority class (attacks) by interpolating between
-existing minority samples and their neighbours. This balancing is applied only
-to the training split to avoid data leakage into the test set.
+outnumbers attack traffic. Without correction, the ML model becomes biased
+toward the majority class, learning to always predict \texttt{normal} and
+achieving high Accuracy while failing to detect minority attack classes.
 
-\subsubsection{Train-test split and cross-validation}
+To mitigate this problem, SMOTE (Synthetic Minority Over-sampling Technique)
+is applied on the training set only. SMOTE operates by:
 
-The dataset is split into training (typically 70--80\%) and test (20--30\%)
-subsets using stratified random splitting to preserve class proportions. During
-hyperparameter tuning, stratified k-fold cross-validation (k=5) is used on the
-training set to select the best combination of hyperparameters for each model
-type (max depth, learning rate, number of estimators, etc.). The final model
-is retrained on the entire training set with the selected hyperparameters.
+\begin{enumerate}[leftmargin=1.5em]
+  \item Identifying minority class samples (attack types with few examples).
+  \item For each minority sample, finding its $k$ nearest neighbors in the
+    feature space.
+  \item Generating synthetic samples by interpolating between the minority
+    sample and randomly selected neighbors.
+  \item Adding synthetic samples until all classes reach the same size.
+\end{enumerate}
 
-\subsubsection{Model training and selection}
+In the IDS-AI training pipeline, SMOTE was configured with $k=5$ neighbors
+and applied with sampling strategy \texttt{"not\_majority"}. This means all
+attack classes were upsampled to match the size of the largest attack class,
+ensuring the model learns distinctive patterns for each attack type without
+being overwhelmed by normal traffic.
+
+Critically, SMOTE is applied \textbf{only to the training set}, not the test
+set. This prevents data leakage: the test set remains genuinely imbalanced,
+allowing realistic evaluation of model performance on real-world class
+distributions.
+
+\subsubsection{Train-Test Split and Cross-Validation}
+
+The dataset is split into training (70--80\%) and test (20--30\%) subsets
+using stratified random splitting to preserve class proportions. During
+hyperparameter tuning, stratified 5-fold cross-validation is used on the
+training set. The final model is retrained on the entire training set with the
+selected hyperparameters.
+
+\subsubsection{Model Training and Selection}
 
 Three candidate models are trained: Random Forest, XGBoost, and Isolation
 Forest. Each is evaluated on the held-out test set using Accuracy, Precision,
@@ -679,23 +617,16 @@ Recall, and F1-score. The model with the highest F1-score is selected for
 production deployment and serialized using joblib into
 \texttt{backend/ml/best\_model.joblib}.
 
-The trained model bundle is re-used for all inference requests and is loaded
-once at application startup to minimize latency. Periodic retraining is
-recommended (weekly or monthly) when new labeled attack data becomes available,
-especially if data drift is detected through monitoring metrics on production
-traffic.
-
-\subsection{Models used and evaluation metrics}
+\subsection{Models Used and Evaluation Metrics}
 
 During development IDS-AI evaluated three primary detection approaches:
-Random Forest (supervised), XGBoost (supervised) and Isolation Forest
+Random Forest (supervised), XGBoost (supervised), and Isolation Forest
 (unsupervised anomaly detection). Models were compared using a held-out test
-split and F1-score drove the final model selection. SMOTE-based
-oversampling was applied on the training set to mitigate class imbalance when
-training supervised classifiers.
+split and F1-score drove the final model selection. SMOTE-based oversampling
+was applied on the training set to mitigate class imbalance.
 
 Table~\ref{tab:ml-metrics} summarises the evaluation metrics observed on the
-test set for the comparative experiments used to choose the runtime model.
+test set.
 
 \begin{table}[htbp]
   \centering
@@ -705,28 +636,26 @@ test set for the comparative experiments used to choose the runtime model.
     \toprule
     \textbf{Model} & \textbf{Accuracy} & \textbf{Precision} & \textbf{Recall} & \textbf{F1} \\
     \midrule
-    RandomForest & 0.9912 & 0.9934 & 0.9928 & 0.9931 \\
-    XGBoost      & 0.9905 & 0.9921 & 0.9919 & 0.9920 \\
+    RandomForest    & 0.9912 & 0.9934 & 0.9928 & 0.9931 \\
+    XGBoost         & 0.9905 & 0.9921 & 0.9919 & 0.9920 \\
     IsolationForest & 0.7841 & 0.8102 & 0.7630 & 0.7859 \\
     \bottomrule
   \end{tabular}
 \end{table}
 
-\subsection{Metric explanations}
+\subsection{Metric Definitions}
 
-To interpret Table~\ref{tab:ml-metrics} correctly, the main classification
-metrics are defined as follows, where:
+The main classification metrics are defined as follows, where
 \textit{TP} = true positives, \textit{TN} = true negatives,
 \textit{FP} = false positives, and \textit{FN} = false negatives.
 
 \begin{itemize}[leftmargin=1.5em]
-  \item \textbf{Accuracy:} proportion of correctly classified samples among all
-    samples.
+  \item \textbf{Accuracy:} proportion of correctly classified samples.
     \[
       \mathrm{Accuracy} = \frac{TP + TN}{TP + TN + FP + FN}
     \]
-  \item \textbf{Precision:} among events predicted as attacks, the fraction that
-    are truly attacks.
+  \item \textbf{Precision:} among events predicted as attacks, the fraction
+    that are truly attacks.
     \[
       \mathrm{Precision} = \frac{TP}{TP + FP}
     \]
@@ -734,61 +663,130 @@ metrics are defined as follows, where:
     \[
       \mathrm{Recall} = \frac{TP}{TP + FN}
     \]
-  \item \textbf{F1-score:} harmonic mean of Precision and Recall; useful when
-    classes are imbalanced.
+  \item \textbf{F1-score:} harmonic mean of Precision and Recall.
     \[
-      \mathrm{F1} = 2 \times \frac{\mathrm{Precision} \times \mathrm{Recall}}{\mathrm{Precision} + \mathrm{Recall}}
+      \mathrm{F1} = 2 \times \frac{\mathrm{Precision} \times \mathrm{Recall}}
+                                   {\mathrm{Precision} + \mathrm{Recall}}
     \]
 \end{itemize}
 
 In an intrusion detection context, high Recall is important to reduce missed
 attacks (low FN), while high Precision reduces alert fatigue caused by false
-alarms (low FP). The F1-score is therefore a practical selection metric
-because it balances both objectives.
+alarms (low FP). The F1-score balances both objectives.
 
-\subsection{Interpretation of the observed metric values}
-
-Based on the metric definitions above, the values in
-Table~\ref{tab:ml-metrics} can be interpreted as follows:
+\subsection{Interpretation of Results}
 
 \begin{itemize}[leftmargin=1.5em]
-  \item \textbf{RandomForest (F1 = 0.9931):} this model achieves an F1-score of
-    0.9931, combining Precision of 0.9934 and Recall of 0.9928. In practical
-    terms, Precision 0.9934 means that of all events predicted as attacks,
-    approximately 99.34\% are truly attacks, leaving only 0.66\% false alarms.
-    Recall 0.9928 means that approximately 99.28\% of real attacks are
-    correctly detected, missing only 0.72\%. The overall Accuracy of 0.9912
-    confirms strong global performance across all classes.
-  \item \textbf{XGBoost (F1 = 0.9920):} performance is very close to
-    RandomForest. Precision 0.9921 yields 0.79\% false alarms, while Recall
-    0.9919 captures 99.19\% of true attacks (missing 0.81\%). The F1-score of
-    0.9920 is only 0.0011 lower than RandomForest, making this model practically
-    equivalent for IDS use in this evaluation. Accuracy 0.9905 also demonstrates
-    strong overall classification ability.
-  \item \textbf{IsolationForest (F1 = 0.7859):} this unsupervised model achieves
-    lower performance. Precision 0.8102 produces 18.98\% false alarms, and Recall
-    0.7630 misses 23.70\% of real attacks. Although Accuracy 0.7841 is
-    acceptable for a baseline, the F1-score of 0.7859 shows significantly weaker
-    balance between minimizing false alerts and catching true attacks. This
-    reflects the inherent challenge of unsupervised anomaly detection on imbalanced
-    data.
+  \item \textbf{RandomForest (F1 = 0.9931):} Precision 0.9934 means 99.34\%
+    of predicted attacks are real, leaving only 0.66\% false alarms. Recall
+    0.9928 means 99.28\% of real attacks are correctly detected.
+  \item \textbf{XGBoost (F1 = 0.9920):} Very close to RandomForest. Precision
+    0.9921 yields 0.79\% false alarms; Recall 0.9919 captures 99.19\% of true
+    attacks. Practically equivalent for IDS use.
+  \item \textbf{IsolationForest (F1 = 0.7859):} This unsupervised model
+    produces 18.98\% false alarms (Precision 0.8102) and misses 23.70\% of
+    real attacks (Recall 0.7630). Weaker but can detect novel anomaly patterns
+    without labelled data.
 \end{itemize}
 
-From an operational IDS perspective, the RandomForest or XGBoost models are
-strongly preferred. Recall is usually prioritized when the cost of a missed
-attack is high (e.g. ransomware, data exfiltration), while Precision is
-prioritized when analyst capacity is limited and alert fatigue must be reduced.
-For RandomForest and XGBoost at recall $>$ 99.19\%, the system misses fewer
-than 1 in 100 real attacks, which is operationally acceptable for most
-environments. F1-score remains a useful compromise metric to select a model
-that is robust on both dimensions.
+From an operational perspective, RandomForest or XGBoost are strongly preferred.
+For both supervised models at Recall $>$ 99\%, the system misses fewer than 1
+in 100 real attacks, which is operationally acceptable for most environments.
 
-These numbers are illustrative of the development experiments. The
-supervised models (RandomForest and XGBoost) achieved very high F1-scores on
-the curated test split; the unsupervised Isolation Forest performs worse on
-the same metrics but can detect novel anomaly patterns without labelled data.
-For production, we recommend continuous evaluation, monitoring for data
-drift, and re-training (or calibration) when metrics degrade.
+\subsection{Confusion Matrix Analysis}
+
+The confusion matrix provides a detailed breakdown of model predictions across
+all attack classes. Each row represents the true label, each column represents
+the predicted label, and the value shows how many samples fall into that
+combination. The diagonal entries represent correct predictions, while
+off-diagonal entries represent classification errors.
+
+Figure~\ref{fig:xgboost-cm} shows the confusion matrix for the selected
+XGBoost model on the test set.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.95\textwidth]{xgboost_confusion_matrix.png}
+  \caption{XGBoost Confusion Matrix: Multi-class classification results on test set (20,000 samples)}
+  \label{fig:xgboost-cm}
+\end{figure}
+
+\subsubsection{Per-Class Performance}
+
+Table~\ref{tab:cm-analysis} summarizes per-class accuracy derived from the
+confusion matrix:
+
+\begin{table}[htbp]
+  \centering
+  \caption{Per-class classification accuracy from confusion matrix}
+  \label{tab:cm-analysis}
+  \begin{tabular}{lrrr}
+    \toprule
+    \textbf{Attack Class} & \textbf{Correct} & \textbf{Total} & \textbf{Accuracy} \\
+    \midrule
+    backdoor    & 3997 & 4000 & 99.925\% \\
+    ransomware  & 3996 & 4000 & 99.900\% \\
+    normal      & 9963 & 10000 & 99.630\% \\
+    password    & 3959 & 4000 & 98.975\% \\
+    scanning    & 3968 & 4000 & 99.200\% \\
+    xss         & 3953 & 4000 & 98.825\% \\
+    ddos        & 3924 & 4000 & 98.100\% \\
+    dos         & 3914 & 4000 & 97.850\% \\
+    injection   & 3868 & 4000 & 96.700\% \\
+    mitm        & 191  & 209  & 91.388\% \\
+    \midrule
+    \textbf{Overall} & \textbf{39733} & \textbf{40209} & \textbf{98.815\%} \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\subsubsection{Interpretation and Operational Significance}
+
+\paragraph{Strengths:}
+The model achieves $>99\%$ accuracy on critical attack types (backdoor,
+ransomware, normal traffic), meaning false alarms and missed detections are
+exceedingly rare. This is ideal for a production IDS where alert fatigue and
+missed incidents are both operationally costly.
+
+\paragraph{Weakness:} 
+MITM (Man-in-the-Middle) classification lags at 91.4\%, with the model
+confusing some MITM attacks as DDoS ($9$~cases), DoS ($7$~cases), or
+ransomware ($5$~cases). This likely reflects overlapping network feature
+patterns between these attack families.
+
+\paragraph{Recommendation:}
+For critical MITM detection, the organization could:
+\begin{enumerate}[leftmargin=1.5em]
+  \item Collect more labeled MITM samples to retrain the model.
+  \item Deploy the LLM layer (Section~\ref{sec:llm}) to provide additional
+    contextual reasoning on borderline cases.
+  \item Use the LLM's \texttt{needs\_manual\_review} flag to route ambiguous
+    MITM detections to human analysts.
+\end{enumerate}
+
+\subsubsection{Comparison with Other Models}
+
+Figures~\ref{fig:rf-cm} and~\ref{fig:iso-cm} show the confusion matrices for
+RandomForest and IsolationForest respectively.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.95\textwidth]{randomforest_confusion_matrix.png}
+  \caption{RandomForest Confusion Matrix: Comparable performance to XGBoost}
+  \label{fig:rf-cm}
+\end{figure}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.95\textwidth]{isolationforest_confusion_matrix.png}
+  \caption{IsolationForest Confusion Matrix: Binary anomaly detection (normal vs.~attack)}
+  \label{fig:iso-cm}
+\end{figure}
+
+RandomForest produces nearly identical results to XGBoost, with both diagonal
+dominated patterns indicating few classification errors. IsolationForest, being
+unsupervised and binary (normal vs.\ anomaly), cannot differentiate specific
+attack types and is reserved for novelty detection in IDS-AI.
 
 \subsection{Example ML Output}
 
@@ -842,15 +840,14 @@ knowledge-base context. It returns a structured classification containing:
   \item manual-review flag.
 \end{itemize}
 
-\subsection{How the LLM layer works (detail)}
+\subsection{How the LLM Layer Works}
 
 The LLM receives a tightly controlled prompt constructed from a sanitized
-raw log (or a fallback reconstruction), a compact ML summary (label,
-confidence, top features, risk signals) and short snippets from the
-knowledge-base. The prompt template enforces a JSON-only structured reply to
-make downstream parsing reliable. The backend enforces length limits and
-detects prompt-injection patterns; suspect inputs are redacted before being
-sent to the model.
+raw log, a compact ML summary (label, confidence, top features, risk signals),
+and short snippets from the knowledge base. The prompt template enforces a
+JSON-only structured reply to make downstream parsing reliable. The backend
+enforces length limits and detects prompt-injection patterns; suspect inputs
+are redacted before being sent to the model.
 
 \subsection{Example LLM Output}
 
@@ -892,20 +889,20 @@ Key properties:
 \begin{itemize}[leftmargin=1.5em]
   \item Contextual reasoning: the LLM provides human-readable explanations
     and can correlate indicators that the ML layer misses.
-  \item Higher latency and resource use compared to ML — calls must be
-    guarded by timeouts and executed off the event loop.
-  \item Structured output: the LLM returns classification, evidence items,
-    suggested severity, and recommended mitigation steps.
+  \item Higher latency compared to ML --- calls must be guarded by timeouts
+    and executed off the event loop.
+  \item Structured output: classification, evidence items, suggested severity,
+    and recommended mitigation steps.
 \end{itemize}
 
-\subsection{Safety and reliability}
+\subsection{Safety and Reliability}
 
 To limit misuse and instability the system:
 \begin{itemize}[leftmargin=1.5em]
   \item sanitizes and truncates raw logs;
   \item applies prompt-injection detection rules and redaction policies;
-  \item enforces an `ANALYSIS_TIMEOUT_SECONDS` for each LLM call and marks
-    long-running jobs as failed to avoid blocking the queue;
+  \item enforces \texttt{ANALYSIS\_TIMEOUT\_SECONDS} for each LLM call and
+    marks long-running jobs as failed to avoid blocking the queue;
   \item isolates LLM calls in threads or worker processes when necessary.
 \end{itemize}
 
@@ -931,37 +928,25 @@ layer predicts the traffic label and the LLM layer produces explanations,
 evidence, severity, and recommended action, the security analyst reviews the
 complete result in the dashboard.
 
-\subsection{How the Human-in-the-Loop works (detail)}
+\subsection{How the Human-in-the-Loop Works}
 
 The dashboard aggregates ML outputs, LLM explanations, and persisted traffic
 history for each analyzed event. An analyst inspects the combined context and
-can change alert workflow status (open, reviewing, resolved, false positive)
-via the UI. All analyst actions are recorded with timestamps to create an
-audit trail. The human reviewer is responsible for final operational
-decisions, which reduces the risk associated with automated false positives
-or LLM hallucinations.
+can change alert workflow status (\texttt{open}, \texttt{reviewing},
+\texttt{resolved}, \texttt{false\_positive}) via the UI. All analyst actions
+are recorded with timestamps to create an audit trail.
 
-\subsection{UX and operational recommendations}
+\subsection{UX and Operational Recommendations}
 
-Presenting clear, concise evidence helps analysts decide quickly. Recommended
-UX features include:
+Recommended features include:
 \begin{itemize}[leftmargin=1.5em]
   \item a live queue view showing waiting and processing jobs with progress
     percentages and per-job spinners;
-  \item an action history log for each alert (who changed what and when);
+  \item an action history log for each alert;
   \item one-click escalation workflows that attach relevant logs to tickets;
   \item role-based access control so only authorized users can resolve alerts.
 \end{itemize}
 
-The human analyst can then decide whether the alert is a real incident, a
-false positive, or a case requiring further investigation. This is important
-because automated systems can misclassify ambiguous traffic, and LLM output
-may require human validation before response actions are taken. In IDS-AI,
-automation accelerates analysis, but the human analyst remains the final
-decision-maker.
-
-% ================================================================
-% CHAPTER 5
 % ================================================================
 \chapter{Database and Persistence}
 
@@ -994,8 +979,6 @@ entry has completed. Live queue entries are displayed together with persisted
 traffic so the user can see both current and historical activity.
 
 % ================================================================
-% CHAPTER 6
-% ================================================================
 \chapter{Frontend Dashboard}
 
 \section{Dashboard Overview}
@@ -1022,15 +1005,14 @@ traffic. Live jobs are shown with:
   \item a cancel button for jobs still waiting in the queue.
 \end{itemize}
 
-\screenshot{traffic_queue.png}{Traffic view with live queued attacks and percentage progress}
+\screenshot{traffic\_queue.png}{Traffic view with live queued attacks and percentage progress}
 
 \section{Human Analyst Review}
 
 The dashboard is also the interface for the Human-in-the-Loop layer. It
 centralizes ML predictions, LLM explanations, evidence, confidence, severity,
 and recommended actions so the analyst can make a final decision with all
-available context. The analyst can monitor live traffic, inspect completed
-results, and update alert status after review.
+available context.
 
 \section{Alerts View}
 
@@ -1038,7 +1020,7 @@ The Alerts view displays recent IDS alerts, including severity badges,
 classification, confidence, evidence, explanation, and recommended action.
 Security analysts can update the alert workflow status from the table.
 
-\screenshot{alerts_dashboard.png}{Alerts dashboard with severity and status controls}
+\screenshot{alerts\_dashboard.png}{Alerts dashboard with severity and status controls}
 
 \section{System Health}
 
@@ -1046,8 +1028,6 @@ The dashboard also displays health indicators for the ML model, LLM,
 MongoDB storage, analysis queue, active workers, and configured concurrency.
 This makes operational issues visible without opening backend logs.
 
-% ================================================================
-% CHAPTER 7
 % ================================================================
 \chapter{Testing and Evaluation}
 
@@ -1101,33 +1081,30 @@ processed one at a time. The queue status after the observation window was:
     \toprule
     \textbf{Status} & \textbf{Count} \\
     \midrule
-    Completed & 3 \\
+    Completed  & 3 \\
     Processing & 1 \\
-    Waiting & 96 \\
-    Failed & 0 \\
+    Waiting    & 96 \\
+    Failed     & 0 \\
     \bottomrule
   \end{tabular}
 \end{table}
 
 This result confirms that the backend accepts burst traffic without dropping
 requests and keeps them visible to the frontend. The slow completion rate is
-expected because only one worker was configured and several attack samples
+expected because only one worker was configured, and several attack samples
 triggered LLM classification.
 
 \section{Build Verification}
 
-The following commands were used to verify the modified project:
-
 \begin{lstlisting}[style=bashstyle, caption={Verification commands}]
-python3 -m py_compile backend/main.py backend/router/analyse.py backend/schemas/schemas.py
+python3 -m py_compile backend/main.py backend/router/analyse.py \
+  backend/schemas/schemas.py
 npm run build
 \end{lstlisting}
 
 The React production build completed successfully, and the FastAPI application
 started correctly on the test port \texttt{8001}.
 
-% ================================================================
-% CHAPTER 8
 % ================================================================
 \chapter{Security Considerations}
 
@@ -1158,8 +1135,6 @@ RabbitMQ, or Kafka would be recommended so jobs survive process restarts and
 can be distributed across multiple workers or machines.
 
 % ================================================================
-% CHAPTER 9
-% ================================================================
 \chapter{Conclusion}
 
 IDS-AI demonstrates a practical three-layer approach to intrusion detection.
@@ -1180,8 +1155,6 @@ Future improvements could include a durable distributed queue, WebSocket or
 Server-Sent Events for lower-latency updates, richer model metrics, role-based
 dashboard access, and automated report export for incident response.
 
-% ================================================================
-% APPENDIX
 % ================================================================
 \appendix
 
