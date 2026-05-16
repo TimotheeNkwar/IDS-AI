@@ -16,6 +16,7 @@ from sklearn.ensemble import IsolationForest, RandomForestClassifier
 from sklearn.metrics import (
     accuracy_score,
     classification_report,
+    ConfusionMatrixDisplay,
     f1_score,
     precision_score,
     recall_score,
@@ -36,8 +37,9 @@ warnings.filterwarnings("ignore")
 logging.basicConfig(level=logging.INFO, format="%(asctime)s  %(levelname)s  %(message)s")
 log = logging.getLogger(__name__)
 
-DATA_PATH = os.path.join(os.path.dirname(__file__), "data.csv")
-MODEL_SAVE_PATH = os.path.join(os.path.dirname(__file__), "best_model.joblib")
+DATA_PATH = os.path.join(os.path.dirname(__file__), "ml", "data.csv")
+MODEL_SAVE_PATH = os.path.join(os.path.dirname(__file__), "ml", "best_model.joblib")
+CONFUSION_MATRIX_DIR = os.path.join(os.path.dirname(__file__), "ml", "confusion_matrices")
 
 # ── Feature lists ──────────────────────────────────────────────────────────────
 
@@ -139,6 +141,43 @@ def _print_table(rows: list[dict]) -> None:
     print(sep)
 
 
+def _save_confusion_matrix(
+    model_name: str,
+    y_true: np.ndarray,
+    y_pred: np.ndarray,
+    labels: list[int],
+    display_labels: list[str],
+) -> str:
+    import matplotlib
+
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+
+    os.makedirs(CONFUSION_MATRIX_DIR, exist_ok=True)
+    filename = f"{model_name.lower().replace(' ', '_')}_confusion_matrix.png"
+    output_path = os.path.join(CONFUSION_MATRIX_DIR, filename)
+
+    fig_width = max(8, len(display_labels) * 0.9)
+    fig_height = max(6, len(display_labels) * 0.75)
+    fig, ax = plt.subplots(figsize=(fig_width, fig_height))
+    ConfusionMatrixDisplay.from_predictions(
+        y_true,
+        y_pred,
+        labels=labels,
+        display_labels=display_labels,
+        xticks_rotation=45,
+        cmap="Blues",
+        ax=ax,
+        colorbar=True,
+    )
+    ax.set_title(f"{model_name} Confusion Matrix")
+    fig.tight_layout()
+    fig.savefig(output_path, dpi=160, bbox_inches="tight")
+    plt.close(fig)
+    log.info("Saved %s confusion matrix to %s", model_name, output_path)
+    return output_path
+
+
 # ── Data augmentation ─────────────────────────────────────────────────────────
 
 def _balance_classes(X: np.ndarray, y: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
@@ -210,6 +249,13 @@ def train():
     log.info("RandomForest done  F1=%.4f", results[-1]["f1"])
     print("\n[RandomForest] Classification Report:")
     print(classification_report(y_test, y_pred_rf, target_names=type_classes))
+    _save_confusion_matrix(
+        "RandomForest",
+        y_test,
+        y_pred_rf,
+        labels=list(range(len(type_classes))),
+        display_labels=type_classes,
+    )
 
     # ── XGBoost ───────────────────────────────────────────────────────────────
     log.info("Training XGBClassifier (multi-class) …")
@@ -228,6 +274,13 @@ def train():
     log.info("XGBoost done  F1=%.4f", results[-1]["f1"])
     print("\n[XGBoost] Classification Report:")
     print(classification_report(y_test, y_pred_xgb, target_names=type_classes))
+    _save_confusion_matrix(
+        "XGBoost",
+        y_test,
+        y_pred_xgb,
+        labels=list(range(len(type_classes))),
+        display_labels=type_classes,
+    )
 
     # ── Isolation Forest (anomaly detector — binary, no multi-class) ──────────
     log.info("Training IsolationForest (anomaly detection) …")
@@ -251,6 +304,13 @@ def train():
     log.info("IsolationForest done  F1=%.4f", results[-1]["f1"])
     print("\n[IsolationForest] Classification Report (binary):")
     print(classification_report(y_test_bin, y_pred_iso_bin, target_names=["normal", "attack"]))
+    _save_confusion_matrix(
+        "IsolationForest",
+        y_test_bin,
+        y_pred_iso_bin,
+        labels=[0, 1],
+        display_labels=["normal", "attack"],
+    )
 
     # ── Comparison table ───────────────────────────────────────────────────────
     _print_table(results)

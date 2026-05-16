@@ -7,7 +7,9 @@ requires-python = ">=3.11"
 dependencies = [
     "cryptography>=48.0.0",
     "fastapi==0.110.0",
+    "imbalanced-learn>=0.14.1",
     "joblib==1.4.2",
+    "matplotlib==3.8.4",
     # "jwt==0.6.0",  <-- remove this
     "motor==3.3.2",
     "numpy==1.26.4",

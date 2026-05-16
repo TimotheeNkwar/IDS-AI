@@ -9,6 +9,7 @@ numpy==1.26.4
 scikit-learn==1.4.2
 xgboost==2.0.3
 joblib==1.4.2
+matplotlib==3.8.4
 
 # LLM
 # Ollama is used through its local HTTP API, so no Python LLM runtime is required.
