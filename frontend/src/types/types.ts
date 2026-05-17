@@ -160,3 +160,18 @@ export interface AlertFeedItem {
 }
 
 // types/types.ts
+
+export interface Suggestion {
+  id: string;
+  type: string; // "xss", "mitm", "password"
+  priority: "high" | "medium" | "low" | "critical";
+  title: string;
+  description: string | null;
+  recommended_action: string;
+  evidence: string[];
+  knowledge_matches: string[];
+  source_ip: string;
+  timestamp: string;
+  needs_manual_review: boolean;
+  count: number;
+}

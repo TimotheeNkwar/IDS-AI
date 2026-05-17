@@ -23,6 +23,7 @@ import IPFilterInput from "../../components/IPFilterInput.tsx";
 export default function ThreatsAnalysisPage() {
   const [selectedAlert, setSelectedAlert] = useState<Alert | null>(null);
   const dialogRef = useRef<HTMLDialogElement>(null);
+
   const openModal = (alert: Alert) => {
     setSelectedAlert(alert);
     dialogRef.current?.showModal();
@@ -32,9 +33,10 @@ export default function ThreatsAnalysisPage() {
     pageIndex: 0,
     pageSize: 10,
   });
+
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
-  const { data: alerts, error, isPending } = useAlerts();
+  const { data: alerts } = useAlerts();
 
   const table = useReactTable({
     data: alerts?.alerts ?? [],
@@ -47,83 +49,134 @@ export default function ThreatsAnalysisPage() {
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     onPaginationChange: setPagination,
-
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
   });
+
   return (
-    <div>
-      <div className="overflow-x-auto  rounded-xlborder border-base-content/5 bg-slate-900 py-4 rounded-4xl">
-        <div className="px-8">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2 mb-4">
-              <h1 className="text-xl font-medium ">Threats Analysis</h1>
+    <div className="space-y-4">
+      {/* MAIN CONTAINER */}
+      <div
+        className="
+        overflow-hidden
+        rounded-2xl
+        border border-slate-700/50
+        bg-slate-900/40
+        backdrop-blur-xl
+        shadow-xl shadow-black/30
+      "
+      >
+        {/* HEADER */}
+        <div className="px-6 py-4 border-b border-slate-800/50">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-xl font-semibold text-white">
+                Threats Analysis
+              </h1>
+              <p className="text-xs text-slate-400 mt-1">
+                Real-time ML + LLM threat detection stream
+              </p>
             </div>
+
             <IPFilterInput
               table={table}
               column="source_ip"
               placeholder="Filter by IP..."
             />
           </div>
-          <div>
-            <table className="table">
-              <thead className="bg-slate-800/50 text-white">
-                {table.getHeaderGroups().map((headerGroup) => (
-                  <tr key={headerGroup.id}>
-                    {headerGroup.headers.map((header) => (
-                      <th
-                        key={header.id}
-                        onClick={header.column.getToggleSortingHandler()}
-                        className="cursor-pointer select-none"
-                      >
-                        <div className="flex items-center font-semibold gap-1">
-                          {flexRender(
-                            header.column.columnDef.header,
-                            header.getContext(),
-                          )}
-                          {{
-                            asc: <ChevronUp className="w-4 h-4" />,
-                            desc: <ChevronDown className="w-4 h-4" />,
-                          }[header.column.getIsSorted() as string] ?? null}
-                        </div>
-                      </th>
-                    ))}
-                  </tr>
-                ))}
-              </thead>
-              <tbody>
-                {table.getRowModel().rows.map((row) => (
-                  <Fragment key={row.id}>
-                    <tr
-                      className="hover cursor-pointer"
-                      onClick={() => openModal(row.original)}
+        </div>
+
+        {/* TABLE */}
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            {/* THEAD */}
+            <thead className="bg-slate-800/30 border-b border-slate-700/40">
+              {table.getHeaderGroups().map((headerGroup) => (
+                <tr key={headerGroup.id}>
+                  {headerGroup.headers.map((header) => (
+                    <th
+                      key={header.id}
+                      onClick={header.column.getToggleSortingHandler()}
+                      className="
+                        px-4 py-3
+                        text-left text-xs uppercase tracking-wider
+                        text-slate-300
+                        cursor-pointer
+                        hover:text-white
+                        transition
+                      "
                     >
-                      {row.getVisibleCells().map((cell) => (
-                        <td key={cell.id}>
-                          {flexRender(
-                            cell.column.columnDef.cell,
-                            cell.getContext(),
-                          )}
-                        </td>
-                      ))}
-                    </tr>
-                  </Fragment>
-                ))}
-              </tbody>
-            </table>
-            {alerts?.alerts.length === 0 && (
-              <p className="text-center py-8 text-base-content/50">
-                No data available
-              </p>
-            )}
-            <div className="flex items-center justify-end mt-4">
-              <ThreatModal ref={dialogRef} alert={selectedAlert} />
+                      <div className="flex items-center gap-1">
+                        {flexRender(
+                          header.column.columnDef.header,
+                          header.getContext(),
+                        )}
+
+                        {{
+                          asc: (
+                            <ChevronUp className="w-4 h-4 text-fuchsia-400" />
+                          ),
+                          desc: (
+                            <ChevronDown className="w-4 h-4 text-fuchsia-400" />
+                          ),
+                        }[header.column.getIsSorted() as string] ?? null}
+                      </div>
+                    </th>
+                  ))}
+                </tr>
+              ))}
+            </thead>
+
+            {/* TBODY */}
+            <tbody className="divide-y divide-slate-800/40">
+              {table.getRowModel().rows.map((row) => (
+                <tr
+                  key={row.id}
+                  onClick={() => openModal(row.original)}
+                  className="
+                    cursor-pointer
+                    hover:bg-slate-800/30
+                    transition
+                    group
+                  "
+                >
+                  {row.getVisibleCells().map((cell) => (
+                    <td
+                      key={cell.id}
+                      className="
+                        px-4 py-3
+                        text-sm text-slate-200
+                        group-hover:text-white
+                        transition
+                      "
+                    >
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext(),
+                      )}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+
+          {/* EMPTY STATE */}
+          {alerts?.alerts.length === 0 && (
+            <div className="text-center py-10 text-slate-500 text-sm">
+              No data available
             </div>
-          </div>
+          )}
         </div>
       </div>
+
+      {/* MODAL + PAGINATION */}
+      <div className="flex items-center justify-end">
+        <ThreatModal ref={dialogRef} alert={selectedAlert} />
+      </div>
+
       <TablePagination table={table} />
     </div>
   );

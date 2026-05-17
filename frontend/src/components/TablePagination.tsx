@@ -21,69 +21,87 @@ export default function TablePagination<T>({ table }: Props<T>) {
     }, []);
 
   return (
-    <div className="flex items-center justify-between mt-4 px-2">
-      <div className="join">
+    <div className="flex items-center justify-between mt-4 px-2 text-sm text-slate-300">
+      {/* LEFT CONTROLS */}
+      <div className="flex items-center gap-1 bg-slate-900/60 border border-slate-800 rounded-xl px-2 py-1 backdrop-blur">
         <button
-          className="join-item btn btn-sm bg-slate-900"
           onClick={() => table.firstPage()}
           disabled={!table.getCanPreviousPage()}
+          className="px-2 py-1 rounded-md hover:bg-slate-800 disabled:opacity-40 transition"
         >
           «
         </button>
+
         <button
-          className="join-item btn btn-sm bg-slate-900"
           onClick={() => table.previousPage()}
           disabled={!table.getCanPreviousPage()}
+          className="px-2 py-1 rounded-md hover:bg-slate-800 disabled:opacity-40 transition"
         >
           ‹
         </button>
 
+        <div className="h-4 w-px bg-slate-700 mx-1" />
+
+        {/* PAGE NUMBERS */}
         {pages.map((item, idx) =>
           item === "..." ? (
-            <button
-              key={`ellipsis-${idx}`}
-              className="join-item btn btn-sm btn-disabled"
-            >
-              ...
-            </button>
+            <span key={`ellipsis-${idx}`} className="px-2 text-slate-500">
+              …
+            </span>
           ) : (
             <button
               key={item}
-              className={`join-item btn btn-sm ${currentPage === item ? "bg-fuchsia-600 border-fuchsia-600 text-white" : ""}`}
               onClick={() => table.setPageIndex(item as number)}
+              className={`
+                px-3 py-1 rounded-md transition
+                hover:bg-slate-800
+                ${
+                  currentPage === item
+                    ? "bg-fuchsia-500/20 text-fuchsia-300 border border-fuchsia-500/30"
+                    : "text-slate-300"
+                }
+              `}
             >
               {(item as number) + 1}
             </button>
           ),
         )}
 
+        <div className="h-4 w-px bg-slate-700 mx-1" />
+
         <button
-          className="join-item btn btn-sm bg-slate-900"
           onClick={() => table.nextPage()}
           disabled={!table.getCanNextPage()}
+          className="px-2 py-1 rounded-md hover:bg-slate-800 disabled:opacity-40 transition"
         >
           ›
         </button>
+
         <button
-          className="join-item btn btn-sm bg-slate-900"
           onClick={() => table.lastPage()}
           disabled={!table.getCanNextPage()}
+          className="px-2 py-1 rounded-md hover:bg-slate-800 disabled:opacity-40 transition"
         >
           »
         </button>
       </div>
 
-      <select
-        className="select select-sm select-bordered"
-        value={table.getState().pagination.pageSize}
-        onChange={(e) => table.setPageSize(Number(e.target.value))}
-      >
-        {[10, 20, 50].map((size) => (
-          <option key={size} value={size}>
-            {size} / page
-          </option>
-        ))}
-      </select>
+      {/* RIGHT: page size (clean chip style instead of select) */}
+      <div className="flex items-center gap-2 text-xs text-slate-400">
+        <span>Rows</span>
+
+        <select
+          className="bg-slate-900/60 border border-slate-800 rounded-lg px-2 py-1 text-slate-300 outline-none"
+          value={table.getState().pagination.pageSize}
+          onChange={(e) => table.setPageSize(Number(e.target.value))}
+        >
+          {[10, 20, 50].map((size) => (
+            <option key={size} value={size}>
+              {size}
+            </option>
+          ))}
+        </select>
+      </div>
     </div>
   );
 }

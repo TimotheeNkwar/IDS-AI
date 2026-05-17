@@ -15,17 +15,12 @@ body {
   position: relative;
 }
 
-/* body::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  background-image: url("./assets/images/background/bg.png");
-  background-size: cover;
-  background-position: center;
-  filter: blur(10px);
-  scale: 1.05;
-  z-index: -3;
-} */
+.glass {
+  background: rgba(15, 23, 42, 0.55);
+  backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
 @keyframes slideDown {
   from {
     opacity: 0;

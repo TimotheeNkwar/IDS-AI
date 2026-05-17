@@ -10,8 +10,12 @@ import sys
 import os
 
 import logging
-import os
-import sys
+from ml import detector
+from ml import model as llm_module
+
+
+import database
+
 from contextlib import asynccontextmanager
 
 from pathlib import Path
@@ -24,23 +28,18 @@ from llm_queue.llm_queue import llm_queue
 
 sys.path.append(str(Path(__file__).resolve().parents[1]))
 
-from backend.router.analyse.analyse import analyse_router
-from backend.router.users.user import user_router
+from router.analyse.analyse import analyse_router
+from router.users.user import user_router
 from router.websockets_router import socket_router
 from router.health import health_router
 from router.stats import stats_router
+from router.suggestion import suggestions_router
 
 sys.path.append(str(Path(__file__).resolve().parents[1]))
 
 load_dotenv(Path(__file__).with_name(".env"))
 load_dotenv(Path(__file__).resolve().parents[1] / ".env", override=False)
 
-from ml import detector
-from ml import model as llm_module
-
-
-import database
-from config.config import settings
 
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s  %(levelname)s  %(message)s"
@@ -94,6 +93,7 @@ app.include_router(user_router, prefix="/api/users", tags=["users"])
 app.include_router(socket_router, prefix="/api", tags=["websockets"])
 app.include_router(stats_router, prefix="/api", tags=["stats"])
 app.include_router(health_router, prefix="/api", tags=["health"])
+app.include_router(suggestions_router, prefix="/api", tags=["suggestions"])
 
 
 # ── Request / Response models ─────────────────────────────────────────────────

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 import logging
+from pymongo.errors import DuplicateKeyError
 from typing import Any
 import database
 
@@ -26,8 +27,11 @@ def serialize_user(user: dict[str, Any]) -> dict[str, Any]:
 async def create_user(user_dict: dict) -> str | None:
     if database.user_col is None:
         return None
-    result = await database.user_col.insert_one(dict(user_dict))
-    return str(result.inserted_id) if result.inserted_id else None
+    try:
+        result = await database.user_col.insert_one(dict(user_dict))
+        return str(result.inserted_id) if result.inserted_id else None
+    except DuplicateKeyError:
+        return None
 
 
 async def list_users() -> list[dict[str, Any]]:
@@ -50,6 +54,7 @@ async def get_user_by_id(user_id: str) -> dict[str, Any] | None:
     except Exception as exc:
         log.warning("Failed to get user by ID: %s", exc)
         return None
+
 
 async def get_user_by_email(email: str) -> dict[str, Any] | None:
     if database.user_col is None:
@@ -95,4 +100,3 @@ async def update_user(user_id: str, update_data: dict[str, Any]) -> bool:
     except Exception as exc:
         log.warning("Failed to update user: %s", exc)
         return False
-

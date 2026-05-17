@@ -120,39 +120,49 @@ export default function TrafficMonitorPage() {
 
   return (
     <div>
-      <div className="overflow-x-auto  rounded-xlborder border-base-content/5 bg-slate-900 py-4 rounded-4xl">
-        <div className="flex items-center justify-between mb-4 px-8">
+      <div className="overflow-x-auto rounded-2xl border border-slate-700/50 bg-slate-900/40 backdrop-blur-xl shadow-xl shadow-black/30">
+        {/* HEADER */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-800/50">
           <div>
-            <h1 className="text-xl font-medium">Traffic Monitor</h1>
-            <p className="text-xs text-base-content/40">
-              Only anomalies from the last 24h are displayed. Data is updated
-              live via WebSocket.
+            <h1 className="text-xl font-semibold text-white">
+              Traffic Monitor
+            </h1>
+            <p className="text-xs text-slate-400 mt-1">
+              Only anomalies from the last 24h are displayed. Live WebSocket
+              feed.
             </p>
           </div>
+
           <IPFilterInput
             table={table}
             column="source_ip"
             placeholder="Filter by IP..."
           />
         </div>
-        <table className="table">
-          <thead className="bg-slate-800/50 text-white">
+
+        {/* TABLE */}
+        <table className="w-full">
+          {/* HEADER */}
+          <thead className="bg-slate-800/30 border-b border-slate-700/40 backdrop-blur">
             {table.getHeaderGroups().map((headerGroup) => (
               <tr key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (
                   <th
                     key={header.id}
                     onClick={header.column.getToggleSortingHandler()}
-                    className="cursor-pointer select-none"
+                    className="px-4 py-3 text-left text-xs uppercase tracking-wider text-slate-300 cursor-pointer hover:text-white transition"
                   >
-                    <div className="flex items-center font-semibold gap-1">
+                    <div className="flex items-center gap-1 font-medium">
                       {flexRender(
                         header.column.columnDef.header,
                         header.getContext(),
                       )}
+
                       {{
-                        asc: <ChevronUp className="w-4 h-4" />,
-                        desc: <ChevronDown className="w-4 h-4" />,
+                        asc: <ChevronUp className="w-4 h-4 text-fuchsia-400" />,
+                        desc: (
+                          <ChevronDown className="w-4 h-4 text-fuchsia-400" />
+                        ),
                       }[header.column.getIsSorted() as string] ?? null}
                     </div>
                   </th>
@@ -161,56 +171,77 @@ export default function TrafficMonitorPage() {
               </tr>
             ))}
           </thead>
-          <tbody>
-            {table.getRowModel().rows.map((row) => (
-              <Fragment key={row.id}>
-                <tr
-                  className="hover cursor-pointer"
-                  onClick={() =>
-                    setExpandedRow(expandedRow === row.id ? null : row.id)
-                  }
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <td key={cell.id}>
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext(),
-                      )}
-                    </td>
-                  ))}
-                  <td>
-                    {expandedRow === row.id ? (
-                      <ChevronUp className="w-4 h-4" />
-                    ) : (
-                      <ChevronDown className="w-4 h-4" />
-                    )}
-                  </td>
-                </tr>
 
-                {expandedRow === row.id && (
-                  <tr className="bg-slate-800/30 accordion-row">
-                    <td colSpan={columns.length + 1} className="p-0">
-                      <TrafficRowDetail row={row.original} />
+          {/* BODY */}
+          <tbody className="divide-y divide-slate-800/40">
+            {table.getRowModel().rows.map((row) => {
+              const isOpen = expandedRow === row.id;
+
+              return (
+                <Fragment key={row.id}>
+                  {/* ROW */}
+                  <tr
+                    onClick={() => setExpandedRow(isOpen ? null : row.id)}
+                    className={`
+                  group cursor-pointer transition
+                  hover:bg-slate-800/40
+                  ${isOpen ? "bg-fuchsia-500/5" : ""}
+                `}
+                  >
+                    {row.getVisibleCells().map((cell) => (
+                      <td
+                        key={cell.id}
+                        className="px-4 py-3 text-sm text-slate-200 group-hover:text-white transition"
+                      >
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext(),
+                        )}
+                      </td>
+                    ))}
+
+                    <td className="px-4 py-3">
+                      <div className="flex justify-end">
+                        {isOpen ? (
+                          <ChevronUp className="w-4 h-4 text-fuchsia-400" />
+                        ) : (
+                          <ChevronDown className="w-4 h-4 text-slate-500 group-hover:text-white" />
+                        )}
+                      </div>
                     </td>
                   </tr>
-                )}
-              </Fragment>
-            ))}
+
+                  {/* EXPANDED */}
+                  {isOpen && (
+                    <tr className="bg-slate-900/30">
+                      <td colSpan={columns.length + 1} className="p-0">
+                        <div className="border-l-2 border-fuchsia-500/40 pl-4 py-3 backdrop-blur">
+                          <TrafficRowDetail row={row.original} />
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                </Fragment>
+              );
+            })}
           </tbody>
         </table>
 
+        {/* EMPTY STATE */}
         {traffic.length === 0 && (
-          <p className="text-center py-8 text-base-content/50">
+          <div className="py-10 text-center text-slate-500 text-sm">
             No data available
-          </p>
+          </div>
         )}
       </div>
 
-      <TablePagination table={table} />
+      {/* FOOTER */}
+      <div className="flex items-center justify-between mt-2 text-xs text-slate-500">
+        <span>{traffic.length} entries</span>
+        <span>live via WebSocket</span>
+      </div>
 
-      <p className="text-xs text-base-content/40 mt-2">
-        {traffic.length} entries — live via WebSocket
-      </p>
+      <TablePagination table={table} />
     </div>
   );
 }

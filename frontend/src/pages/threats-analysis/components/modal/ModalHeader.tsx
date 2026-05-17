@@ -1,43 +1,90 @@
-import { ShieldAlert, ShieldBan, ShieldX, TrafficCone } from "lucide-react";
+import { ShieldAlert, ShieldBan } from "lucide-react";
 import type { Alert } from "../../../../types/types";
-export default function ModalHeader({ alert }: { alert: Alert | null }) {
-  return (
-    <div className="flex items-center justify-between gap-2">
-      <div className="flex items-center gap-2">
-        <h3 className="font-bold text-lg flex items-center bg-red-900 p-2 rounded-lg">
-          {alert?.severity === "medium" && (
-            <ShieldAlert className="w-6 h-6 text-yellow-500" />
-          )}
 
-          {alert?.severity === "high" && (
-            <ShieldBan className="w-6 h-6 text-red-600" />
+export default function ModalHeader({ alert }: { alert: Alert | null }) {
+  const severity = alert?.severity;
+  const status = alert?.status;
+
+  return (
+    <div className="flex items-start justify-between gap-4">
+
+      {/* LEFT SIDE */}
+      <div className="flex items-start gap-3">
+
+        {/* ICON BLOCK */}
+        <div
+          className={`
+            p-2 rounded-xl border
+            ${severity === "high"
+              ? "bg-red-500/10 border-red-500/20"
+              : "bg-yellow-500/10 border-yellow-500/20"}
+          `}
+        >
+          {severity === "high" ? (
+            <ShieldBan className="w-5 h-5 text-red-400" />
+          ) : (
+            <ShieldAlert className="w-5 h-5 text-yellow-400" />
           )}
-        </h3>
-        <div className="flex flex-col justify-center ">
-          <div className="flex space-x-1 text-xs items-center">
-            <p>{alert?.type}</p>
-            <p
-              className={`font-semibold p-0.5 px-1.5 rounded-2xl ${alert?.severity === "medium" ? "text-yellow-800 bg-yellow-500 " : "text-red-300 bg-red-900 "}`}
-            >
-              {alert?.severity}
+        </div>
+
+        {/* INFO */}
+        <div className="flex flex-col">
+
+          {/* TYPE + BADGES */}
+          <div className="flex items-center gap-2 flex-wrap">
+
+            <p className="text-sm font-semibold text-slate-100">
+              {alert?.type}
             </p>
-            <p
-              className={`font-semibold p-0.5 px-2 rounded-2xl ${alert?.status === "open" ? "text-green-300 bg-green-900" : "text-red-300 bg-red-900"}`}
+
+            <span
+              className={`
+                text-[11px] px-2 py-0.5 rounded-full border
+                ${severity === "high"
+                  ? "bg-red-500/10 text-red-300 border-red-500/20"
+                  : "bg-yellow-500/10 text-yellow-300 border-yellow-500/20"}
+              `}
             >
-              {alert?.status}
-            </p>
+              {severity}
+            </span>
+
+            <span
+              className={`
+                text-[11px] px-2 py-0.5 rounded-full border
+                ${status === "open"
+                  ? "bg-green-500/10 text-green-300 border-green-500/20"
+                  : "bg-slate-500/10 text-slate-300 border-slate-500/20"}
+              `}
+            >
+              {status}
+            </span>
           </div>
-          <div className="flex space-x-1 items-center text-base-content/60 text-xs">
-            <p className="">
-              {new Date(alert?.timestamp ?? "").toLocaleString()}.
-            </p>
-            <p>ID:{alert?.id}</p>
+
+          {/* META */}
+          <div className="mt-1 text-[11px] text-slate-500 flex gap-3 flex-wrap">
+            <span>
+              {alert?.timestamp
+                ? new Date(alert.timestamp).toLocaleString()
+                : "—"}
+            </span>
+            <span className="font-mono">ID: {alert?.id}</span>
           </div>
         </div>
       </div>
 
+      {/* CLOSE */}
       <form method="dialog">
-        <button className="btn btn-sm btn-circle btn-ghost">✕</button>
+        <button
+          className="
+            w-8 h-8 rounded-lg
+            bg-slate-800/40 hover:bg-slate-700/40
+            border border-slate-700/40
+            text-slate-300 hover:text-white
+            transition
+          "
+        >
+          ✕
+        </button>
       </form>
     </div>
   );

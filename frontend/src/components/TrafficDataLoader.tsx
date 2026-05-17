@@ -1,53 +1,58 @@
 export default function TrafficDataLoader() {
   return (
-    <div className="overflow-x-auto rounded-box border border-base-content/5 bg-base-100">
-      <table className="table">
-        <thead>
+    <div className="overflow-x-auto rounded-2xl border border-slate-800/60 bg-slate-900/40 backdrop-blur-xl shadow-xl shadow-black/20">
+      {/* HEADER (fake table header feel) */}
+      <div className="px-6 py-4 border-b border-slate-800/50">
+        <div className="h-5 w-40 bg-slate-700/40 rounded-md animate-pulse mb-2" />
+        <div className="h-3 w-72 bg-slate-700/30 rounded-md animate-pulse" />
+      </div>
+
+      <table className="w-full">
+        <thead className="bg-slate-800/30">
           <tr>
-            <th></th>
-            <th>Time</th>
-            <th>Type</th>
-            <th>Source IP</th>
-            <th>Destination IP</th>
-            <th>ML Confidence</th>
-            <th>Protocol</th>
-            <th>Severity</th>
+            {Array.from({ length: 8 }).map((_, i) => (
+              <th key={i} className="px-4 py-3">
+                <div className="h-3 w-20 bg-slate-700/30 rounded animate-pulse" />
+              </th>
+            ))}
           </tr>
         </thead>
 
-        <tbody>
-          {[...Array(6)].map((_, index) => (
-            <tr key={index}>
-              <th>
-                <div className="skeleton h-4 w-4 rounded"></div>
-              </th>
-
-              <td>
-                <div className="skeleton h-4 w-24"></div>
+        <tbody className="divide-y divide-slate-800/40">
+          {Array.from({ length: 6 }).map((_, rowIndex) => (
+            <tr key={rowIndex} className="hover:bg-slate-800/20 transition">
+              {/* checkbox column */}
+              <td className="px-4 py-3">
+                <div className="h-4 w-4 bg-slate-700/40 rounded animate-pulse" />
               </td>
 
-              <td>
-                <div className="skeleton h-4 w-20"></div>
+              {/* other columns */}
+              <td className="px-4 py-3">
+                <div className="h-3 w-24 bg-slate-700/30 rounded animate-pulse" />
               </td>
 
-              <td>
-                <div className="skeleton h-4 w-32"></div>
+              <td className="px-4 py-3">
+                <div className="h-3 w-20 bg-slate-700/30 rounded animate-pulse" />
               </td>
 
-              <td>
-                <div className="skeleton h-4 w-32"></div>
+              <td className="px-4 py-3">
+                <div className="h-3 w-32 bg-slate-700/30 rounded animate-pulse" />
               </td>
 
-              <td>
-                <div className="skeleton h-4 w-16"></div>
+              <td className="px-4 py-3">
+                <div className="h-3 w-32 bg-slate-700/30 rounded animate-pulse" />
               </td>
 
-              <td>
-                <div className="skeleton h-4 w-14"></div>
+              <td className="px-4 py-3">
+                <div className="h-3 w-16 bg-slate-700/30 rounded animate-pulse" />
               </td>
 
-              <td>
-                <div className="skeleton h-4 w-20"></div>
+              <td className="px-4 py-3">
+                <div className="h-3 w-14 bg-slate-700/30 rounded animate-pulse" />
+              </td>
+
+              <td className="px-4 py-3">
+                <div className="h-3 w-20 bg-slate-700/30 rounded animate-pulse" />
               </td>
             </tr>
           ))}

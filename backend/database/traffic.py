@@ -7,17 +7,17 @@ import logging
 from datetime import datetime, timezone, timedelta
 from typing import Any
 
-from . import _get_traffic_col, _get_traffic_stats_col
+import database
 
 log = logging.getLogger(__name__)
 
 
 def is_available() -> bool:
-    return _get_traffic_col() is not None
+    return database.traffic_col is not None
 
 
 def is_stats_available() -> bool:
-    return _get_traffic_stats_col() is not None
+    return database.traffic_stats_col is not None
 
 
 def serialize_traffic(record: dict[str, Any]) -> dict[str, Any]:
@@ -30,8 +30,9 @@ def serialize_traffic(record: dict[str, Any]) -> dict[str, Any]:
 
 # ── CRUD ───────────────────────────────────────────────────────────────────────
 
+
 async def create_traffic_record(record: dict[str, Any]) -> str | None:
-    col = _get_traffic_col()
+    col = database.traffic_col
     if col is None:
         return None
     document = {"timestamp": datetime.now(timezone.utc), **record}
@@ -44,7 +45,7 @@ async def create_traffic_record(record: dict[str, Any]) -> str | None:
 
 
 async def list_traffic(limit: int = 50) -> list[dict[str, Any]]:
-    col = _get_traffic_col()
+    col = database.traffic_col
     if col is None:
         return []
     try:
@@ -56,7 +57,7 @@ async def list_traffic(limit: int = 50) -> list[dict[str, Any]]:
 
 
 async def list_traffic_by_ip(src_ip: str, limit: int = 50) -> list[dict[str, Any]]:
-    col = _get_traffic_col()
+    col = database.traffic_col
     if col is None:
         return []
     try:
@@ -75,7 +76,7 @@ async def upsert_stats(
     src_bytes: int,
     dst_bytes: int,
 ) -> None:
-    col = _get_traffic_stats_col()
+    col = database.traffic_stats_col
     if col is None:
         return
     try:
@@ -94,15 +95,16 @@ async def upsert_stats(
 
 # ── Stats ──────────────────────────────────────────────────────────────────────
 
+
 async def count_by_protocol() -> list[dict[str, Any]]:
     """count the number of normal traffic records grouped by protocol."""
-    col = _get_traffic_stats_col()
+    col = database.traffic_stats_col
     if col is None:
         return []
     try:
         pipeline = [
             {"$group": {"_id": "$protocol", "total": {"$sum": "$count"}}},
-            {"$sort": {"total": -1}}
+            {"$sort": {"total": -1}},
         ]
         results = await col.aggregate(pipeline).to_list(None)
         return json.loads(json_util.dumps(results))
@@ -113,13 +115,13 @@ async def count_by_protocol() -> list[dict[str, Any]]:
 
 async def count_by_service() -> list[dict[str, Any]]:
     """count the volume for each service in the traffic stats collection, sorted by volume descending."""
-    col = _get_traffic_stats_col()
+    col = database.traffic_stats_col
     if col is None:
         return []
     try:
         pipeline = [
             {"$group": {"_id": "$service", "total": {"$sum": "$count"}}},
-            {"$sort": {"total": -1}}
+            {"$sort": {"total": -1}},
         ]
         results = await col.aggregate(pipeline).to_list(None)
         return json.loads(json_util.dumps(results))
@@ -130,7 +132,7 @@ async def count_by_service() -> list[dict[str, Any]]:
 
 async def traffic_over_time(hours: int = 24) -> list[dict[str, Any]]:
     """Get traffic volume over time for the last N hours, grouped by 5-minute windows."""
-    col = _get_traffic_stats_col()
+    col = database.traffic_stats_col
     if col is None:
         return []
     try:
@@ -138,13 +140,15 @@ async def traffic_over_time(hours: int = 24) -> list[dict[str, Any]]:
         pipeline = [
             {"$match": {"window": {"$gte": since}}},
             {"$sort": {"window": 1}},
-            {"$project": {
-                "window": 1,
-                "protocol": 1,
-                "service": 1,
-                "count": 1,
-                "total_bytes": 1,
-            }}
+            {
+                "$project": {
+                    "window": 1,
+                    "protocol": 1,
+                    "service": 1,
+                    "count": 1,
+                    "total_bytes": 1,
+                }
+            },
         ]
         results = await col.aggregate(pipeline).to_list(None)
         return json.loads(json_util.dumps(results))
@@ -155,7 +159,7 @@ async def traffic_over_time(hours: int = 24) -> list[dict[str, Any]]:
 
 async def top_talkers(limit: int = 10) -> list[dict[str, Any]]:
     """Get the top IPs by traffic volume."""
-    col = _get_traffic_stats_col()
+    col = database.traffic_stats_col
     if col is None:
         return []
     try:
@@ -163,28 +167,25 @@ async def top_talkers(limit: int = 10) -> list[dict[str, Any]]:
             {"$unwind": "$unique_ips"},
             {"$group": {"_id": "$unique_ips", "total": {"$sum": "$count"}}},
             {"$sort": {"total": -1}},
-            {"$limit": limit}
+            {"$limit": limit},
         ]
         results = await col.aggregate(pipeline).to_list(None)
         return json.loads(json_util.dumps(results))
     except Exception as exc:
         log.warning("Failed to get top talkers: %s", exc)
         return []
-    
+
 
 async def count_by_label(hours: int = 24) -> list[dict[str, Any]]:
     """Nombre de traffic par label — normal/suspicious/malicious."""
-    col = _get_traffic_stats_col()
+    col = database.traffic_stats_col
     if col is None:
         return []
     try:
         since = datetime.now(timezone.utc) - timedelta(hours=hours)
         pipeline = [
             {"$match": {"window": {"$gte": since}}},
-            {"$group": {
-                "_id": None,
-                "total_normal": {"$sum": "$count"} 
-            }}
+            {"$group": {"_id": None, "total_normal": {"$sum": "$count"}}},
         ]
         results = await col.aggregate(pipeline).to_list(None)
         return json.loads(json_util.dumps(results))
@@ -195,7 +196,7 @@ async def count_by_label(hours: int = 24) -> list[dict[str, Any]]:
 
 async def count_suspicious_malicious(hours: int = 24) -> list[dict[str, Any]]:
     """Nombre de suspicious/malicious depuis network_traffic."""
-    col = _get_traffic_col()
+    col = database.traffic_col
     if col is None:
         return []
     try:
@@ -203,7 +204,7 @@ async def count_suspicious_malicious(hours: int = 24) -> list[dict[str, Any]]:
         pipeline = [
             {"$match": {"timestamp": {"$gte": since}}},
             {"$group": {"_id": "$severity", "count": {"$sum": 1}}},
-            {"$sort": {"count": -1}}
+            {"$sort": {"count": -1}},
         ]
         results = await col.aggregate(pipeline).to_list(None)
         return json.loads(json_util.dumps(results))
