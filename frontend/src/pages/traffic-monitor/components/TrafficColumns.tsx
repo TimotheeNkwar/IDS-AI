@@ -31,7 +31,7 @@ function useTokens() {
     // Badge "Type" — always red (alert)
     badgeType: isDark
       ? "bg-red-500/10 text-red-300 border-red-500/20"
-      : "bg-red-800    text-white  border-none",
+      : "bg-red-50    text-red-600  border-red-200",
 
     // ML confidence bar
     barTrack: isDark ? "bg-slate-800" : "bg-slate-200",
@@ -45,8 +45,8 @@ function useTokens() {
     // Badges "Severity"
     severity: {
       high: isDark
-        ? "bg-red-500/10    text-red-300    border-red-500/20"
-        : "bg-red-800    text-white  border-none",
+        ? "bg-red-500/10 text-red-300 border-red-500/20"
+        : "bg-red-50    text-red-600  border-red-200",
       medium: isDark
         ? "bg-yellow-500/10 text-yellow-300 border-yellow-500/20"
         : "bg-yellow-50     text-yellow-700 border-yellow-200",
