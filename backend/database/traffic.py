@@ -44,24 +44,34 @@ async def create_traffic_record(record: dict[str, Any]) -> str | None:
         return None
 
 
-async def list_traffic(limit: int = 50) -> list[dict[str, Any]]:
+async def list_traffic(limit: int = 50, hours: int = 24) -> list[dict[str, Any]]:
     col = database.traffic_col
     if col is None:
         return []
     try:
-        cursor = col.find().sort("timestamp", -1).limit(limit)
+        since = datetime.now(timezone.utc) - timedelta(hours=hours)
+        cursor = (
+            col.find({"timestamp": {"$gte": since}}).sort("timestamp", -1).limit(limit)
+        )
         return [serialize_traffic(r) async for r in cursor]
     except Exception as exc:
         log.warning("Failed to list traffic records: %s", exc)
         return []
 
 
-async def list_traffic_by_ip(src_ip: str, limit: int = 50) -> list[dict[str, Any]]:
+async def list_traffic_by_ip(
+    src_ip: str, limit: int = 50, hours: int = 24
+) -> list[dict[str, Any]]:
     col = database.traffic_col
     if col is None:
         return []
     try:
-        cursor = col.find({"src_ip": src_ip}).sort("timestamp", -1).limit(limit)
+        since = datetime.now(timezone.utc) - timedelta(hours=hours)
+        cursor = (
+            col.find({"src_ip": src_ip, "timestamp": {"$gte": since}})
+            .sort("timestamp", -1)
+            .limit(limit)
+        )
         return [serialize_traffic(r) async for r in cursor]
     except Exception as exc:
         log.warning("Failed to list traffic by IP: %s", exc)
@@ -96,13 +106,14 @@ async def upsert_stats(
 # ── Stats ──────────────────────────────────────────────────────────────────────
 
 
-async def count_by_protocol() -> list[dict[str, Any]]:
-    """count the number of normal traffic records grouped by protocol."""
+async def count_by_protocol(hours: int = 24) -> list[dict[str, Any]]:
     col = database.traffic_stats_col
     if col is None:
         return []
     try:
+        since = datetime.now(timezone.utc) - timedelta(hours=hours)
         pipeline = [
+            {"$match": {"window": {"$gte": since}}},
             {"$group": {"_id": "$protocol", "total": {"$sum": "$count"}}},
             {"$sort": {"total": -1}},
         ]
@@ -113,13 +124,14 @@ async def count_by_protocol() -> list[dict[str, Any]]:
         return []
 
 
-async def count_by_service() -> list[dict[str, Any]]:
-    """count the volume for each service in the traffic stats collection, sorted by volume descending."""
+async def count_by_service(hours: int = 24) -> list[dict[str, Any]]:
     col = database.traffic_stats_col
     if col is None:
         return []
     try:
+        since = datetime.now(timezone.utc) - timedelta(hours=hours)
         pipeline = [
+            {"$match": {"window": {"$gte": since}}},
             {"$group": {"_id": "$service", "total": {"$sum": "$count"}}},
             {"$sort": {"total": -1}},
         ]
@@ -157,13 +169,14 @@ async def traffic_over_time(hours: int = 24) -> list[dict[str, Any]]:
         return []
 
 
-async def top_talkers(limit: int = 10) -> list[dict[str, Any]]:
-    """Get the top IPs by traffic volume."""
+async def top_talkers(limit: int = 10, hours: int = 24) -> list[dict[str, Any]]:
     col = database.traffic_stats_col
     if col is None:
         return []
     try:
+        since = datetime.now(timezone.utc) - timedelta(hours=hours)
         pipeline = [
+            {"$match": {"window": {"$gte": since}}},
             {"$unwind": "$unique_ips"},
             {"$group": {"_id": "$unique_ips", "total": {"$sum": "$count"}}},
             {"$sort": {"total": -1}},

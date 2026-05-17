@@ -1,8 +1,10 @@
 @import "tailwindcss";
 @plugin "daisyui";
+
 :root {
   --my-font: "Inter", "Trebuchet MS" sans-serif;
 }
+@variant light (&:where(.light, .light *));
 
 #root {
   position: relative;
@@ -15,6 +17,15 @@ body {
   position: relative;
 }
 
+/* globals.css */
+html.dark {
+  background: #0f172a !important;
+  color: #f1f5f9 !important;
+}
+html.light {
+  background: #ffffff !important;
+  color: #0f172a !important;
+}
 .glass {
   background: rgba(15, 23, 42, 0.55);
   backdrop-filter: blur(14px);

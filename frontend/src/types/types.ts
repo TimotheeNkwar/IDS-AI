@@ -175,3 +175,5 @@ export interface Suggestion {
   needs_manual_review: boolean;
   count: number;
 }
+
+export type Theme = "dark" | "light" | "system";

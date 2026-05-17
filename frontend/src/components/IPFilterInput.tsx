@@ -26,6 +26,10 @@ export default function IPFilterInput<T>({
       transition
       focus-within:border-fuchsia-500/40
       focus-within:bg-slate-900/60
+      light:bg-white/40
+      light:border-slate-200/50
+      light:focus-within:bg-white/60
+      light:focus-within:border-violet-300/50
     "
     >
       <Search className="h-4 w-4 text-slate-400" />
@@ -37,6 +41,8 @@ export default function IPFilterInput<T>({
           outline-none
           text-sm text-slate-200
           placeholder:text-slate-500
+          light:text-slate-900
+          light:placeholder:text-slate-400
         "
         placeholder={placeholder}
         onChange={(e) =>

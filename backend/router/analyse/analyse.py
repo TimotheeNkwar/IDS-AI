@@ -1,6 +1,6 @@
 # ── Endpoints ──────────────────────────────────────────────────────────────────
 import asyncio
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Any
 import logging
 from llm_queue.llm_queue import llm_queue
@@ -186,11 +186,17 @@ async def update_alert_status(
 
 
 @analyse_router.get("/traffic")
-async def api_traffic(limit: int = Query(default=50, ge=1, le=200)) -> dict[str, Any]:
+async def api_traffic(
+    limit: int = Query(default=50, ge=1, le=200),
+    hours: int = Query(default=24, ge=1, le=720),
+) -> dict[str, Any]:
     if not traffic_repo.is_available():
         return {"traffic": [], "storage_available": False}
+
     return {
-        "traffic": await traffic_repo.list_traffic(limit),
+        "traffic": await traffic_repo.list_traffic(
+            limit=limit, hours=hours
+        ),  # ← hours passed?
         "storage_available": True,
     }
 
@@ -207,28 +213,24 @@ async def get_alert(alert_id: str) -> dict[str, Any]:
     return alert
 
 
-@analyse_router.get("/alerts", summary="List alerts with optional filters")
+@analyse_router.get("/alerts")
 async def api_alerts_filtered(
     limit: int = Query(default=50, ge=1, le=200),
+    hours: int = Query(default=24, ge=1, le=720),
     severity: Literal["low", "medium", "high"] | None = Query(default=None),
     status: Literal["open", "reviewing", "resolved", "false_positive"] | None = Query(
         default=None
     ),
     attack_type: str | None = Query(default=None),
 ) -> dict[str, Any]:
-    """
-    List alerts for Threats Analysis page.
-    All filters are optional and combinable:
-      ?severity=high
-      ?status=open
-      ?attack_type=injection
-      ?severity=high&status=open&attack_type=injection
-    """
     if not alert_repo.is_available():
         return {"alerts": [], "storage_available": False}
 
+    since = datetime.now(timezone.utc) - timedelta(hours=hours)
+
     alerts = await alert_repo.list_alerts_filtered(
         limit=limit,
+        since=since,
         severity=severity,
         status=status,
         attack_type=attack_type,

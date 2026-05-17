@@ -54,12 +54,15 @@ async def get_by_id(alert_id: str) -> dict[str, Any] | None:
         return None
 
 
-async def list_alerts(limit: int = 50) -> list[dict[str, Any]]:
+async def list_alerts(limit: int = 50, hours: int = 24) -> list[dict[str, Any]]:
     col = database.alerts_col
     if col is None:
         return []
     try:
-        cursor = col.find().sort("timestamp", -1).limit(limit)
+        since = datetime.now(timezone.utc) - timedelta(hours=hours)
+        cursor = (
+            col.find({"timestamp": {"$gte": since}}).sort("timestamp", -1).limit(limit)
+        )
         return [serialize_alert(a) async for a in cursor]
     except Exception as exc:
         log.warning("Failed to list alerts: %s", exc)
@@ -71,25 +74,20 @@ async def list_alerts_filtered(
     severity: str | None = None,
     status: str | None = None,
     attack_type: str | None = None,
-    hours: int | None = None,
+    hours: int = 24,
 ) -> list[dict[str, Any]]:
     col = database.alerts_col
     if col is None:
         return []
     try:
-        query: dict[str, Any] = {}
+        since = datetime.now(timezone.utc) - timedelta(hours=hours)
+        query: dict[str, Any] = {"timestamp": {"$gte": since}}
         if severity:
             query["severity"] = severity
         if status:
             query["status"] = status
         if attack_type:
             query["attack_type"] = attack_type
-        if hours:
-            from datetime import datetime, timezone, timedelta
-
-            query["timestamp"] = {
-                "$gte": datetime.now(timezone.utc) - timedelta(hours=hours)
-            }
 
         cursor = col.find(query).sort("timestamp", -1).limit(limit)
         return [serialize_alert(a) async for a in cursor]
@@ -152,13 +150,16 @@ async def count_by_severity(hours: int = 24) -> list[dict[str, Any]]:
         return []
 
 
-async def count_by_status() -> list[dict[str, Any]]:
-    """Number of alerts by status — open/reviewing/resolved."""
+async def count_by_status(hours: int = 24) -> list[dict[str, Any]]:
     col = database.alerts_col
     if col is None:
         return []
     try:
-        pipeline = [{"$group": {"_id": "$status", "count": {"$sum": 1}}}]
+        since = datetime.now(timezone.utc) - timedelta(hours=hours)
+        pipeline = [
+            {"$match": {"timestamp": {"$gte": since}}},
+            {"$group": {"_id": "$status", "count": {"$sum": 1}}},
+        ]
         results = await col.aggregate(pipeline).to_list(None)
         return json.loads(json_util.dumps(results))
     except Exception as exc:
@@ -220,13 +221,14 @@ async def alerts_over_time(hours: int = 24) -> list[dict[str, Any]]:
         return []
 
 
-async def top_source_ips(limit: int = 10) -> list[dict[str, Any]]:
-    """Top IPs sources of attacks."""
+async def top_source_ips(limit: int = 10, hours: int = 24) -> list[dict[str, Any]]:
     col = database.alerts_col
     if col is None:
         return []
     try:
+        since = datetime.now(timezone.utc) - timedelta(hours=hours)
         pipeline = [
+            {"$match": {"timestamp": {"$gte": since}}},
             {"$group": {"_id": "$source_ip", "count": {"$sum": 1}}},
             {"$sort": {"count": -1}},
             {"$limit": limit},

@@ -1,16 +1,9 @@
-import { Monitor, Moon, Sun, Sparkles } from "lucide-react";
-import React, { useState } from "react";
+import { Shield } from "lucide-react";
+import { useState } from "react";
 
-type Theme = "dark" | "light" | "system";
-
-export default function Theme() {
-  const [theme, setTheme] = useState<Theme>("dark");
-
-  const THEMES: { value: Theme; label: string; icon: React.ReactNode }[] = [
-    { value: "light", label: "Light", icon: <Sun className="w-5 h-5" /> },
-    { value: "dark", label: "Dark", icon: <Moon className="w-5 h-5" /> },
-    { value: "system", label: "System", icon: <Monitor className="w-5 h-5" /> },
-  ];
+export default function Security() {
+  const [twoFactor, setTwoFactor] = useState(false);
+  const [sessionTimeout, setSessionTimeout] = useState("30");
 
   return (
     <div
@@ -18,84 +11,107 @@ export default function Theme() {
         relative overflow-hidden
         rounded-3xl border border-slate-700/60
         bg-slate-900/70 backdrop-blur-xl
+        light:bg-white/70 light:border-slate-200
         p-6
       "
     >
       {/* Glow */}
-      <div className="absolute -top-10 -right-10 w-40 h-40 bg-fuchsia-500/10 blur-3xl rounded-full"></div>
-      <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-cyan-500/10 blur-3xl rounded-full"></div>
+      <div className="absolute -top-10 -right-10 w-40 h-40 bg-cyan-500/10 blur-3xl rounded-full" />
+      <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-fuchsia-500/10 blur-3xl rounded-full" />
 
       <div className="relative">
         {/* Header */}
         <div className="flex items-center gap-2 mb-5">
-          <Sparkles className="w-4 h-4 text-fuchsia-400" />
-
+          <Shield className="w-4 h-4 text-cyan-400 light:text-cyan-500" />
           <div>
-            <p className="text-[11px] uppercase tracking-[0.2em] text-slate-500 font-semibold">
-              Appearance
+            <p
+              className="
+                text-[11px] uppercase tracking-[0.2em] font-semibold
+                text-slate-500 light:text-slate-400
+              "
+            >
+              Privacy
             </p>
-            <h2 className="text-xl font-bold text-white">Theme Settings</h2>
+            <h2 className="text-xl font-bold text-white light:text-slate-900">
+              Security
+            </h2>
           </div>
         </div>
 
-        {/* Options */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          {THEMES.map((t) => {
-            const active = theme === t.value;
+        <div className="flex flex-col gap-4">
+          {/* Two-factor toggle row */}
+          <div
+            className="
+              flex items-center justify-between
+              px-4 py-3 rounded-2xl border
+              border-slate-700 bg-slate-800/40
+              light:border-slate-200 light:bg-white/50
+            "
+          >
+            <div>
+              <p className="text-sm font-medium text-slate-200 light:text-slate-800">
+                Two-factor authentication
+              </p>
+              <p className="text-xs text-slate-500 light:text-slate-400">
+                Require a second verification step on sign-in
+              </p>
+            </div>
 
-            return (
-              <button
-                key={t.value}
-                onClick={() => setTheme(t.value)}
+            <button
+              onClick={() => setTwoFactor((v) => !v)}
+              className={`
+                relative w-11 h-6 rounded-full border transition-all duration-300
+                ${
+                  twoFactor
+                    ? "bg-cyan-500/30 border-cyan-500/40 light:bg-cyan-100 light:border-cyan-300"
+                    : "bg-slate-800 border-slate-700 light:bg-slate-100 light:border-slate-200"
+                }
+              `}
+              aria-checked={twoFactor}
+              role="switch"
+            >
+              <span
                 className={`
-                  group relative overflow-hidden
-                  flex flex-col items-center gap-3
-                  p-5 rounded-2xl border
-                  transition-all duration-300
-                  cursor-pointer
+                  absolute top-0.5 w-5 h-5 rounded-full border transition-all duration-300
                   ${
-                    active
-                      ? "border-fuchsia-500/40 bg-fuchsia-500/10 text-fuchsia-300 shadow-lg shadow-fuchsia-500/10"
-                      : "border-slate-700 bg-slate-800/40 text-slate-400 hover:border-slate-600 hover:-translate-y-1"
+                    twoFactor
+                      ? "left-[22px] bg-cyan-400 border-cyan-300 shadow-[0_0_8px_rgba(34,211,238,0.5)] light:bg-cyan-500 light:border-cyan-400 light:shadow-none"
+                      : "left-0.5 bg-slate-600 border-slate-500 light:bg-slate-300 light:border-slate-200"
                   }
                 `}
-              >
-                {/* hover glow */}
-                <div
-                  className={`
-                    absolute inset-0 opacity-0 group-hover:opacity-100
-                    transition-opacity duration-500
-                    bg-gradient-to-br from-fuchsia-500/10 to-cyan-500/10
-                  `}
-                />
+              />
+            </button>
+          </div>
 
-                {/* Icon */}
-                <div
-                  className={`
-                    relative w-12 h-12 rounded-2xl
-                    flex items-center justify-center
-                    border
-                    transition-all duration-300
-                    ${
-                      active
-                        ? "bg-fuchsia-500/10 border-fuchsia-500/30"
-                        : "bg-slate-900 border-slate-700"
-                    }
-                  `}
-                >
-                  {t.icon}
-                </div>
-
-                {/* Label */}
-                <span className="relative text-sm font-medium">{t.label}</span>
-
-                {/* Active indicator */}
-                {active && (
-                  <span className="absolute bottom-2 w-2 h-2 rounded-full bg-fuchsia-400" />
-                )}
-              </button>
-            );
-          })}
+          {/* Session timeout select */}
+          <div className="flex flex-col gap-2">
+            <label
+              className="
+                text-xs font-semibold uppercase tracking-widest
+                text-slate-500 light:text-slate-400
+              "
+            >
+              Session timeout
+            </label>
+            <select
+              value={sessionTimeout}
+              onChange={(e) => setSessionTimeout(e.target.value)}
+              className="
+                w-full px-4 py-3 rounded-2xl border appearance-none
+                bg-slate-800/40 border-slate-700 text-slate-200
+                focus:outline-none focus:border-cyan-500/50 focus:bg-slate-800/60
+                transition-all duration-200
+                light:bg-white/50 light:border-slate-200 light:text-slate-800
+                light:focus:border-cyan-400 light:focus:bg-white/80
+              "
+            >
+              <option value="15">15 minutes</option>
+              <option value="30">30 minutes</option>
+              <option value="60">1 hour</option>
+              <option value="240">4 hours</option>
+              <option value="0">Never</option>
+            </select>
+          </div>
         </div>
       </div>
     </div>

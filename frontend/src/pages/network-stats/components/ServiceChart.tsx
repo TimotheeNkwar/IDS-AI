@@ -7,10 +7,13 @@ import {
   Cell,
 } from "recharts";
 import { Globe } from "lucide-react";
+import { useChartTokens } from "../../../hooks/useChartTokens";
 
 const COLORS = ["#ec4899", "#8b5cf6", "#06b6d4", "#f59e0b"];
 
 export default function ServiceChart({ data }: { data: any[] }) {
+  const t = useChartTokens();
+
   const chartData =
     data?.map((item, index) => ({
       ...item,
@@ -19,12 +22,16 @@ export default function ServiceChart({ data }: { data: any[] }) {
     })) ?? [];
 
   return (
-    <div className="relative overflow-hidden rounded-3xl border border-slate-700/60 bg-slate-900/70 backdrop-blur-xl p-6">
-      <div className="absolute -top-10 -right-10 w-40 h-40 bg-fuchsia-500/10 blur-3xl rounded-full" />
+    <div
+      className={`relative overflow-hidden rounded-3xl border p-6 ${t.card}`}
+    >
+      <div
+        className={`absolute -top-10 -right-10 w-40 h-40 rounded-full ${t.glowFuchsia}`}
+      />
 
       <div className="flex items-center gap-2 mb-5">
-        <Globe className="w-4 h-4 text-fuchsia-400" />
-        <h2 className="text-xl font-bold text-white">Traffic by Service</h2>
+        <Globe className={`w-4 h-4 ${t.iconFuchsia}`} />
+        <h2 className={`text-xl font-bold ${t.title}`}>Traffic by Service</h2>
       </div>
 
       <div className="h-[250px]">
@@ -46,17 +53,15 @@ export default function ServiceChart({ data }: { data: any[] }) {
                 />
               ))}
             </Pie>
-
             <Tooltip
               contentStyle={{
-                backgroundColor: "#0f172a",
-                border: "1px solid #334155",
+                backgroundColor: t.tooltipBg,
+                border: `1px solid ${t.tooltipBorder}`,
                 borderRadius: "12px",
-                color: "#fff",
+                color: t.tooltipColor,
               }}
             />
-
-            <Legend wrapperStyle={{ color: "#94a3b8", fontSize: "12px" }} />
+            <Legend wrapperStyle={{ color: t.legendColor, fontSize: "12px" }} />
           </PieChart>
         </ResponsiveContainer>
       </div>

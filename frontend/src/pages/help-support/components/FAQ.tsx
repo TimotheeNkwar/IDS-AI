@@ -40,19 +40,19 @@ export default function FAQ() {
         relative overflow-hidden
         rounded-3xl border border-slate-700/60
         bg-slate-900/70 backdrop-blur-xl
+        light:bg-white/70 light:border-slate-200
         p-6
       "
     >
-      {/* Background Glow */}
-      <div className="absolute -top-16 right-0 w-52 h-52 bg-fuchsia-500/10 blur-3xl rounded-full"></div>
-      <div className="absolute bottom-0 left-0 w-52 h-52 bg-cyan-500/10 blur-3xl rounded-full"></div>
+      {/* Glow */}
+      <div className="absolute -top-16 right-0 w-52 h-52 bg-fuchsia-500/10 blur-3xl rounded-full" />
+      <div className="absolute bottom-0 left-0 w-52 h-52 bg-cyan-500/10 blur-3xl rounded-full" />
 
       <div className="relative">
         {/* Header */}
         <div className="mb-6">
-          <div className="flex items-center gap-2 text-fuchsia-400 mb-3">
+          <div className="flex items-center gap-2 mb-3 text-fuchsia-400 light:text-fuchsia-500">
             <Sparkles className="w-4 h-4" />
-
             <span className="uppercase tracking-[0.2em] text-[11px] font-semibold">
               Knowledge Base
             </span>
@@ -61,22 +61,22 @@ export default function FAQ() {
           <div className="flex items-center gap-3 mb-3">
             <div
               className="
-                w-12 h-12 rounded-2xl
-                flex items-center justify-center
+                w-12 h-12 rounded-2xl flex items-center justify-center
                 bg-gradient-to-br from-cyan-500/20 to-cyan-700/10
-                border border-cyan-500/20
-                text-cyan-300
+                border border-cyan-500/20 text-cyan-300
+                light:from-cyan-50 light:to-cyan-100/60
+                light:border-cyan-200 light:text-cyan-600
               "
             >
               <HelpCircle className="w-6 h-6" />
             </div>
 
             <div>
-              <h1 className="text-2xl md:text-3xl font-bold text-white">
+              <h1 className="text-2xl md:text-3xl font-bold text-white light:text-slate-900">
                 Frequently Asked Questions
               </h1>
 
-              <p className="text-sm text-slate-400 mt-1">
+              <p className="text-sm text-slate-400 light:text-slate-500 mt-1">
                 Quick answers about alerts, ML analysis, anomaly detection, and
                 response actions.
               </p>
@@ -86,22 +86,19 @@ export default function FAQ() {
 
         {/* Search */}
         <div className="relative mb-6">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 light:text-slate-400" />
 
           <input
             type="text"
             placeholder="Search for help..."
             className="
-              w-full h-12 rounded-2xl
-              border border-slate-700
-              bg-slate-800/70
-              pl-12 pr-4
-              text-sm text-white
-              placeholder:text-slate-500
-              outline-none
-              transition-all
-              focus:border-fuchsia-500
-              focus:ring-2 focus:ring-fuchsia-500/20
+              w-full h-12 rounded-2xl border pl-12 pr-4
+              text-sm outline-none transition-all
+              border-slate-700 bg-slate-800/70 text-white placeholder:text-slate-500
+              focus:border-fuchsia-500 focus:ring-2 focus:ring-fuchsia-500/20
+              light:border-slate-200 light:bg-white/80 light:text-slate-800
+              light:placeholder:text-slate-400
+              light:focus:border-fuchsia-400 light:focus:ring-fuchsia-400/20
             "
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -118,6 +115,8 @@ export default function FAQ() {
                   rounded-2xl border border-slate-700/60
                   bg-slate-800/40
                   hover:border-slate-600
+                  light:border-slate-200 light:bg-slate-50/60
+                  light:hover:border-slate-300
                   transition-all duration-300
                 "
               >
@@ -128,30 +127,32 @@ export default function FAQ() {
             <div
               className="
                 flex flex-col items-center justify-center
-                text-center py-10
-                rounded-2xl
+                text-center py-10 rounded-2xl
                 border border-dashed border-slate-700
                 bg-slate-800/30
+                light:border-slate-300 light:bg-slate-50/40
               "
             >
               <div
                 className="
-                  w-14 h-14 rounded-2xl
-                  flex items-center justify-center
+                  w-14 h-14 rounded-2xl flex items-center justify-center
                   bg-slate-800 border border-slate-700
+                  light:bg-slate-100 light:border-slate-200
                   mb-4
                 "
               >
-                <ShieldCheck className="w-6 h-6 text-slate-400" />
+                <ShieldCheck className="w-6 h-6 text-slate-400 light:text-slate-500" />
               </div>
 
-              <h3 className="text-white font-semibold mb-2">
+              <h3 className="text-white light:text-slate-800 font-semibold mb-2">
                 No matching results
               </h3>
 
-              <p className="text-sm text-slate-500">
+              <p className="text-sm text-slate-500 light:text-slate-400">
                 No FAQ found for{" "}
-                <span className="text-slate-300 font-medium">"{search}"</span>
+                <span className="text-slate-300 light:text-slate-700 font-medium">
+                  "{search}"
+                </span>
               </p>
             </div>
           )}

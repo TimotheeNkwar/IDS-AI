@@ -22,7 +22,7 @@ export default function Notifications() {
       label: "Medium alerts",
       sub: "Notified for medium severity threats",
       icon: Bell,
-      accent: "text-yellow-300 bg-yellow-500/10 border-yellow-500/20",
+      accent: "text-yellow-300 bg-yellow-500/10 border-yellow-500/20 ",
     },
     {
       key: "low",
@@ -46,37 +46,54 @@ export default function Notifications() {
         relative overflow-hidden
         rounded-3xl border border-slate-700/60
         bg-slate-900/70 backdrop-blur-xl
+        light:bg-white/70 light:border-slate-200
         p-6
       "
     >
       {/* Glow */}
-      <div className="absolute -top-10 -right-10 w-40 h-40 bg-fuchsia-500/10 blur-3xl rounded-full"></div>
-      <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-cyan-500/10 blur-3xl rounded-full"></div>
+      <div className="absolute -top-10 -right-10 w-40 h-40 bg-fuchsia-500/10 blur-3xl rounded-full" />
+      <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-cyan-500/10 blur-3xl rounded-full" />
 
       <div className="relative">
         {/* Header */}
         <div className="flex items-center gap-2 mb-5">
-          <Bell className="w-4 h-4 text-fuchsia-400" />
+          <Bell className="w-4 h-4 text-fuchsia-400 light:text-fuchsia-500" />
 
           <div>
-            <p className="text-[11px] uppercase tracking-[0.2em] text-slate-500 font-semibold">
+            <p
+              className="
+                text-[11px] uppercase tracking-[0.2em] font-semibold
+                text-slate-500 light:text-slate-400
+              "
+            >
               Alerts
             </p>
-            <h2 className="text-xl font-bold text-white">
+            <h2 className="text-xl font-bold text-white light:text-slate-900">
               Notification Settings
             </h2>
           </div>
         </div>
 
         {/* List */}
-        <div className="rounded-2xl border border-slate-700/60 bg-slate-800/40 divide-y divide-slate-700/60 overflow-hidden">
+        <div
+          className="
+            rounded-2xl border overflow-hidden
+            divide-y divide-slate-700/60
+            border-slate-700/60 bg-slate-800/40
+            light:border-slate-200 light:bg-slate-50/60
+            light:divide-slate-200
+          "
+        >
           {items.map((item) => {
             const Icon = item.icon;
 
             return (
               <div
                 key={item.key}
-                className="flex items-center justify-between px-5 py-4"
+                className="
+                  flex items-center justify-between px-5 py-4
+                  light:hover:bg-slate-50 transition-colors duration-150
+                "
               >
                 {/* Left */}
                 <div className="flex items-start gap-3">
@@ -92,17 +109,19 @@ export default function Notifications() {
                   </div>
 
                   <div>
-                    <p className="text-sm font-medium text-white">
+                    <p className="text-sm font-medium text-white light:text-slate-800">
                       {item.label}
                     </p>
-                    <p className="text-xs text-slate-400">{item.sub}</p>
+                    <p className="text-xs text-slate-400 light:text-slate-500">
+                      {item.sub}
+                    </p>
                   </div>
                 </div>
 
                 {/* Toggle */}
                 <input
                   type="checkbox"
-                  className="toggle toggle-sm toggle-primary text-fuchsia-500"
+                  className="toggle toggle-sm toggle-primary text-fuchsia-500 light:text-fuchsia-600 light:bg-fuchsia-100"
                   checked={
                     notifications[item.key as keyof typeof notifications]
                   }

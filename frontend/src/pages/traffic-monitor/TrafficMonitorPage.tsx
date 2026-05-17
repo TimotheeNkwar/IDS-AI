@@ -18,10 +18,15 @@ import TablePagination from "../../components/TablePagination.tsx";
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { ChevronUp, ChevronDown } from "lucide-react";
-import { columns } from "./components/TrafficColumns";
+// Avant
+
+// Après
+import { useColumns } from "./components/TrafficColumns";
 import TrafficRowDetail from "./components/TrafficRowDetail";
 import { Fragment } from "react";
 import IPFilterInput from "../../components/IPFilterInput.tsx";
+import useAppStore from "../../stores/hourStore.ts";
+import useHourDayText from "../../hooks/useHourDayText.ts";
 
 const columnHelper = createColumnHelper<TrafficRecord>();
 
@@ -34,6 +39,7 @@ const SEVERITY_BADGE: Record<string, string> = {
 export default function TrafficMonitorPage() {
   const [expandedRow, setExpandedRow] = useState<string | null>(null);
   const queryClient = useQueryClient();
+  const HoursDayText = useHourDayText();
   const [pagination, setPagination] = useState({
     pageIndex: 0,
     pageSize: 10,
@@ -42,19 +48,19 @@ export default function TrafficMonitorPage() {
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const lastUpdate = useWsStore((s) => s.lastUpdate);
   const liveTraffic = useWsStore((s) => s.liveTraffic);
+  const hours = useAppStore((s) => s.hours);
 
   const { data, isPending } = useQuery({
-    queryKey: ["traffic"],
-    queryFn: () => trafficService.fetchTrafficData(),
+    queryKey: ["traffic", hours], // ← re-fetches when hours changes
+    queryFn: () => trafficService.fetchTrafficData(hours),
     refetchOnWindowFocus: false,
   });
-
   // Whenever we receive a new dashboard update via WebSocket, we check if it's an anomaly. If it is, we invalidate the "traffic" query to trigger a refetch and get the latest data. This ensures that our table stays up-to-date with the most recent anomalies.
   useEffect(() => {
     if (lastUpdate?.is_anomaly) {
-      queryClient.invalidateQueries({ queryKey: ["traffic"] });
+      queryClient.invalidateQueries({ queryKey: ["traffic", hours] });
     }
-  }, [lastUpdate]);
+  }, [lastUpdate, hours]);
 
   // explanation may not exist on TrafficRecord; guard access to avoid TS error
   // console.log((data?.data?.traffic?.[0] as any)?.evidence);
@@ -96,6 +102,8 @@ export default function TrafficMonitorPage() {
     return [...live, ...initial];
   }, [data, liveAlerts]);
 
+  const columns = useColumns();
+
   const table = useReactTable({
     data: traffic,
     columns,
@@ -120,16 +128,16 @@ export default function TrafficMonitorPage() {
 
   return (
     <div>
-      <div className="overflow-x-auto rounded-2xl border border-slate-700/50 bg-slate-900/40 backdrop-blur-xl shadow-xl shadow-black/30">
+      <div className="overflow-x-auto rounded-2xl border border-slate-700/50 light:bg-slate-100 bg-slate-900/40 backdrop-blur-xl shadow-xl shadow-black/30">
         {/* HEADER */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-800/50">
           <div>
-            <h1 className="text-xl font-semibold text-white">
+            <h1 className="text-xl font-semibold text-white light:text-slate-900 ">
               Traffic Monitor
             </h1>
-            <p className="text-xs text-slate-400 mt-1">
-              Only anomalies from the last 24h are displayed. Live WebSocket
-              feed.
+            <p className="text-xs text-slate-400 mt-1 light:text-slate-600">
+              Only anomalies from the last {HoursDayText} are displayed. Live
+              WebSocket feed.
             </p>
           </div>
 
@@ -143,7 +151,7 @@ export default function TrafficMonitorPage() {
         {/* TABLE */}
         <table className="w-full">
           {/* HEADER */}
-          <thead className="bg-slate-800/30 border-b border-slate-700/40 backdrop-blur">
+          <thead className="bg-slate-800/30 border-b border-slate-700/40  backdrop-blur light:bg-white/50 light:border-slate-200">
             {table.getHeaderGroups().map((headerGroup) => (
               <tr key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (
@@ -159,9 +167,11 @@ export default function TrafficMonitorPage() {
                       )}
 
                       {{
-                        asc: <ChevronUp className="w-4 h-4 text-fuchsia-400" />,
+                        asc: (
+                          <ChevronUp className="w-4 h-4 text-fuchsia-400 light:text-violet-700" />
+                        ),
                         desc: (
-                          <ChevronDown className="w-4 h-4 text-fuchsia-400" />
+                          <ChevronDown className="w-4 h-4 text-fuchsia-400 light:text-violet-700" />
                         ),
                       }[header.column.getIsSorted() as string] ?? null}
                     </div>
@@ -184,7 +194,7 @@ export default function TrafficMonitorPage() {
                     onClick={() => setExpandedRow(isOpen ? null : row.id)}
                     className={`
                   group cursor-pointer transition
-                  hover:bg-slate-800/40
+                  hover:bg-slate-800/40 light:hover:bg-slate-200
                   ${isOpen ? "bg-fuchsia-500/5" : ""}
                 `}
                   >
@@ -203,9 +213,9 @@ export default function TrafficMonitorPage() {
                     <td className="px-4 py-3">
                       <div className="flex justify-end">
                         {isOpen ? (
-                          <ChevronUp className="w-4 h-4 text-fuchsia-400" />
+                          <ChevronUp className="w-4 h-4 text-fuchsia-400 light:text-violet-700" />
                         ) : (
-                          <ChevronDown className="w-4 h-4 text-slate-500 group-hover:text-white" />
+                          <ChevronDown className="w-4 h-4 text-slate-500 group-hover:text-white light:text-slate-600 light:group-hover:text-slate-900" />
                         )}
                       </div>
                     </td>
@@ -213,7 +223,7 @@ export default function TrafficMonitorPage() {
 
                   {/* EXPANDED */}
                   {isOpen && (
-                    <tr className="bg-slate-900/30">
+                    <tr className="bg-slate-900/30 light:bg-white/50">
                       <td colSpan={columns.length + 1} className="p-0">
                         <div className="border-l-2 border-fuchsia-500/40 pl-4 py-3 backdrop-blur">
                           <TrafficRowDetail row={row.original} />
@@ -230,7 +240,7 @@ export default function TrafficMonitorPage() {
         {/* EMPTY STATE */}
         {traffic.length === 0 && (
           <div className="py-10 text-center text-slate-500 text-sm">
-            No data available
+            No traffic data available for the last {HoursDayText}.
           </div>
         )}
       </div>

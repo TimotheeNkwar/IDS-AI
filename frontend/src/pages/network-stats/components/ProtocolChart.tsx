@@ -7,17 +7,24 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { Network } from "lucide-react";
+import { useChartTokens } from "../../../hooks/useChartTokens";
 
 const COLORS = ["#ec4899", "#8b5cf6", "#06b6d4", "#f59e0b"];
 
 export default function ProtocolChart({ data }: { data: any[] }) {
+  const t = useChartTokens();
+
   return (
-    <div className="relative overflow-hidden rounded-3xl border border-slate-700/60 bg-slate-900/70 backdrop-blur-xl p-6">
-      <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-cyan-500/10 blur-3xl rounded-full" />
+    <div
+      className={`relative overflow-hidden rounded-3xl border p-6 ${t.card}`}
+    >
+      <div
+        className={`absolute -bottom-10 -left-10 w-40 h-40 rounded-full ${t.glowCyan}`}
+      />
 
       <div className="flex items-center gap-2 mb-5">
-        <Network className="w-4 h-4 text-cyan-400" />
-        <h2 className="text-xl font-bold text-white">Traffic by Protocol</h2>
+        <Network className={`w-4 h-4 ${t.iconCyan}`} />
+        <h2 className={`text-xl font-bold ${t.title}`}>Traffic by Protocol</h2>
       </div>
 
       <div className="h-[250px]">
@@ -39,17 +46,15 @@ export default function ProtocolChart({ data }: { data: any[] }) {
                 />
               ))}
             </Pie>
-
             <Tooltip
               contentStyle={{
-                backgroundColor: "#0f172a",
-                border: "1px solid #334155",
+                backgroundColor: t.tooltipBg,
+                border: `1px solid ${t.tooltipBorder}`,
                 borderRadius: "12px",
-                color: "#fff",
+                color: t.tooltipColor,
               }}
             />
-
-            <Legend wrapperStyle={{ color: "#94a3b8", fontSize: "12px" }} />
+            <Legend wrapperStyle={{ color: t.legendColor, fontSize: "12px" }} />
           </PieChart>
         </ResponsiveContainer>
       </div>

@@ -1,4 +1,6 @@
 import api from "../Api/Api";
+import useAppStore from "../stores/hourStore";
+
 
 export const statsService = {
   fetchStats: (hours = 24) => api.get(`/stats?hours=${hours}`),
