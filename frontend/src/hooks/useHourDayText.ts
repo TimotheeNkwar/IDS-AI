@@ -1,4 +1,4 @@
-import useAppStore from "../stores/hourStore";
+import useAppStore from "../stores/AppStore";
 
 export default function useHourDayText() {
   const { hours } = useAppStore();

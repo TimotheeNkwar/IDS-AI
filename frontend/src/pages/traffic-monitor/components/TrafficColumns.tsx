@@ -81,10 +81,11 @@ function ColHeader({
 }
 
 // ── Colonnes ──────────────────────────────────────────────────────────────────
-// Les cell renderers sont des composants React pour pouvoir appeler les hooks.
+// Each column can use the tokens via the useTokens() hook, which ensures they update on theme change.
 
 function TimestampCell({ value }: { value: string }) {
   const t = useTokens();
+
   return (
     <span className={`font-mono text-sm ${t.cellText}`}>
       {formatDate(value)}

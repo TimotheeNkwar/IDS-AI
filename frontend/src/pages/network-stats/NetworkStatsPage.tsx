@@ -8,7 +8,7 @@ import ProtocolChart from "./components/ProtocolChart.tsx";
 import ServiceChart from "./components/ServiceChart.tsx";
 import Loader from "../../components/Loader.tsx";
 import { useThemeStore } from "../../stores/themeStore";
-import useAppStore from "../../stores/hourStore.ts";
+import useAppStore from "../../stores/AppStore.ts";
 import useHourDayText from "../../hooks/useHourDayText.ts";
 
 export default function NetworkStatsPage() {

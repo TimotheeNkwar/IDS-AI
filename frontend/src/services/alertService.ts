@@ -7,7 +7,7 @@ export const alertService = {
   fetchAlerts: (
     filters?: AlertFilters,
   ): Promise<AxiosResponse<AlertResponse>> =>
-    api.get("/alerts", { params: filters }),
+    api.get("/alerts", { params: filters }), // ← hardcode 1h
 
   fetchAlert: (id: string): Promise<AxiosResponse<Alert>> =>
     api.get(`/alerts/${id}`),

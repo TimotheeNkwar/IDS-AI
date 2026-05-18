@@ -25,7 +25,7 @@ import { useColumns } from "./components/TrafficColumns";
 import TrafficRowDetail from "./components/TrafficRowDetail";
 import { Fragment } from "react";
 import IPFilterInput from "../../components/IPFilterInput.tsx";
-import useAppStore from "../../stores/hourStore.ts";
+import useAppStore from "../../stores/AppStore.ts";
 import useHourDayText from "../../hooks/useHourDayText.ts";
 
 const columnHelper = createColumnHelper<TrafficRecord>();

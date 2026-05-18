@@ -81,11 +81,11 @@ export interface AlertResponse {
 }
 
 export interface AlertFilters {
-  severity?: "low" | "medium" | "high" | "critical";
-  status?: "open" | "resolved" | "ignored";
-  type?: string;
-  from?: string; // ISO date
-  to?: string;
+  hours?: number;
+  limit?: number;
+  severity?: "low" | "medium" | "high";
+  status?: "open" | "reviewing" | "resolved" | "false_positive";
+  attack_type?: string;
 }
 
 // ── WebSocket ──────────────────────────────────────────────────

@@ -71,26 +71,28 @@ async def list_alerts(limit: int = 50, hours: int = 24) -> list[dict[str, Any]]:
 
 async def list_alerts_filtered(
     limit: int = 50,
+    hours: int = 24,
     severity: str | None = None,
     status: str | None = None,
     attack_type: str | None = None,
-    hours: int = 24,
 ) -> list[dict[str, Any]]:
+
     col = database.alerts_col
     if col is None:
         return []
     try:
+        print(f">>> REPO hours={hours}")  # ← ajoute ça
         since = datetime.now(timezone.utc) - timedelta(hours=hours)
+        print(f">>> since={since.isoformat()}")
         query: dict[str, Any] = {"timestamp": {"$gte": since}}
-        if severity:
+        if severity is not None:
             query["severity"] = severity
-        if status:
+        if status is not None:
             query["status"] = status
-        if attack_type:
+        if attack_type is not None:
             query["attack_type"] = attack_type
-
         cursor = col.find(query).sort("timestamp", -1).limit(limit)
-        return [serialize_alert(a) async for a in cursor]
+        return [serialize_alert(alert) async for alert in cursor]
     except Exception as exc:
         log.warning("Failed to list filtered alerts: %s", exc)
         return []

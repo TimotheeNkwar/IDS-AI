@@ -17,6 +17,7 @@ import { ChevronDown, ChevronUp } from "lucide-react";
 import ThreatModal from "./components/ThreatModal.tsx";
 import IPFilterInput from "../../components/IPFilterInput.tsx";
 import { useThemeStore } from "../../stores/themeStore";
+import useAppStore from "../../stores/AppStore.ts";
 
 export default function ThreatsAnalysisPage() {
   const { theme } = useThemeStore();
@@ -58,7 +59,8 @@ export default function ThreatsAnalysisPage() {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
 
-  const { data: alerts } = useAlerts();
+  const { hours } = useAppStore();
+  const { data: alerts } = useAlerts({ hours });
   const columns = useColumns();
 
   const table = useReactTable({

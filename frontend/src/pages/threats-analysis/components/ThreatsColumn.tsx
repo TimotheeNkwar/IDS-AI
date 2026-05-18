@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import type { Alert } from "../../../types/types";
 import { useThemeStore } from "../../../stores/themeStore";
+import { formatDate } from "../../../lib/utils";
 
 const columnHelper = createColumnHelper<Alert>();
 
@@ -71,7 +72,7 @@ function TimestampCell({ value }: { value: string }) {
   const t = useTokens();
   return (
     <span className={`text-sm font-mono ${t.cellText}`}>
-      {new Date(value).toLocaleTimeString()}
+      {formatDate(value)}
     </span>
   );
 }

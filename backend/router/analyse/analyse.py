@@ -161,13 +161,27 @@ async def analyze(event: LogEvent) -> AnalysisResult:
 
 
 # ── CRUD endpoints ─────────────────────────────────────────────────────────────
-
-
 @analyse_router.get("/alerts")
-async def api_alerts(limit: int = Query(default=50, ge=1, le=200)) -> dict[str, Any]:
+async def api_alerts_filtered(
+    limit: int = Query(default=50, ge=1, le=200),
+    hours: int = Query(default=24, ge=1, le=720),
+    severity: Literal["low", "medium", "high"] | None = Query(default=None),
+    status: Literal["open", "reviewing", "resolved", "false_positive"] | None = Query(
+        default=None
+    ),
+    attack_type: str | None = Query(default=None),
+) -> dict[str, Any]:
     if not alert_repo.is_available():
         return {"alerts": [], "storage_available": False}
-    return {"alerts": await alert_repo.list_alerts(limit), "storage_available": True}
+
+    alerts = await alert_repo.list_alerts_filtered(
+        limit=limit,
+        hours=hours,  # ← comme traffic
+        severity=severity,
+        status=status,
+        attack_type=attack_type,
+    )
+    return {"alerts": alerts, "storage_available": True}
 
 
 @analyse_router.patch("/alerts/{alert_id}/status")
@@ -211,28 +225,3 @@ async def get_alert(alert_id: str) -> dict[str, Any]:
     if not alert:
         raise HTTPException(status_code=404, detail="Alert not found")
     return alert
-
-
-@analyse_router.get("/alerts")
-async def api_alerts_filtered(
-    limit: int = Query(default=50, ge=1, le=200),
-    hours: int = Query(default=24, ge=1, le=720),
-    severity: Literal["low", "medium", "high"] | None = Query(default=None),
-    status: Literal["open", "reviewing", "resolved", "false_positive"] | None = Query(
-        default=None
-    ),
-    attack_type: str | None = Query(default=None),
-) -> dict[str, Any]:
-    if not alert_repo.is_available():
-        return {"alerts": [], "storage_available": False}
-
-    since = datetime.now(timezone.utc) - timedelta(hours=hours)
-
-    alerts = await alert_repo.list_alerts_filtered(
-        limit=limit,
-        since=since,
-        severity=severity,
-        status=status,
-        attack_type=attack_type,
-    )
-    return {"alerts": alerts, "storage_available": True}
