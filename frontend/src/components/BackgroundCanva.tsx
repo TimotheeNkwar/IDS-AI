@@ -134,6 +134,7 @@ export default function Background() {
 
   return (
     <>
+      {/* BACKGROUND IMAGE LAYER */}
       <div
         style={{
           position: "fixed",
@@ -141,14 +142,34 @@ export default function Background() {
           backgroundImage: "url('../../src/assets/images/background/bg.png')",
           backgroundSize: "cover",
           backgroundPosition: "center",
-          filter: "blur(10px)",
-          scale: "1.35",
+          filter: "blur(18px) brightness(0.5) saturate(1.2)",
+          transform: "scale(1.4)",
+          zIndex: -3,
+        }}
+      />
+
+      {/* VIGNETTE LAYER (IMPORTANT pour look premium) */}
+      <div
+        style={{
+          position: "fixed",
+          inset: 0,
+          background:
+            "radial-gradient(circle at center, rgba(0,0,0,0.2), rgba(0,0,0,0.85))",
           zIndex: -2,
         }}
       />
+
+      {/* CANVAS LAYER */}
       <canvas
         ref={canvasRef}
-        style={{ position: "fixed", top: 0, left: 0, zIndex: -1 }}
+        style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          zIndex: -1,
+          opacity: 0.85,
+          mixBlendMode: "screen",
+        }}
       />
     </>
   );

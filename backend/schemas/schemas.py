@@ -49,7 +49,7 @@ class AnalysisResult(BaseModel):
     attack_type: str | None  # e.g. "ddos", "injection", None when normal
     risk_signals: list[dict[str, Any]]
     top_features: list[dict[str, Any]]
-    # LLM layer (only when anomaly)
+    # LLM layer
     classification: str  # "Normal" | "Suspicious" | "Malicious"
     llm_attack_type: str | None = None
     llm_severity: str | None = None
@@ -65,7 +65,9 @@ class AnalysisResult(BaseModel):
     severity: str  # "low" | "medium" | "high"
     src_ip: str
     dst_ip: str
-    proto: str
+    src_port: int
+    dst_port: int
+    protocol: str
     service: str
 
 

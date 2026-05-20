@@ -17,21 +17,16 @@ import type { SortingState, ColumnFiltersState } from "@tanstack/react-table";
 import TablePagination from "../../components/TablePagination.tsx";
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
-import {
-  ChevronUp,
-  ChevronDown,
-  Clock,
-  Shield,
-  MonitorSmartphone,
-  Network,
-  Activity,
-  Radio,
-  AlertTriangle,
-  Search,
-} from "lucide-react";
-import { columns } from "./components/TrafficColumns";
+import { ChevronUp, ChevronDown } from "lucide-react";
+// Avant
+
+// Après
+import { useColumns } from "./components/TrafficColumns";
 import TrafficRowDetail from "./components/TrafficRowDetail";
 import { Fragment } from "react";
+import IPFilterInput from "../../components/IPFilterInput.tsx";
+import useAppStore from "../../stores/AppStore.ts";
+import useHourDayText from "../../hooks/useHourDayText.ts";
 
 const columnHelper = createColumnHelper<TrafficRecord>();
 
@@ -44,6 +39,7 @@ const SEVERITY_BADGE: Record<string, string> = {
 export default function TrafficMonitorPage() {
   const [expandedRow, setExpandedRow] = useState<string | null>(null);
   const queryClient = useQueryClient();
+  const HoursDayText = useHourDayText();
   const [pagination, setPagination] = useState({
     pageIndex: 0,
     pageSize: 10,
@@ -52,19 +48,19 @@ export default function TrafficMonitorPage() {
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const lastUpdate = useWsStore((s) => s.lastUpdate);
   const liveTraffic = useWsStore((s) => s.liveTraffic);
+  const hours = useAppStore((s) => s.hours);
 
   const { data, isPending } = useQuery({
-    queryKey: ["traffic"],
-    queryFn: () => trafficService.fetchTrafficData(),
+    queryKey: ["traffic", hours], // ← re-fetches when hours changes
+    queryFn: () => trafficService.fetchTrafficData(hours),
     refetchOnWindowFocus: false,
   });
-
   // Whenever we receive a new dashboard update via WebSocket, we check if it's an anomaly. If it is, we invalidate the "traffic" query to trigger a refetch and get the latest data. This ensures that our table stays up-to-date with the most recent anomalies.
   useEffect(() => {
     if (lastUpdate?.is_anomaly) {
-      queryClient.invalidateQueries({ queryKey: ["traffic"] });
+      queryClient.invalidateQueries({ queryKey: ["traffic", hours] });
     }
-  }, [lastUpdate]);
+  }, [lastUpdate, hours]);
 
   // explanation may not exist on TrafficRecord; guard access to avoid TS error
   // console.log((data?.data?.traffic?.[0] as any)?.evidence);
@@ -106,6 +102,8 @@ export default function TrafficMonitorPage() {
     return [...live, ...initial];
   }, [data, liveAlerts]);
 
+  const columns = useColumns();
+
   const table = useReactTable({
     data: traffic,
     columns,
@@ -130,62 +128,51 @@ export default function TrafficMonitorPage() {
 
   return (
     <div>
-      <div className="overflow-x-auto  rounded-xlborder border-base-content/5 bg-slate-900 py-4 rounded-4xl">
-        <div className="flex items-center justify-between mb-4 px-8">
+      <div className="overflow-x-auto rounded-2xl border border-slate-700/50 light:bg-slate-100 bg-slate-900/40 backdrop-blur-xl shadow-xl shadow-black/30">
+        {/* HEADER */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-800/50">
           <div>
-            <h1 className="text-xl font-medium">Traffic Monitor</h1>
-            <p className="text-xs text-base-content/40">
-              Only anomalies from the last 24h are displayed. Data is updated
-              live via WebSocket.
+            <h1 className="text-xl font-semibold text-white light:text-slate-900 ">
+              Traffic Monitor
+            </h1>
+            <p className="text-xs text-slate-400 mt-1 light:text-slate-600">
+              Only anomalies from the last {HoursDayText} are displayed. Live
+              WebSocket feed.
             </p>
           </div>
-          <div className="relative">
-            {/* <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-base-content/40 pointer-events-none" /> */}
-            <div>
-              <label className="input input-sm input-bordered rounded-full flex items-center gap-2 w-64 ">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 16 16"
-                  fill="currentColor"
-                  className="h-4 w-4 opacity-70"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M9.965 11.026a5.5 5.5 0 1 1 1.06-1.06l3.754 3.754a.75.75 0 1 1-1.06 1.06l-3.754-3.754ZM11 6.5a4.5 4.5 0 1 1-9 0a4.5 4.5 0 0 1 9 0Z"
-                    clipRule="evenodd"
-                  />
-                </svg>
 
-                <input
-                  type="text"
-                  className="grow"
-                  placeholder="Filter by IP..."
-                  onChange={(e) =>
-                    table.getColumn("source_ip")?.setFilterValue(e.target.value)
-                  }
-                />
-              </label>
-            </div>
-          </div>
+          <IPFilterInput
+            table={table}
+            column="source_ip"
+            placeholder="Filter by IP..."
+          />
         </div>
-        <table className="table">
-          <thead className="bg-slate-800/50 text-white">
+
+        {/* TABLE */}
+        <table className="w-full">
+          {/* HEADER */}
+          <thead className="bg-slate-800/30 border-b border-slate-700/40  backdrop-blur light:bg-white/50 light:border-slate-200">
             {table.getHeaderGroups().map((headerGroup) => (
               <tr key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (
                   <th
                     key={header.id}
                     onClick={header.column.getToggleSortingHandler()}
-                    className="cursor-pointer select-none"
+                    className="px-4 py-3 text-left text-xs uppercase tracking-wider text-slate-300 cursor-pointer hover:text-white transition"
                   >
-                    <div className="flex items-center font-semibold gap-1">
+                    <div className="flex items-center gap-1 font-medium">
                       {flexRender(
                         header.column.columnDef.header,
                         header.getContext(),
                       )}
+
                       {{
-                        asc: <ChevronUp className="w-4 h-4" />,
-                        desc: <ChevronDown className="w-4 h-4" />,
+                        asc: (
+                          <ChevronUp className="w-4 h-4 text-fuchsia-400 light:text-violet-700" />
+                        ),
+                        desc: (
+                          <ChevronDown className="w-4 h-4 text-fuchsia-400 light:text-violet-700" />
+                        ),
                       }[header.column.getIsSorted() as string] ?? null}
                     </div>
                   </th>
@@ -194,56 +181,77 @@ export default function TrafficMonitorPage() {
               </tr>
             ))}
           </thead>
-          <tbody>
-            {table.getRowModel().rows.map((row) => (
-              <Fragment key={row.id}>
-                <tr
-                  className="hover cursor-pointer"
-                  onClick={() =>
-                    setExpandedRow(expandedRow === row.id ? null : row.id)
-                  }
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <td key={cell.id}>
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext(),
-                      )}
-                    </td>
-                  ))}
-                  <td>
-                    {expandedRow === row.id ? (
-                      <ChevronUp className="w-4 h-4" />
-                    ) : (
-                      <ChevronDown className="w-4 h-4" />
-                    )}
-                  </td>
-                </tr>
 
-                {expandedRow === row.id && (
-                  <tr className="bg-slate-800/30 accordion-row">
-                    <td colSpan={columns.length + 1} className="p-0">
-                      <TrafficRowDetail row={row.original} />
+          {/* BODY */}
+          <tbody className="divide-y divide-slate-800/40">
+            {table.getRowModel().rows.map((row) => {
+              const isOpen = expandedRow === row.id;
+
+              return (
+                <Fragment key={row.id}>
+                  {/* ROW */}
+                  <tr
+                    onClick={() => setExpandedRow(isOpen ? null : row.id)}
+                    className={`
+                  group cursor-pointer transition
+                  hover:bg-slate-800/40 light:hover:bg-slate-200
+                  ${isOpen ? "bg-fuchsia-500/5" : ""}
+                `}
+                  >
+                    {row.getVisibleCells().map((cell) => (
+                      <td
+                        key={cell.id}
+                        className="px-4 py-3 text-sm text-slate-200 group-hover:text-white transition"
+                      >
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext(),
+                        )}
+                      </td>
+                    ))}
+
+                    <td className="px-4 py-3">
+                      <div className="flex justify-end">
+                        {isOpen ? (
+                          <ChevronUp className="w-4 h-4 text-fuchsia-400 light:text-violet-700" />
+                        ) : (
+                          <ChevronDown className="w-4 h-4 text-slate-500 group-hover:text-white light:text-slate-600 light:group-hover:text-slate-900" />
+                        )}
+                      </div>
                     </td>
                   </tr>
-                )}
-              </Fragment>
-            ))}
+
+                  {/* EXPANDED */}
+                  {isOpen && (
+                    <tr className="bg-slate-900/30 light:bg-white/50">
+                      <td colSpan={columns.length + 1} className="p-0">
+                        <div className="border-l-2 border-fuchsia-500/40 pl-4 py-3 backdrop-blur">
+                          <TrafficRowDetail row={row.original} />
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                </Fragment>
+              );
+            })}
           </tbody>
         </table>
 
+        {/* EMPTY STATE */}
         {traffic.length === 0 && (
-          <p className="text-center py-8 text-base-content/50">
-            No data available
-          </p>
+          <div className="py-10 text-center text-slate-500 text-sm">
+            No traffic data available for the last {HoursDayText}.
+          </div>
         )}
       </div>
 
-      <TablePagination table={table} />
+      {/* FOOTER */}
+      <div className="flex items-center justify-between mt-2 text-xs text-slate-500">
+        <span>{traffic.length} entries</span>
+        <span>live via WebSocket</span>
+      </div>
 
-      <p className="text-xs text-base-content/40 mt-2">
-        {traffic.length} entries — live via WebSocket
-      </p>
+      <TablePagination table={table} />
     </div>
   );
 }

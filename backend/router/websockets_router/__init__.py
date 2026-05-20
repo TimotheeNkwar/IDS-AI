@@ -6,7 +6,7 @@ socket_router = APIRouter()
 
 class ConnectionManager:
     def __init__(self):
-        self.active_connections: list[WebSocket] = []  # ✅ pas besoin de List
+        self.active_connections: list[WebSocket] = []  # list of WebSocket connections
 
     async def connect(self, websocket: WebSocket):
         await websocket.accept()

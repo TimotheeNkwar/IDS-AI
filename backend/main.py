@@ -11,35 +11,28 @@ import logging
 import os
 import sys
 from contextlib import asynccontextmanager
-
 from pathlib import Path
 from typing import Any
 
+from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
-from dotenv import load_dotenv
 
-# from helpers.helper import (
-#     _severity,
-#     _build_raw_log,
-#     _final_confidence,
-#     _save_alert,
-#     _save_traffic,
-# )
+from ml import detector
+from ml import model as llm_module
+import database
+
 from router.analyse import analyse_router, start_analysis_worker, stop_analysis_worker
 from router.users import router as user_router
 from router.websockets_router import socket_router
+from router.health import health_router
+from router.stats import stats_router
+from router.suggestion import suggestions_router
 
 sys.path.append(str(Path(__file__).resolve().parents[1]))
 
 load_dotenv(Path(__file__).with_name(".env"))
 load_dotenv(Path(__file__).resolve().parents[1] / ".env", override=False)
-
-from ml import detector
-from ml import model as llm_module
-
-
-import database
 
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s  %(levelname)s  %(message)s"
@@ -92,6 +85,9 @@ app.add_middleware(
 app.include_router(analyse_router, prefix="/api", tags=["analysis"])
 app.include_router(user_router, prefix="/api/users", tags=["users"])
 app.include_router(socket_router, prefix="/api", tags=["websockets"])
+app.include_router(stats_router, prefix="/api", tags=["stats"])
+app.include_router(health_router, prefix="/api", tags=["health"])
+app.include_router(suggestions_router, prefix="/api", tags=["suggestions"])
 
 
 # ── Request / Response models ──────────────────────────────────────────────────

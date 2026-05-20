@@ -1,8 +1,10 @@
 @import "tailwindcss";
 @plugin "daisyui";
+
 :root {
   --my-font: "Inter", "Trebuchet MS" sans-serif;
 }
+@variant light (&:where(.light, .light *));
 
 #root {
   position: relative;
@@ -15,17 +17,21 @@ body {
   position: relative;
 }
 
-/* body::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  background-image: url("./assets/images/background/bg.png");
-  background-size: cover;
-  background-position: center;
-  filter: blur(10px);
-  scale: 1.05;
-  z-index: -3;
-} */
+/* globals.css */
+html.dark {
+  background: #0f172a !important;
+  color: #f1f5f9 !important;
+}
+html.light {
+  background: #ffffff !important;
+  color: #0f172a !important;
+}
+.glass {
+  background: rgba(15, 23, 42, 0.55);
+  backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
 @keyframes slideDown {
   from {
     opacity: 0;

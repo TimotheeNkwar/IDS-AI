@@ -70,6 +70,7 @@ async def _save_alert(result: AnalysisResult) -> None:
             "source_ip": result.src_ip,
             "destination_ip": result.dst_ip,
             "severity": result.severity,
+            "protocol": result.protocol,
             "status": "open",
             "classification": result.classification,
             "llm_attack_type": result.llm_attack_type,
@@ -84,6 +85,8 @@ async def _save_alert(result: AnalysisResult) -> None:
             "knowledge_matches": result.knowledge_matches,
             "recommended_action": result.recommended_action,
             "needs_manual_review": result.needs_manual_review,
+            "source_port": result.src_port,
+            "destination_port": result.dst_port,
         }
     )
 
@@ -118,6 +121,8 @@ async def _save_traffic(
             "llm_confidence": result.llm_confidence,
             "final_confidence": result.final_confidence,
             "attack_type": result.attack_type or result.llm_attack_type,
+            "source_port": result.src_port,
+            "destination_port": result.dst_port,
         }
     )
 

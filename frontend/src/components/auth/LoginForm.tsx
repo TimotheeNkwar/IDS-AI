@@ -52,64 +52,111 @@ export default function LoginForm() {
     <>
       {/* Limiter la largeur de la card */}
       <div className="flex items-center justify-center h-full">
-        <div className="w-96 rounded-3xl px-8 py-10 bg-gray-800/70 backdrop-blur-md shadow-lg border border-gray-700">
+        <div
+          className="w-96 rounded-3xl px-8 py-10
+    bg-slate-900/60 backdrop-blur-xl
+    border border-white/10
+    shadow-2xl
+  "
+        >
+          {/* Header */}
           <div className="text-center">
             <h1 className="text-3xl font-semibold text-white mb-2">
               Welcome back!
             </h1>
-            <h1 className="text-gray-200 text-sm  mb-8">
-              Login to your account
-            </h1>
+            <p className="text-gray-400 text-sm mb-8">Login to your account</p>
           </div>
+
           <form onSubmit={handleSubmit(onSubmit)}>
-            <div className="mb-4 relative">
+            {/* EMAIL */}
+            <div className="mb-5 relative">
               <input
-                className="w-full px-4 pt-6 pb-2 rounded-2xl bg-gray-800/50 backdrop-blur-md text-white focus:outline-none focus:ring-2 focus:ring-fuchsia-700 peer border border-gray-600/50 hover:border-gray-500 transition duration-200"
-                type="text"
                 id="email"
+                type="text"
                 placeholder=" "
                 {...register("email")}
+                className="
+            w-full px-4 pt-6 pb-2 rounded-2xl
+            bg-slate-900/40 backdrop-blur-md
+            text-white
+            border border-white/10
+            focus:outline-none focus:ring-2 focus:ring-fuchsia-500/40
+            focus:border-fuchsia-500/40
+            peer
+            transition
+          "
               />
+
               <label
                 htmlFor="email"
-                className="absolute left-4 top-4 text-white text-sm transition-all duration-200
-               peer-focus:top-1 peer-focus:text-xs peer-focus:text-fuchsia-400
-               peer-not-placeholder-shown:top-1 peer-not-placeholder-shown:text-xs peer-not-placeholder-shown:text-fuchsia-400"
+                className="
+            absolute left-4 top-4 text-gray-400 text-sm transition-all
+            peer-focus:top-1 peer-focus:text-xs peer-focus:text-fuchsia-400
+            peer-not-placeholder-shown:top-1 peer-not-placeholder-shown:text-xs
+          "
               >
                 Email
               </label>
+
               {errors.email && (
-                <p className="text-red-400 text-sm mt-1">
+                <p className="text-red-400 text-xs mt-1">
                   {errors.email.message}
                 </p>
               )}
             </div>
-            <div className="mb-4 relative">
+
+            {/* PASSWORD */}
+            <div className="mb-5 relative">
               <input
-                className="w-full px-4 pt-6 pb-2 rounded-2xl bg-gray-800/50 backdrop-blur-md text-white focus:outline-none focus:ring-2 focus:ring-fuchsia-700 peer border border-gray-600/50 hover:border-gray-500 transition duration-200"
-                type="password"
                 id="password"
+                type="password"
                 placeholder=" "
                 {...register("password")}
+                className="
+            w-full px-4 pt-6 pb-2 rounded-2xl
+            bg-slate-900/40 backdrop-blur-md
+            text-white
+            border border-white/10
+            focus:outline-none focus:ring-2 focus:ring-fuchsia-500/40
+            focus:border-fuchsia-500/40
+            peer
+            transition
+          "
               />
+
               <label
                 htmlFor="password"
-                className="absolute left-4 top-4 text-white text-sm transition-all duration-200
-               peer-focus:top-1 peer-focus:text-xs peer-focus:text-fuchsia-400
-               peer-not-placeholder-shown:top-1 peer-not-placeholder-shown:text-xs peer-not-placeholder-shown:text-fuchsia-400"
+                className="
+            absolute left-4 top-4 text-gray-400 text-sm transition-all
+            peer-focus:top-1 peer-focus:text-xs peer-focus:text-fuchsia-400
+            peer-not-placeholder-shown:top-1 peer-not-placeholder-shown:text-xs
+          "
               >
                 Password
               </label>
+
               {errors.password && (
-                <p className="text-red-400 text-sm mt-1">
+                <p className="text-red-400 text-xs mt-1">
                   {errors.password.message}
                 </p>
               )}
             </div>
 
-            {/* Bouton plus sobre */}
-            <button className="w-full mt-2 bg-fuchsia-700/80 hover:bg-fuchsia-600 text-white mb-4 py-3 rounded-2xl transition duration-200">
-              Login
+            {/* BUTTON */}
+            <button
+              type="submit"
+              disabled={isPending}
+              className="
+          w-full mt-2 py-3 rounded-2xl
+          bg-fuchsia-500/20 text-fuchsia-200
+          border border-fuchsia-500/30
+          hover:bg-fuchsia-500/30
+          hover:shadow-[0_0_20px_rgba(217,70,239,0.25)]
+          transition-all duration-200
+          disabled:opacity-50
+        "
+            >
+              {isPending ? "Loading..." : "Login"}
             </button>
           </form>
         </div>
