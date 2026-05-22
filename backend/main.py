@@ -96,4 +96,4 @@ app.include_router(suggestions_router, prefix="/api", tags=["suggestions"])
 if __name__ == "__main__":
     import uvicorn
 
-    uvicorn.run(app, host="10.30.199.223", port=int(os.getenv("PORT", "8000")))
+    uvicorn.run(app, host="localhost", port=int(os.getenv("PORT", "8000")))
