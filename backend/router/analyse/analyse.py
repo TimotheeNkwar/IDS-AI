@@ -32,7 +32,30 @@ analyse_router = APIRouter()
 
 # ── Constants ──────────────────────────────────────────────────────────────────
 
-ALLOWED_IPS = {"127.0.0.1", "::1"}
+ALLOWED_IPS = {"127.0.0.1", "::1", "192.168.0.101"}
+
+WHITELISTED_RANGES = [
+    "20.",  # Microsoft Azure
+    "13.",  # Microsoft/AWS
+    "40.",  # Microsoft Azure
+    "142.250.",  # Google
+    "172.217.",  # Google
+    "31.13.",  # Meta
+    "17.",  # Apple
+]
+
+
+def is_allowed(src_ip: str, dst_ip: str) -> bool:
+    return (
+        src_ip.startswith("192.168.")
+        or src_ip in {"127.0.0.1", "::1"}
+        or dst_ip.startswith("192.168.")
+        or dst_ip in {"127.0.0.1", "::1"}
+    )
+
+
+def is_whitelisted(ip: str) -> bool:
+    return any(ip.startswith(r) for r in WHITELISTED_RANGES)
 
 
 # ── Main endpoint ──────────────────────────────────────────────────────────────
@@ -42,8 +65,39 @@ ALLOWED_IPS = {"127.0.0.1", "::1"}
     "/analyze", response_model=AnalysisResult, summary="Analyze a network log event"
 )
 async def analyze(event: LogEvent) -> AnalysisResult:
-    if event.src_ip not in ALLOWED_IPS:
-        raise HTTPException(status_code=403, detail="Forbidden: IP not allowed")
+
+    if not is_allowed(event.src_ip, event.dst_ip):
+        raise HTTPException(status_code=403, detail="Forbidden")
+
+    if is_whitelisted(event.src_ip):
+        return AnalysisResult(
+            timestamp=datetime.now(timezone.utc),
+            ml_label="Whitelisted Source IP",
+            ml_confidence=1.0,
+            ml_model="N/A",
+            is_anomaly=False,
+            attack_type=None,
+            risk_signals=[],
+            top_features=[],
+            classification="Normal",
+            llm_attack_type=None,
+            llm_severity=None,
+            llm_confidence=1.0,
+            evidence=[],
+            knowledge_matches=[],
+            explanation="Source IP is whitelisted. Classified as normal without ML/LLM analysis.",
+            recommended_action="No action required.",
+            needs_manual_review=False,
+            llm_available=False,
+            final_confidence=1.0,
+            severity="low",
+            src_ip=event.src_ip,
+            dst_ip=event.dst_ip,
+            protocol=event.protocol,
+            service=event.service,
+            src_port=event.src_port,
+            dst_port=event.dst_port,
+        )
     raw = event.model_dump()
 
     ml_result = detector.predict(raw)
@@ -163,7 +217,7 @@ async def analyze(event: LogEvent) -> AnalysisResult:
 # ── CRUD endpoints ─────────────────────────────────────────────────────────────
 @analyse_router.get("/alerts")
 async def api_alerts_filtered(
-    limit: int = Query(default=50, ge=1, le=200),
+    limit: int = Query(default=500, ge=1, le=720),
     hours: int = Query(default=24, ge=1, le=720),
     severity: Literal["low", "medium", "high"] | None = Query(default=None),
     status: Literal["open", "reviewing", "resolved", "false_positive"] | None = Query(
@@ -201,7 +255,7 @@ async def update_alert_status(
 
 @analyse_router.get("/traffic")
 async def api_traffic(
-    limit: int = Query(default=50, ge=1, le=200),
+    limit: int = Query(default=500, ge=1, le=720),
     hours: int = Query(default=24, ge=1, le=720),
 ) -> dict[str, Any]:
     if not traffic_repo.is_available():

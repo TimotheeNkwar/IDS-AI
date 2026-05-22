@@ -66,6 +66,7 @@ export default function ThreatsAnalysisPage() {
   const table = useReactTable({
     data: alerts?.alerts ?? [],
     columns,
+    autoResetPageIndex: false,
     state: { sorting, columnFilters, pagination },
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,

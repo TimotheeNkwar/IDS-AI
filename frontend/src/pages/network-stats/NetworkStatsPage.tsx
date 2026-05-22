@@ -10,6 +10,7 @@ import Loader from "../../components/Loader.tsx";
 import { useThemeStore } from "../../stores/themeStore";
 import useAppStore from "../../stores/AppStore.ts";
 import useHourDayText from "../../hooks/useHourDayText.ts";
+import { formatCount } from "../../lib/utils.ts";
 
 export default function NetworkStatsPage() {
   const { hours, setHours } = useAppStore();
@@ -63,7 +64,7 @@ export default function NetworkStatsPage() {
           <div className="text-right">
             <p className={`text-xs ${t.bannerMeta}`}>Last {HoursDayText}</p>
             <p className={`text-sm font-semibold ${t.bannerValue}`}>
-              {summary?.total ?? 0} connections
+              {formatCount(summary?.total ?? 0)} connections
             </p>
           </div>
         </div>
