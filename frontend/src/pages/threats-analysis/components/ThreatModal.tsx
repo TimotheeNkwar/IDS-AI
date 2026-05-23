@@ -10,6 +10,7 @@ import RiskSignals from "./modal/RiskSignals";
 import TopFeatures from "./modal/TopFeatures";
 import KnowledgeMatches from "./modal/KnowledgeMatches";
 import RecommendedAction from "./modal/RecommendedAction";
+import IPChecker from "./modal/IPChecker";
 
 const ThreatModal = forwardRef<HTMLDialogElement, { alert: Alert | null }>(
   ({ alert }, ref) => {
@@ -62,6 +63,8 @@ const ThreatModal = forwardRef<HTMLDialogElement, { alert: Alert | null }>(
             `}
           >
             <Message alert={alert} />
+            {alert && <IPChecker defaultIP={alert.source_ip} />}
+
             <NetworkInfo alert={alert} />
             <ConfidenceInfo alert={alert} />
             <RiskSignals alert={alert} />
