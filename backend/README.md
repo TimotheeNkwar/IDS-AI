@@ -1,155 +1,155 @@
-# Backend — IDS-AI
+# IDS-AI — Backend
 
-FastAPI-based backend providing REST APIs and machine learning inference for the AI-powered Intrusion Detection System.
+FastAPI backend for the AI-powered Intrusion Detection System (ML + LLM).
+
+---
 
 ## Prerequisites
 
-- Python >= 3.10
-- pip
-- Ollama running locally for LLM analysis
+| Tool                   | Version | Download                                               |
+| ---------------------- | ------- | ------------------------------------------------------ |
+| Python                 | >= 3.10 | https://python.org                                     |
+| MongoDB                | any     | https://www.mongodb.com/try/download/community         |
+| Ollama                 | any     | https://ollama.com/download                            |
+| uv                     | any     | https://docs.astral.sh/uv/getting-started/installation |
+| Npcap _(Windows only)_ | any     | https://npcap.com/#download                            |
 
-## Getting Started
+> **Windows** — When installing Npcap, check **"WinPcap API-compatible mode"**.
+
+---
+
+## Installation & Setup
 
 ```bash
-# Create and activate a virtual environment
-python -m venv venv
-source venv/bin/activate   # Windows: venv\Scripts\activate
+# 1. Clone the repository
+git clone <your-repo-url>
+cd IDS-AI/backend
 
-# Install dependencies
-pip install -r requirements.txt
+# 2. Install dependencies
+uv sync
 
-# Prepare the default local LLM
-ollama pull mistral
+# 3. Create your .env file
+cp .env.example .env
+# Edit .env with your settings (see Environment Variables section below)
+
+# 4. Start MongoDB
+mongod                        # Windows (if not running as a service)
+sudo systemctl start mongod   # Linux
+
+# 5. Start Ollama and pull the model (in a separate terminal)
 ollama serve
+#best for cyber security
+ollama pull phi3
 
-# Start the development server (http://localhost:8000)
-uvicorn main:app --reload
+# 6. Seed the database (creates the default admin user)
+uv run python -m database.seed
+
+# 7. Train the ML model
+uv run python ml/train.py
+
+# 8. Start the server
+uv run python main.py
 ```
 
-`ollama serve` keeps running in the terminal. Open another terminal before starting `uvicorn`.
+API available at **http://localhost:8000**  
+Interactive docs at **http://localhost:8000/docs**
 
-Interactive API docs are available at `http://localhost:8000/docs`.
+---
+
+## Environment Variables
+
+Create a `.env` file in `backend/`:
+
+```env
+# MongoDB
+MONGO_ENABLED=true
+MONGO_URI=mongodb://localhost:27017
+MONGO_DB=ids-ai
+
+# LLM
+LLM_PROVIDER=ollama
+LLM_MODEL_NAME=phi3
+OLLAMA_BASE_URL=http://localhost:11434
+LLM_ENABLED=true
+
+# Auth
+SECRET_KEY=your-secret-key-here
+ALGORITHM=HS256
+ACCESS_TOKEN_EXPIRE_MINUTES=30
+
+# CORS
+CORS_ORIGINS=http://localhost:5173
+```
+
+---
+
+## Default Credentials
+
+| Field    | Value          |
+| -------- | -------------- |
+| Email    | admin@test.com |
+| Password | admin123       |
+
+> Change these after first login.
+
+---
+
+## Network Capture _(optional)_
+
+To analyze real-time network traffic, run the capture script.  
+It automatically detects your OS and active network interface.
+
+```bash
+# Windows — run as Administrator
+uv run python network_capture.py
+
+# Linux — run with sudo
+sudo uv run python network_capture.py
+```
+
+---
+
+## API Endpoints
+
+| Method | Path                    | Description                        |
+| ------ | ----------------------- | ---------------------------------- |
+| POST   | /api/analyze            | Analyze a network event (ML + LLM) |
+| GET    | /api/alerts             | List recent alerts                 |
+| PATCH  | /api/alerts/{id}/status | Update alert status                |
+| GET    | /api/traffic            | List analyzed traffic              |
+| GET    | /api/health             | System health check                |
+| POST   | /api/users/             | Create a user                      |
+| POST   | /api/users/login        | Login (returns JWT)                |
+| GET    | /api/users/me           | Current user profile               |
+
+---
 
 ## Project Structure
 
 ```
 backend/
-├── main.py              # FastAPI application entry point
-├── requirements.txt     # Python dependencies
-└── README.md
-```
-
-## Git Workflow: Backend Branch
-
-### Create and Switch to Backend Branch
-
-```bash
-# Create a new branch for backend changes
-git checkout -b backend-branch
-
-# Or create and switch in one command
-git checkout -b backend-branch main
-```
-
-### Work on the Backend Branch
-
-Make your changes to API endpoints, business logic, or dependencies:
-
-```bash
-# Stage changes
-git add backend/
-
-# Commit changes
-git commit -m "feat: add new API endpoint"
-
-# Push branch to remote
-git push origin backend-branch
-```
-
-### Merge Backend Branch into Main
-
-#### Option 1: Via Git Command (Local)
-
-```bash
-# Switch to main branch
-git checkout main
-
-# Pull latest changes from remote
-git pull origin main
-
-# Merge backend-branch into main
-git merge backend-branch
-
-# Push merged changes
-git push origin main
-```
-
-#### Option 2: Via Pull Request (Recommended)
-
-```bash
-# Push your branch to remote (if not already pushed)
-git push origin backend-branch
-
-# Create a pull request on GitHub/GitLab
-# - Go to your repository
-# - Click "New Pull Request" or "Create PR"
-# - Base: main
-# - Compare: backend-branch
-# - Add title and description
-# - Request review and merge
-```
-
-#### Clean Up After Merge
-
-```bash
-# Delete local branch
-git branch -d backend-branch
-
-# Delete remote branch
-git push origin --delete backend-branch
-```
-
-### View Branch History
-
-```bash
-# List all branches
-git branch -a
-
-# View commit history on current branch
-git log --oneline
-
-# View branches merged into main
-git branch --merged main
-```
-
-## API Endpoints
-
-| Method | Path          | Description                  |
-|--------|---------------|------------------------------|
-| GET    | /api/status   | System health check          |
-| GET    | /api/alerts   | Retrieve recent IDS alerts   |
-| PATCH  | /api/alerts/{id}/status | Update alert workflow status |
-| GET    | /api/traffic  | Retrieve recent analyzed traffic |
-
-## ML + LLM Explainability
-
-`POST /analyze` now returns ML and LLM evidence fields:
-
-- `risk_signals`: rule-based network indicators derived from the knowledge base.
-- `top_features`: most influential model features when the selected ML model exposes feature importances.
-- `knowledge_matches`: knowledge-base sections selected for the LLM prompt.
-- `evidence`: short LLM-cited observations used in the final decision.
-
-## Environment Variables
-
-Create a `.env` file in this directory:
-
-```
-LLM_PROVIDER=ollama
-LLM_MODEL_NAME=mistral
-OLLAMA_BASE_URL=http://localhost:11434
-LLM_ENABLED=true
-MONGO_ENABLED=true
-MONGO_URI=mongodb://localhost:27017/ids_ai
-DATABASE_NAME=ids_ai
+├── main.py                 # FastAPI entry point
+├── network_capture.py      # Real-time network capture (Windows + Linux)
+├── requirements.txt        # Python dependencies
+├── .env                    # Environment variables (create from .env.example)
+├── config/
+│   └── config.py           # Global settings
+├── database/
+│   ├── __init__.py         # MongoDB connection + collections
+│   ├── alerts.py           # Alerts repository
+│   ├── traffic.py          # Traffic repository
+│   ├── models.py           # Pydantic MongoDB schemas
+│   └── seed.py             # Database seeding (admin user)
+├── ml/
+│   ├── detector.py         # ML pipeline
+│   ├── model.py            # LLM pipeline
+│   └── train.py            # Model training
+├── router/
+│   ├── analyse/            # POST /analyze
+│   ├── users/              # Auth + users
+│   ├── health.py
+│   ├── stats.py
+│   └── websockets_router.py
+└── schemas/
+    └── schemas.py          # Pydantic API models
 ```

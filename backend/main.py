@@ -95,5 +95,14 @@ app.include_router(stats_router, prefix="/api", tags=["stats"])
 app.include_router(health_router, prefix="/api", tags=["health"])
 app.include_router(suggestions_router, prefix="/api", tags=["suggestions"])
 
+if __name__ == "__main__":
+    import uvicorn
+
+    uvicorn.run(
+        "main:app",
+        host="0.0.0.0",
+        port=8000,
+        reload=True,
+    )
 
 # ── Request / Response models ─────────────────────────────────────────────────
