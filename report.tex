@@ -372,6 +372,7 @@ IDS-AI/
 |   |-- ml/model.py             # LLM analysis integration
 |   |-- llm_queue/llm_queue.py  # Internal LLM concurrency queue
 |   |-- ml/best_model.joblib    # Trained model bundle
+|   |-- services/abuseipdb.py   # AbuseIPDB API client and cache
 |   |-- helpers/helper.py       # Result persistence and helper logic
 |   `-- database/               # MongoDB repositories
 |-- frontend/
@@ -403,6 +404,7 @@ IDS-AI/
     Backend       & FastAPI               & REST API and application orchestration \\
     Data validation & Pydantic            & Request and response schemas \\
     ML            & XGBoost / scikit-learn & Traffic classification \\
+    Threat Intelligence & AbuseIPDB API          & IP reputation scoring and defense-in-depth reviews \\
     LLM           & Ollama                & Local natural-language security analysis \\
     Database      & MongoDB + Motor       & Async storage for alerts and traffic \\
     Testing       & Python scripts        & Synthetic traffic and API validation \\
@@ -488,6 +490,18 @@ the backend decides internally whether an LLM call is necessary.
     \bottomrule
   \end{tabular}
 \end{table}
+
+\section{Threat Intelligence and AbuseIPDB Integration}
+
+To enhance detection capabilities, the system integrates the AbuseIPDB threat intelligence service. Before processing events through the ML and LLM pipelines, the backend checks the reputation of the source IP address. 
+
+The integration implements the following logic:
+\begin{itemize}[leftmargin=1.5em]
+  \item \textbf{Private/Local IPs Bypass:} Private IP address prefixes (e.g., \texttt{127.*}, \texttt{192.168.*}, \texttt{10.*}) are ignored to avoid unnecessary API queries.
+  \item \textbf{In-Memory Caching:} Queries are cached locally for 1 hour (\texttt{CACHE\_TTL = 3600}) to optimize response latency and respect rate limits.
+  \item \textbf{Malicious IP Short-Circuiting:} If the IP has an abuse confidence score of 80\% or more, it is directly marked as malicious and blocked immediately, bypassing ML/LLM analysis to save system resources.
+  \item \textbf{Forced LLM Review:} For borderline IP addresses with an abuse score above 30\%, the system automatically forces an LLM review, even if the ML classifier predicts the traffic as normal, ensuring defense-in-depth.
+\end{itemize}
 
 \section{Error Handling}
 
@@ -859,6 +873,7 @@ knowledge-base context. It returns a structured classification containing:
 
 The LLM receives a tightly controlled prompt constructed from a sanitized
 raw log, a compact ML summary (label, confidence, top features, risk signals),
+AbuseIPDB reputation indicators (abuse score, ISP, country of origin),
 and short snippets selected from \texttt{backend/ml/knowledge\_base.txt}. The
 prompt template requires a JSON-only structured reply to make downstream
 parsing reliable. The backend enforces length limits and detects
@@ -1010,6 +1025,8 @@ dashboard routes include Traffic Monitor, Network Stats, Threats Analysis,
 Suggested Actions, Help and Support, Preferences, and Profile pages. API
 requests are organized in \texttt{frontend/src/services/}, while React Query
 and Zustand manage fetched data and client state.
+
+To ensure visual consistency and premium aesthetics, the user interface has been modernized by replacing all legacy text-based emojis and symbols with standardized SVG icon components from the \texttt{lucide-react} library. For example, text-based warning signs and close characters have been migrated to the \texttt{AlertTriangle} and \texttt{X} components respectively, aligning with modern design practices.
 
 \section{Traffic View}
 

@@ -75,6 +75,7 @@ Guidelines:
 - If uncertain, choose `"Suspicious"` with `confidence`: 0.5 and an empty `evidence` list.
 - Confidence should reflect the model's certainty (0-1); if you output percent values (0-100), convert to 0-1.
 - Do NOT hallucinate additional data (IPs, history, or external facts not in the prompt).
+- Do NOT output any other text, only the JSON object.
 
 Examples (JSON only):
 {{

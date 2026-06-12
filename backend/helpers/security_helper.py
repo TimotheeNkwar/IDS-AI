@@ -5,8 +5,6 @@ import logging
 
 log = logging.getLogger(__name__)
 
-# ── Security helpers ───────────────────────────────────────────────────────────
-
 _PROMPT_INJECTION_PATTERNS: list[str] = [
     r"ignore\s+(previous|above|all)\s+instructions?",
     r"you\s+are\s+now",
@@ -18,6 +16,7 @@ _PROMPT_INJECTION_PATTERNS: list[str] = [
     r"disregard\s+(all|previous)",
     r"override\s+(previous|all)",
     r"your\s+new\s+role",
+    r"ignore\s+all\s+previous\s+instructions",
 ]
 _MAX_RAW_LOG_LEN = 2048
 def _sanitize_raw_log(raw_log: str | None) -> str:
