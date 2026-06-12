@@ -40,7 +40,7 @@ async def get_suggestions(hours: int = Query(ge=1, le=720)) -> dict:
                 "source_ip": source_ip,
                 "timestamp": first.get("timestamp"),
                 "needs_manual_review": first.get("needs_manual_review"),
-                "count": count,  # ✅ nombre d'occurrences
+                "count": count,  #  nombre d'occurrences
             }
         )
 

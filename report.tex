@@ -18,7 +18,7 @@
 
 % -- Graphics and Diagrams ---------------------------------------
 \usepackage{graphicx}
-\graphicspath{{./}{./screenshots/}}
+\graphicspath{{./}{./screenshot/}}
 \usepackage{tikz}
 \usetikzlibrary{positioning,shapes,arrows.meta,calc}
 
@@ -145,8 +145,8 @@
       \centering
       \vspace{1.0cm}
       \textcolor{orange}{\large\textbf{[SCREENSHOT PLACEHOLDER]}}\\[8pt]
-      \texttt{\detokenize{screenshots/}#1}\\[8pt]
-      \small\textit{Place the screenshot file in a \texttt{screenshots/}
+      \texttt{\detokenize{screenshot/}#1}\\[8pt]
+      \small\textit{Place the screenshot file in a \texttt{screenshot/}
       folder next to this report.}
       \vspace{1.0cm}
     \end{minipage}
@@ -234,28 +234,28 @@ keeps final authority over incident decisions after reviewing all generated
 evidence.
 
 The software platform contains three major technical layers. The backend is
-implemented with FastAPI and exposes REST endpoints for analysis, job
-monitoring, alerts, traffic history, and health checks. The frontend is a
-React single-page dashboard that displays system status, recent alerts,
-analyzed traffic, and live queued analysis requests. The persistence layer
-uses MongoDB through the Motor asynchronous driver to store alert and traffic
-records.
+implemented with FastAPI and exposes REST endpoints for analysis, alerts,
+traffic history, statistics, suggestions, health checks, and WebSocket alert
+updates. The frontend is a React single-page dashboard that displays traffic
+monitoring, recent alerts, network statistics, and suggested actions. The
+persistence layer uses MongoDB through the Motor asynchronous driver to store
+alert, traffic, statistics, and user records.
 
 \section{Problem Statement}
 
-Network intrusion detection systems must operate under high load while still
-providing meaningful results. A simple synchronous API design can become
-unreliable when many analysis requests arrive at the same time, especially
-when some requests trigger slower LLM-based classification. Without a queue,
-large bursts of traffic can block the backend, degrade the user interface,
-and hide the real state of pending analyses.
+Network intrusion detection systems must classify traffic quickly while still
+providing explanations that are useful to analysts. A purely rule-based IDS is
+easy to understand but fragile against changing attack patterns. A purely
+machine-learning system is faster, but it can be difficult for an analyst to
+understand why a flow was flagged. IDS-AI addresses this gap by combining a
+supervised ML detector, payload-pattern inspection, a local LLM explanation
+layer, and a dashboard where the analyst keeps control of the final response.
 
-IDS-AI addresses this problem by introducing an asynchronous analysis queue.
-Incoming network events are accepted as jobs, each job receives a status, and
-worker tasks process the queue one request at a time or according to a
-configurable concurrency limit. This design improves stability and gives the
-frontend enough information to show waiting, processing, completed, and
-failed requests in real time.
+The current backend exposes a synchronous analysis endpoint. Inside that
+request flow, potentially slow LLM calls are submitted to an internal
+\texttt{LLMQueue} with a semaphore limiting concurrent LLM inference. This
+keeps LLM work serialized and predictable, while the ML detector remains the
+fast first-line classifier.
 
 \section{Objectives}
 
@@ -272,10 +272,11 @@ The main objectives of the project are:
   \item Store analyzed traffic and generated alerts in MongoDB.
   \item Provide a React dashboard for monitoring alerts, traffic, and system
     health.
-  \item Add a robust queue mechanism for high-volume concurrent requests.
-  \item Display live request progress from 0\% to 100\% in the Traffic view.
-  \item Generate synthetic test datasets to validate the queue and detection
-    behaviour.
+  \item Provide network statistics, alert trends, and suggested response
+    actions in the frontend.
+  \item Use a controlled internal LLM queue to avoid concurrent LLM overload.
+  \item Generate synthetic test datasets to validate detection behaviour and
+    API responses.
 \end{itemize}
 
 \section{Scope}
@@ -285,7 +286,7 @@ It does not replace a full SIEM platform or a production network sensor, but
 it provides a practical architecture for receiving normalized flow records,
 performing AI-assisted classification, and presenting security findings to a
 user. The project includes test utilities for generating synthetic attacks
-and stress-testing the analysis queue.
+and validating the API analysis pipeline.
 
 % ================================================================
 \chapter{System Architecture}
@@ -293,11 +294,11 @@ and stress-testing the analysis queue.
 \section{High-Level Architecture}
 
 Figure~\ref{fig:architecture} shows the main components of IDS-AI. Network
-events are sent to the FastAPI backend, queued as analysis jobs, processed by
-worker tasks, classified by the ML and LLM components, then stored and
-presented in the React dashboard. The final decision is made by the
-Human-in-the-Loop analyst, who reviews the alert, evidence, severity, and
-recommended action before closing or escalating the incident.
+events are sent to the FastAPI backend, classified first by the ML detector,
+optionally enriched by the local LLM, stored in MongoDB, and then presented in
+the React dashboard. The final decision is made by the Human-in-the-Loop
+analyst, who reviews the alert, evidence, severity, and recommended action
+before closing or escalating the incident.
 
 \begin{figure}[htbp]
   \centering
@@ -313,20 +314,19 @@ recommended action before closing or escalating the incident.
   ]
     \node[block] (client)   {Network Event\\Generator / Sensor};
     \node[block, right=of client]   (api)      {FastAPI Backend\\REST API};
-    \node[block, right=of api]      (queue)    {Analysis Queue\\Job Registry};
-    \node[block, below=of queue]    (worker)   {Worker Tasks\\Concurrency Limit};
-    \node[block, left=of worker]    (ml)       {ML Detector\\XGBoost Bundle};
-    \node[block, right=of worker]   (llm)      {Local LLM\\Ollama};
-    \node[db,    below=of worker]   (mongo)    {MongoDB\\Alerts + Traffic};
+    \node[block, right=of api]      (ml)       {ML Detector\\Best Model Bundle};
+    \node[block, below=of ml]       (queue)    {LLM Queue\\Semaphore Limit};
+    \node[block, right=of queue]    (llm)      {Local LLM\\Ollama / HF};
+    \node[db,    below=of queue]    (mongo)    {MongoDB\\Alerts + Traffic};
     \node[block, below=of api]      (frontend) {React Dashboard\\Traffic + Alerts};
     \node[block, below=of frontend] (human)    {Human-in-the-Loop\\Final Decision};
 
     \draw[arrow] (client)   -- (api);
-    \draw[arrow] (api)      -- (queue);
-    \draw[arrow] (queue)    -- (worker);
-    \draw[arrow] (worker)   -- (ml);
-    \draw[arrow] (worker)   -- (llm);
-    \draw[arrow] (worker)   -- (mongo);
+    \draw[arrow] (api)      -- (ml);
+    \draw[arrow] (ml)       -- (queue);
+    \draw[arrow] (queue)    -- (llm);
+    \draw[arrow] (ml)       -- (mongo);
+    \draw[arrow] (llm)      -- (mongo);
     \draw[arrow] (mongo)    -- (frontend);
     \draw[arrow] (api)      -- (frontend);
     \draw[arrow] (frontend) -- (human);
@@ -362,16 +362,23 @@ final decision after all analysis is complete.
 IDS-AI/
 |-- backend/
 |   |-- main.py                 # FastAPI application entry point
-|   |-- router/analyse.py       # Analysis endpoints and queue workers
+|   |-- router/analyse/analyse.py # Analysis, alerts, and traffic endpoints
+|   |-- router/health/          # Health and status endpoints
+|   |-- router/stats/           # Aggregated dashboard metrics
+|   |-- router/suggestion/      # Suggested response actions
+|   |-- router/websockets_router/ # WebSocket alert updates
 |   |-- schemas/schemas.py      # Pydantic request and response models
 |   |-- ml/detector.py          # Machine learning inference pipeline
 |   |-- ml/model.py             # LLM analysis integration
+|   |-- llm_queue/llm_queue.py  # Internal LLM concurrency queue
 |   |-- ml/best_model.joblib    # Trained model bundle
 |   |-- helpers/helper.py       # Result persistence and helper logic
 |   `-- database/               # MongoDB repositories
 |-- frontend/
-|   |-- src/App.jsx             # React dashboard
-|   `-- src/App.css             # Dashboard styles
+|   |-- src/App.tsx             # React application root
+|   |-- src/router/router.tsx   # Protected dashboard routes
+|   |-- src/pages/              # Traffic, stats, threats, suggestions, settings
+|   `-- src/services/           # Axios API clients
 |-- load_tests/
 |   |-- attack_requests_100.json
 |   |-- synthetic_intrusion_dataset_450.json
@@ -386,17 +393,19 @@ IDS-AI/
   \centering
   \caption{Technology stack used in IDS-AI}
   \label{tab:stack}
-  \begin{tabular}{lll}
+  \begin{tabular}{p{0.22\textwidth}p{0.30\textwidth}p{0.38\textwidth}}
     \toprule
     \textbf{Layer} & \textbf{Technology} & \textbf{Purpose} \\
     \midrule
-    Frontend      & React 18              & Single-page monitoring dashboard \\
+    Frontend      & React 19 + TypeScript & Single-page monitoring dashboard \\
+    UI / charts   & Tailwind, DaisyUI, Recharts & Styling and data visualization \\
+    State / data  & Zustand, React Query  & Client state and API polling/caching \\
     Backend       & FastAPI               & REST API and application orchestration \\
     Data validation & Pydantic            & Request and response schemas \\
     ML            & XGBoost / scikit-learn & Traffic classification \\
     LLM           & Ollama                & Local natural-language security analysis \\
     Database      & MongoDB + Motor       & Async storage for alerts and traffic \\
-    Testing       & Python scripts        & Synthetic load and queue testing \\
+    Testing       & Python scripts        & Synthetic traffic and API validation \\
     \bottomrule
   \end{tabular}
 \end{table}
@@ -408,9 +417,11 @@ IDS-AI/
 
 The backend application is initialized in \texttt{backend/main.py}. On
 startup, the application loads environment variables, preloads the ML model
-bundle, optionally preloads the LLM pipeline, connects to MongoDB, and starts
-the analysis workers. On shutdown, workers are cancelled and the database
-connection is closed cleanly.
+bundle, optionally preloads the LLM pipeline, and connects to MongoDB. On
+shutdown, the database connection is closed cleanly. The current
+\texttt{start\_analysis\_worker} and \texttt{stop\_analysis\_worker}
+functions are lifecycle hooks that log startup and shutdown; public job-worker
+endpoints are not implemented in the current codebase.
 
 \begin{lstlisting}[style=pythonstyle, caption={Backend startup lifecycle summary}]
 @asynccontextmanager
@@ -428,64 +439,65 @@ async def lifespan(app: FastAPI):
     await database.close_db()
 \end{lstlisting}
 
-\section{Analysis Queue}
+\section{Internal LLM Queue}
 
-The analysis queue is implemented in \texttt{backend/router/analyse.py}. Each
-incoming event can be submitted as an analysis job. A job stores the original
-event, status, progress, queue position, timestamps, result, and possible
-error message.
+The current system uses an internal queue in
+\texttt{backend/llm\_queue/llm\_queue.py}. The queue stores coroutine tasks
+for LLM inference and protects the model with an \texttt{asyncio.Semaphore}.
+In the current configuration, \texttt{max\_concurrent=1}, so only one LLM
+analysis is allowed at a time.
 
-The supported job states are:
+\begin{lstlisting}[style=pythonstyle, caption={Internal LLM queue summary}]
+class LLMQueue:
+    def __init__(self, max_concurrent: int = 1):
+        self._semaphore = asyncio.Semaphore(max_concurrent)
+        self._queue: asyncio.Queue = asyncio.Queue()
 
-\begin{itemize}[leftmargin=1.5em]
-  \item \texttt{waiting}: the request has been accepted and is waiting in the
-    queue.
-  \item \texttt{processing}: a worker is currently analyzing the request.
-  \item \texttt{completed}: the request finished successfully and contains an
-    \texttt{AnalysisResult}.
-  \item \texttt{failed}: an exception or timeout occurred during analysis.
-  \item \texttt{cancelled}: a waiting job was cancelled before processing.
-\end{itemize}
-
-\begin{lstlisting}[style=pythonstyle, caption={Configurable queue settings}]
-_ANALYSIS_QUEUE_MAXSIZE = int(os.getenv("ANALYSIS_QUEUE_MAXSIZE", "1000"))
-_ANALYSIS_CONCURRENCY = max(1, int(os.getenv("ANALYSIS_CONCURRENCY", "1")))
-_ANALYSIS_TIMEOUT_SECONDS = max(1, int(os.getenv("ANALYSIS_TIMEOUT_SECONDS", "180")))
-_ANALYSIS_HISTORY_LIMIT = max(10, int(os.getenv("ANALYSIS_HISTORY_LIMIT", "500")))
+    async def submit(self, coro: Coroutine) -> Any:
+        future = asyncio.get_event_loop().create_future()
+        await self._queue.put((coro, future))
+        return await future
 \end{lstlisting}
 
-\section{Queue Endpoints}
+This queue is different from a public job queue. Clients do not create,
+cancel, or poll queue jobs directly. They call \texttt{POST /api/analyze};
+the backend decides internally whether an LLM call is necessary.
+
+\section{API Endpoints}
 
 \begin{table}[htbp]
   \centering
-  \caption{Main analysis and queue endpoints}
+  \caption{Main backend endpoints implemented in the current system}
   \label{tab:endpoints}
-  \begin{tabular}{lll}
+  \begin{tabular}{p{0.13\textwidth}p{0.30\textwidth}p{0.47\textwidth}}
     \toprule
     \textbf{Method} & \textbf{Path} & \textbf{Description} \\
     \midrule
-    POST   & \texttt{/api/analyze}              & Synchronous analysis (backward-compatible) \\
-    POST   & \texttt{/api/analysis/jobs}         & Create a queued analysis job \\
-    GET    & \texttt{/api/analysis/jobs}         & List queued and recent jobs \\
-    GET    & \texttt{/api/analysis/jobs/\{id\}} & Retrieve one job status \\
-    DELETE & \texttt{/api/analysis/jobs/\{id\}} & Cancel a waiting job \\
-    GET    & \texttt{/api/health}                & Backend, model, storage, and queue health \\
+    POST   & \texttt{/api/analyze}              & Run ML analysis and optional LLM enrichment \\
+    GET    & \texttt{/api/health}                & Backend, model, LLM, and storage health \\
+    GET    & \texttt{/api/status}                & Lightweight operational status \\
     GET    & \texttt{/api/alerts}                & Retrieve recent IDS alerts \\
+    GET    & \texttt{/api/alerts/\{id\}}         & Retrieve one alert detail \\
+    PATCH  & \texttt{/api/alerts/\{id\}/status} & Update alert workflow status \\
     GET    & \texttt{/api/traffic}               & Retrieve persisted traffic records \\
+    GET    & \texttt{/api/stats}                 & Aggregated dashboard metrics \\
+    GET    & \texttt{/api/stats/alerts}          & Alert-only statistics \\
+    GET    & \texttt{/api/stats/traffic}         & Traffic-only statistics \\
+    GET    & \texttt{/api/suggestions}           & Grouped recommended actions from open alerts \\
+    WS     & \texttt{/api/ws/alerts}             & Live dashboard updates over WebSocket \\
     \bottomrule
   \end{tabular}
 \end{table}
 
-\section{Error Handling and Timeouts}
+\section{Error Handling}
 
-Each worker wraps analysis execution in \texttt{asyncio.wait\_for}. If an
-analysis exceeds \texttt{ANALYSIS\_TIMEOUT\_SECONDS}, the job is marked
-\texttt{failed}. Exceptions from the ML or LLM pipeline are captured and
-stored in the job error field instead of crashing the worker loop.
-
-CPU-heavy and blocking analysis calls are executed with
-\texttt{asyncio.to\_thread}. This prevents the FastAPI event loop from being
-blocked while model inference or LLM calls are running.
+If the ML model bundle cannot be loaded, the analysis endpoint returns a
+service error telling the operator to run the training pipeline first. LLM
+failures are handled gracefully: the backend returns a Suspicious result,
+marks \texttt{llm\_available=false}, preserves ML risk signals as evidence,
+and recommends manual review. Blocking LLM inference is executed through
+\texttt{asyncio.to\_thread}, so local model calls do not directly block the
+FastAPI event loop.
 
 % ================================================================
 \chapter{Detection Pipeline}
@@ -521,10 +533,10 @@ CTU-style flow features. The main request schema is represented by the
 \section{Machine Learning Stage}
 
 The ML detector loads the trained model bundle from
-\texttt{backend/ml/best\_model.joblib}. The project supports models such as
-Random Forest, XGBoost, and Isolation Forest. The best model is selected by
-F1-score during training and saved for runtime inference. In the tested
-environment, the active model was XGBoost with an F1-score around 0.989.
+\texttt{backend/ml/best\_model.joblib}. The training pipeline compares Random
+Forest, XGBoost, and Isolation Forest. The best supervised model by F1-score
+is saved for runtime inference, while the Isolation Forest model is kept in
+the bundle for anomaly-scoring support.
 
 The ML result includes:
 
@@ -824,10 +836,13 @@ fields give the analyst a fast first-line verdict and a short technical
 explanation of why the event was flagged.
 
 \section{LLM Stage}
+\label{sec:llm}
 
-When the ML model identifies an anomaly, or when HTTP/S traffic requires
-additional review, IDS-AI invokes the local LLM through Ollama. The LLM is
-given sanitized raw log text, ML metadata, risk signals, and selected
+When the ML model identifies an anomaly, or when low-confidence web traffic
+matches the force-review rule, IDS-AI invokes the LLM layer. The default
+provider is Ollama using \texttt{phi3}, and the code also supports a
+HuggingFace text-generation pipeline when configured. The LLM is given
+sanitized raw log text, ML metadata, risk signals, top features, and selected
 knowledge-base context. It returns a structured classification containing:
 
 \begin{itemize}[leftmargin=1.5em]
@@ -844,10 +859,11 @@ knowledge-base context. It returns a structured classification containing:
 
 The LLM receives a tightly controlled prompt constructed from a sanitized
 raw log, a compact ML summary (label, confidence, top features, risk signals),
-and short snippets from the knowledge base. The prompt template enforces a
-JSON-only structured reply to make downstream parsing reliable. The backend
-enforces length limits and detects prompt-injection patterns; suspect inputs
-are redacted before being sent to the model.
+and short snippets selected from \texttt{backend/ml/knowledge\_base.txt}. The
+prompt template requires a JSON-only structured reply to make downstream
+parsing reliable. The backend enforces length limits and detects
+prompt-injection patterns; suspect inputs are redacted before being sent to
+the model.
 
 \subsection{Example LLM Output}
 
@@ -889,8 +905,8 @@ Key properties:
 \begin{itemize}[leftmargin=1.5em]
   \item Contextual reasoning: the LLM provides human-readable explanations
     and can correlate indicators that the ML layer misses.
-  \item Higher latency compared to ML --- calls must be guarded by timeouts
-    and executed off the event loop.
+  \item Higher latency compared to ML --- calls are executed off the event
+    loop through \texttt{asyncio.to\_thread}.
   \item Structured output: classification, evidence items, suggested severity,
     and recommended mitigation steps.
 \end{itemize}
@@ -901,9 +917,9 @@ To limit misuse and instability the system:
 \begin{itemize}[leftmargin=1.5em]
   \item sanitizes and truncates raw logs;
   \item applies prompt-injection detection rules and redaction policies;
-  \item enforces \texttt{ANALYSIS\_TIMEOUT\_SECONDS} for each LLM call and
-    marks long-running jobs as failed to avoid blocking the queue;
-  \item isolates LLM calls in threads or worker processes when necessary.
+  \item limits concurrent LLM execution through the internal
+    \texttt{LLMQueue} semaphore;
+  \item isolates blocking LLM calls in a background thread when necessary.
 \end{itemize}
 
 \section{Prompt Injection Protection}
@@ -933,18 +949,19 @@ complete result in the dashboard.
 The dashboard aggregates ML outputs, LLM explanations, and persisted traffic
 history for each analyzed event. An analyst inspects the combined context and
 can change alert workflow status (\texttt{open}, \texttt{reviewing},
-\texttt{resolved}, \texttt{false\_positive}) via the UI. All analyst actions
-are recorded with timestamps to create an audit trail.
+\texttt{resolved}, \texttt{false\_positive}) via the UI. Alert records include
+timestamps, status, evidence, recommended action, and confidence values so the
+review process can be reconstructed from stored data.
 
 \subsection{UX and Operational Recommendations}
 
 Recommended features include:
 \begin{itemize}[leftmargin=1.5em]
-  \item a live queue view showing waiting and processing jobs with progress
-    percentages and per-job spinners;
-  \item an action history log for each alert;
+  \item a dedicated action history log for each alert;
   \item one-click escalation workflows that attach relevant logs to tickets;
   \item role-based access control so only authorized users can resolve alerts.
+  \item a future durable analysis job queue if high-volume asynchronous
+    processing becomes a production requirement.
 \end{itemize}
 
 % ================================================================
@@ -952,14 +969,17 @@ Recommended features include:
 
 \section{MongoDB Collections}
 
-The persistence layer stores operational data in MongoDB. The main
-collections are:
+The persistence layer stores operational data in MongoDB. The main collections
+created by the backend are:
 
 \begin{itemize}[leftmargin=1.5em]
   \item \texttt{alerts}: IDS alerts generated when traffic is classified as
     anomalous.
   \item \texttt{network\_traffic}: analyzed traffic records and classification
     summaries.
+  \item \texttt{network\_traffic\_stats}: aggregated traffic counters grouped
+    into time windows for dashboard charts.
+  \item \texttt{users}: dashboard user accounts and authentication data.
 \end{itemize}
 
 \section{Alert Workflow}
@@ -973,39 +993,38 @@ analysis, but the analyst decides how the alert should be handled.
 
 \section{Traffic Storage}
 
-Each completed analysis is stored as a traffic record. This allows the
-dashboard to display a history of analyzed events even after the live queue
-entry has completed. Live queue entries are displayed together with persisted
-traffic so the user can see both current and historical activity.
+Anomalous, suspicious, or malicious analyses are stored as traffic records
+with the raw event, model outputs, explanation, evidence, and final
+classification. Normal events update the \texttt{network\_traffic\_stats}
+collection so the dashboard can still show traffic volume without storing
+every benign flow as a full alert-like record.
 
 % ================================================================
 \chapter{Frontend Dashboard}
 
 \section{Dashboard Overview}
 
-The frontend is implemented as a React application in
-\texttt{frontend/src/App.jsx}. It provides a monitoring interface with system
-metrics, model status, storage status, alert tables, and traffic tables.
-Polling is used to keep the interface updated.
+The frontend is implemented as a React and TypeScript application. The route
+configuration lives in \texttt{frontend/src/router/router.tsx}. Protected
+dashboard routes include Traffic Monitor, Network Stats, Threats Analysis,
+Suggested Actions, Help and Support, Preferences, and Profile pages. API
+requests are organized in \texttt{frontend/src/services/}, while React Query
+and Zustand manage fetched data and client state.
 
 \section{Traffic View}
 
-The Traffic view displays both live analysis jobs and persisted network
-traffic. Live jobs are shown with:
+The Traffic Monitor view displays persisted network traffic returned by
+\texttt{GET /api/traffic}. Rows include:
 
 \begin{itemize}[leftmargin=1.5em]
-  \item a row number starting from 1;
-  \item job state;
   \item source and destination addresses;
-  \item protocol and byte counters;
-  \item current label or queue position;
-  \item severity when available;
-  \item numeric progress between 0\% and 100\%;
-  \item a circular cyan progress spinner;
-  \item a cancel button for jobs still waiting in the queue.
+  \item protocol, service, ports, duration, and packet-size fields;
+  \item ML label, anomaly flag, confidence, and severity;
+  \item LLM explanation, evidence, risk signals, and recommended action when
+    the selected row is opened for detail.
 \end{itemize}
 
-\screenshot{traffic\_queue.png}{Traffic view with live queued attacks and percentage progress}
+\screenshot{traffic\_monitor.png}{Traffic Monitor page with persisted IDS traffic records}
 
 \section{Human Analyst Review}
 
@@ -1016,17 +1035,27 @@ available context.
 
 \section{Alerts View}
 
-The Alerts view displays recent IDS alerts, including severity badges,
-classification, confidence, evidence, explanation, and recommended action.
-Security analysts can update the alert workflow status from the table.
+The Threats Analysis view displays recent IDS alerts, including severity
+badges, classification, confidence, evidence, explanation, knowledge matches,
+and recommended action. Security analysts can open an alert detail modal and
+update the workflow status.
 
-\screenshot{alerts\_dashboard.png}{Alerts dashboard with severity and status controls}
+\screenshot{threats\_analysis.png}{Threats Analysis page with severity and status controls}
+
+\section{Network Statistics and Suggestions}
+
+The Network Stats page uses the \texttt{/api/stats} endpoints to show attacks
+by type, severity, status, traffic by protocol and service, alerts over time,
+top attacker IPs, and top talker IPs. The Suggested Actions page calls
+\texttt{/api/suggestions}, groups open alerts by attack type and source IP,
+and presents recommended actions derived from the stored LLM analysis.
 
 \section{System Health}
 
-The dashboard also displays health indicators for the ML model, LLM,
-MongoDB storage, analysis queue, active workers, and configured concurrency.
-This makes operational issues visible without opening backend logs.
+The dashboard can consume \texttt{/api/health} to display the ML model name,
+model load status, F1 score, LLM provider and model, LLM enabled/loaded state,
+and MongoDB storage connectivity. This makes operational issues visible
+without opening backend logs.
 
 % ================================================================
 \chapter{Testing and Evaluation}
@@ -1138,7 +1167,7 @@ attack types without being overwhelmed by normal traffic. Importantly, SMOTE
 is \textbf{not} applied to the test set, keeping it genuinely imbalanced and
 realistic for unbiased evaluation.
 
-\section{Synthetic Attack Dataset for Queue Testing}
+\section{Synthetic Attack Dataset for API Testing}
 
 The project includes a generated synthetic intrusion dataset for load testing:
 \texttt{load\_tests/synthetic\_intrusion\_dataset\_450.json}. It contains 450
@@ -1160,59 +1189,65 @@ Each record follows the same JSON schema as the backend \texttt{LogEvent}
 model. Normal records use benign user IP addresses from
 \texttt{192.168.1.0/24}, while attack records use source addresses from
 \texttt{198.51.100.0/24}. Target hosts use \texttt{10.0.0.0/24}. This dataset
-is used primarily for stress-testing the analysis queue, not for model
+is used for API-level detection tests and demonstration traffic, not for model
 training.
 
-\section{Queue Load Test}
+\section{Attack Request Test}
 
 The file \texttt{load\_tests/run\_attack\_queue\_test.py} generates and
-submits 100 attack events to the queue endpoint. The script writes
-\texttt{attack\_requests\_100.json}, sends each entry to
-\texttt{/api/analysis/jobs}, then polls the queue status.
+submits 100 attack events to the backend. The script writes
+\texttt{attack\_requests\_100.json} and can be adapted to post each entry to
+\texttt{/api/analyze}. Since the current public API does not expose
+\texttt{/api/analysis/jobs}, this script should be treated as a load-test
+utility that must stay synchronized with the backend route design.
 
-\begin{lstlisting}[style=bashstyle, caption={Running the queue load test}]
+\begin{lstlisting}[style=bashstyle, caption={Running the attack request test utility}]
 python3 load_tests/run_attack_queue_test.py \
   --api-base http://127.0.0.1:8001 \
   --wait-seconds 60
 \end{lstlisting}
 
-\section{Observed Test Result}
+\section{Expected Test Result}
 
-During testing, all 100 generated attacks were accepted by the backend queue.
-With \texttt{ANALYSIS\_CONCURRENCY=1} and LLM analysis enabled, jobs were
-processed one at a time. The queue status after the observation window was:
+When pointed at the implemented \texttt{/api/analyze} endpoint, attack samples
+should produce ML labels such as \texttt{ddos}, \texttt{dos},
+\texttt{injection}, \texttt{xss}, \texttt{backdoor}, or related attack
+families. Samples that are anomalous or force-reviewed should also receive
+LLM evidence, an explanation, a recommended action, and
+\texttt{needs\_manual\_review=true}. Alerts should be saved in MongoDB when
+storage is enabled.
 
 \begin{table}[htbp]
   \centering
-  \caption{Queue load test result}
-  \label{tab:queue-result}
-  \begin{tabular}{lr}
+  \caption{Expected fields for attack API validation}
+  \label{tab:attack-api-result}
+  \begin{tabular}{ll}
     \toprule
-    \textbf{Status} & \textbf{Count} \\
+    \textbf{Field} & \textbf{Expected Behaviour} \\
     \midrule
-    Completed  & 3 \\
-    Processing & 1 \\
-    Waiting    & 96 \\
-    Failed     & 0 \\
+    \texttt{is\_anomaly} & \texttt{true} for generated attack samples \\
+    \texttt{classification} & \texttt{Suspicious} or \texttt{Malicious} \\
+    \texttt{severity} & \texttt{medium} or \texttt{high} for confirmed attacks \\
+    \texttt{evidence} & Payload, traffic, or knowledge-base indicators \\
+    \texttt{recommended\_action} & Analyst-facing response step \\
     \bottomrule
   \end{tabular}
 \end{table}
 
-This result confirms that the backend accepts burst traffic without dropping
-requests and keeps them visible to the frontend. The slow completion rate is
-expected because only one worker was configured, and several attack samples
-triggered LLM classification.
+This validation confirms the behaviour of the implemented ML + LLM path. A
+separate public asynchronous queue would be a future improvement rather than
+part of the current backend contract.
 
 \section{Build Verification}
 
 \begin{lstlisting}[style=bashstyle, caption={Verification commands}]
-python3 -m py_compile backend/main.py backend/router/analyse.py \
+python3 -m py_compile backend/main.py backend/router/analyse/analyse.py \
   backend/schemas/schemas.py
 npm run build
 \end{lstlisting}
 
-The React production build completed successfully, and the FastAPI application
-started correctly on the test port \texttt{8001}.
+The expected verification checks are Python syntax compilation for the backend
+and a TypeScript/Vite production build for the frontend.
 
 % ================================================================
 \chapter{Security Considerations}
@@ -1230,18 +1265,20 @@ Raw logs are treated as untrusted data. The backend truncates and sanitizes
 raw input before it is used in an LLM prompt. Prompt-injection detection
 reduces the risk of malicious traffic logs manipulating the LLM.
 
-\section{Queue Protection}
+\section{LLM Concurrency Protection}
 
-The queue has a configurable maximum size. If the queue is full, the backend
-returns HTTP 429 instead of accepting unlimited work. This avoids uncontrolled
-memory growth under extreme load.
+The internal LLM queue uses a semaphore to limit concurrent LLM calls. This is
+important because local LLM inference can consume significant CPU, GPU, and
+memory resources. The current code serializes LLM calls with
+\texttt{max\_concurrent=1}.
 
 \section{Operational Limitations}
 
-The in-memory queue is suitable for a single-process deployment and project
-demonstration. For production use, a durable external queue such as Redis,
-RabbitMQ, or Kafka would be recommended so jobs survive process restarts and
-can be distributed across multiple workers or machines.
+The synchronous \texttt{/api/analyze} endpoint is suitable for demonstration
+and controlled testing. For production use, a durable external queue such as
+Redis, RabbitMQ, or Kafka would be recommended so large bursts of analysis
+requests can survive process restarts and be distributed across multiple
+workers or machines.
 
 % ================================================================
 \chapter{Conclusion}
@@ -1254,15 +1291,17 @@ keeps the final decision under analyst control. The FastAPI backend, MongoDB
 persistence layer, and React dashboard work together to provide both analysis
 and operational visibility.
 
-The most important architectural improvement is the asynchronous job queue.
-Instead of blocking the whole system when many requests arrive, the backend
-stores each analysis request as a job, assigns it a status, and processes it
-according to a configurable concurrency limit. The frontend then displays live
-traffic progress, making waiting and processing requests visible to the user.
+The most important architectural choice is the hybrid analysis flow. The ML
+detector produces fast predictions, payload inspection catches obvious
+injection patterns even when the model predicts normal, and the LLM layer adds
+structured explanations when deeper review is needed. The dashboard then
+turns those outputs into alert review, network statistics, and suggested
+actions.
 
-Future improvements could include a durable distributed queue, WebSocket or
-Server-Sent Events for lower-latency updates, richer model metrics, role-based
-dashboard access, and automated report export for incident response.
+Future improvements could include a durable distributed queue with public job
+status endpoints, stronger role-based dashboard access, richer model metrics,
+automated report export for incident response, and tighter integration between
+WebSocket updates and the traffic/alert tables.
 
 % ================================================================
 \appendix
@@ -1277,30 +1316,39 @@ LLM_ENABLED=true
 MONGO_ENABLED=true
 MONGO_URI=mongodb://localhost:27017/ids_ai
 DATABASE_NAME=ids_ai
-ANALYSIS_QUEUE_MAXSIZE=1000
-ANALYSIS_CONCURRENCY=1
-ANALYSIS_TIMEOUT_SECONDS=180
-ANALYSIS_HISTORY_LIMIT=500
+CORS_ORIGINS=http://localhost:5173
+IDS_MODEL_PATH=backend/ml/best_model.joblib
+LLM_PRELOAD=false
 \end{lstlisting}
 
 \chapter{Example API Response}
 
 \begin{lstlisting}[style=jsonstyle, caption={Example completed analysis result}]
 {
-  "status": "completed",
-  "progress": 100,
-  "result": {
-    "ml_label": "injection",
-    "ml_confidence": 0.4885,
-    "ml_model": "XGBoost",
-    "is_anomaly": true,
-    "classification": "Malicious",
-    "llm_attack_type": "SQL Injection",
-    "llm_severity": "critical",
-    "final_confidence": 0.63,
-    "severity": "high",
-    "recommended_action": "Block source IP and investigate web logs."
-  }
+  "timestamp": "2026-05-01T12:00:00Z",
+  "ml_label": "injection",
+  "ml_confidence": 0.88,
+  "ml_model": "XGBoost",
+  "is_anomaly": true,
+  "attack_type": "injection",
+  "classification": "Malicious",
+  "llm_attack_type": "sql_injection",
+  "llm_severity": "critical",
+  "llm_confidence": 0.92,
+  "evidence": ["UNION SELECT pattern detected"],
+  "knowledge_matches": ["SQL Injection"],
+  "explanation": "The HTTP payload contains SQL injection indicators.",
+  "recommended_action": "Block the source IP and inspect web server logs.",
+  "needs_manual_review": true,
+  "llm_available": true,
+  "final_confidence": 0.89,
+  "severity": "high",
+  "src_ip": "198.51.100.10",
+  "dst_ip": "10.0.0.20",
+  "src_port": 20000,
+  "dst_port": 80,
+  "protocol": "tcp",
+  "service": "http"
 }
 \end{lstlisting}
 
