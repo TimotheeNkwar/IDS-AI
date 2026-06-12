@@ -1,6 +1,7 @@
 from datetime import datetime, timezone
 
-from pydantic import BaseModel, Field
+# pyrefly: ignore [missing-import]
+from pydantic import BaseModel, Field, AliasChoices
 from typing import Any, Literal
 
 
@@ -14,7 +15,11 @@ class LogEvent(BaseModel):
     dst_ip: str = Field(default="0.0.0.0", description="Destination IP address")
     src_port: int = Field(default=0, ge=0, le=65535)
     dst_port: int = Field(default=0, ge=0, le=65535)
-    proto: str = Field(default="tcp", description="Protocol: tcp | udp | icmp")
+    proto: str = Field(
+        default="tcp",
+        description="Protocol: tcp | udp | icmp",
+        validation_alias=AliasChoices("proto", "protocol"),
+    )
     service: str = Field(default="-")
     conn_state: str = Field(default="OTH")
     duration: float = Field(default=0.0, ge=0)
