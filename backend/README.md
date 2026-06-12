@@ -183,3 +183,18 @@ backend/
 └── schemas/
     └── schemas.py          # Pydantic API models
 ```
+
+## Running the Frontend
+
+```bash
+# Navigate to the frontend folder
+cd ../frontend
+
+# Install dependencies
+npm install
+
+# Start the development server
+npm run dev
+```
+
+Frontend available at **http://localhost:5173**
