@@ -96,11 +96,37 @@ CORS_ORIGINS=http://localhost:5173
 
 ## Network Capture _(optional)_
 
-To analyze real-time network traffic, run the capture script.  
+To analyze real-time network traffic, run the capture script.
 It automatically detects your OS and active network interface.
 
+### Setup
+
+1. Rename `network_capture copy.py` to `network_capture.py`
+2. Make sure all dependencies are installed:
+
 ```bash
-# Windows — run as Administrator
+uv sync
+```
+
+3. **Windows only** — Find your network interface by running:
+
+```bash
+python -c "from scapy.all import get_if_list, get_if_addr; [print(i, '->', get_if_addr(i)) for i in get_if_list()]"
+choose the one that contain your IP
+```
+
+Then update this line in `network_capture.py` with your interface:
+
+```python
+INTERFACE = r"\Device\NPF_{YOUR-GUID-HERE}"
+```
+
+### Run
+
+```bash
+# Windows — open your terminal as Administrator inside the project folder
+cd G:\programming\IDS-AI\backend
+.venv\Scripts\activate
 uv run python network_capture.py
 
 # Linux — run with sudo
