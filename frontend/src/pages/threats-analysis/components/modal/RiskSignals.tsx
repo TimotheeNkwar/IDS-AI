@@ -56,7 +56,7 @@ export default function RiskSignals({ alert }: { alert: Alert | null }) {
                 className={`border-b pb-2 last:border-none ${t.riskItemBorder}`}
               >
                 <p className={`font-medium ${t.riskName}`}>
-                  {signal.name.replace(/_/g, " ")}
+                  {signal.name?.replace(/_/g, " ") ?? "Unnamed Signal"}
                 </p>
                 <p className={`text-xs mt-1 ${t.riskEvidence}`}>
                   {signal.evidence}
