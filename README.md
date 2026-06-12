@@ -62,7 +62,6 @@ Create a `.env` file in `backend/`:
 
 ```env
 # MongoDB
-MONGO_ENABLED=true
 MONGO_URI=mongodb://localhost:27017
 MONGO_DB=ids-ai
 
@@ -73,9 +72,16 @@ OLLAMA_BASE_URL=http://localhost:11434
 LLM_ENABLED=true
 
 # Auth
-SECRET_KEY=your-secret-key-here
+# Generate a secure key with: python -c "import secrets; print(secrets.token_hex(32))"
+ACCESS_TOKEN_SECRET=your-secret-key-here
 ALGORITHM=HS256
-ACCESS_TOKEN_EXPIRE_MINUTES=30
+ACCESS_TOKEN_EXPIRES_MINUTES=60
+
+# AbuseIPDB, used to enrich alerts with IP reputation data
+# Get your free API key at https://www.abuseipdb.com/register
+# Leave empty to disable IP reputation checks
+# Get your free API key at https://www.abuseipdb.com/register
+ABUSEIPDB_KEY=
 
 # CORS
 CORS_ORIGINS=http://localhost:5173

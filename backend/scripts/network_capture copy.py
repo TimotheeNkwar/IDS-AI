@@ -42,7 +42,7 @@ logging.basicConfig(
     datefmt="%H:%M:%S",
 )
 log = logging.getLogger("capture")
-
+ 
 
 # ---------------------------------------------------------------------------
 # OS DETECTION
