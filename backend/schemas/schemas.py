@@ -38,6 +38,11 @@ class LogEvent(BaseModel):
         default=None, description="Optional raw log text for LLM analysis"
     )
 
+    @property
+    def protocol(self) -> str:
+        return self.proto
+
+
 
 class AnalysisResult(BaseModel):
     timestamp: datetime
