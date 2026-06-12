@@ -157,7 +157,10 @@ export default function TrafficRowDetail({ row }: { row: TrafficRecord }) {
           </span>
         )}
         {row.needs_review && (
-          <span className={t.metaWarning}>⚠ Needs review</span>
+          <span className={`${t.metaWarning} flex items-center gap-1`}>
+            <AlertTriangle className="w-3.5 h-3.5 text-yellow-500" />
+            Needs review
+          </span>
         )}
       </div>
     </div>

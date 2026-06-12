@@ -1,4 +1,4 @@
-import { ShieldAlert, ShieldBan } from "lucide-react";
+import { ShieldAlert, ShieldBan, X } from "lucide-react";
 import type { Alert } from "../../../../types/types";
 import { useThemeStore } from "../../../../stores/themeStore";
 
@@ -87,8 +87,8 @@ export default function ModalHeader({ alert }: { alert: Alert | null }) {
 
       {/* CLOSE */}
       <form method="dialog">
-        <button className={`w-8 h-8 rounded-lg border transition ${t.closeBtn}`}>
-          ✕
+        <button className={`w-8 h-8 rounded-lg border transition ${t.closeBtn} flex items-center justify-center`}>
+          <X className="w-4 h-4" />
         </button>
       </form>
     </div>
