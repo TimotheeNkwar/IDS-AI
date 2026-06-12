@@ -125,11 +125,14 @@ INTERFACE = r"\Device\NPF_{YOUR-GUID-HERE}"
 
 ```bash
 # Windows — open your terminal as Administrator inside the project folder
+# example:
 cd G:\programming\IDS-AI\backend
 .venv\Scripts\activate
 uv run python network_capture.py
 
 # Linux — run with sudo
+cd /path/to/IDS-AI/backend
+source .venv/bin/activate
 sudo uv run python network_capture.py
 ```
 
