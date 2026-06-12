@@ -62,8 +62,8 @@ def _should_force_llm(event: LogEvent) -> bool:
 # ── Persistence ────────────────────────────────────────────────────────────────
 
 
-async def _save_alert(result: AnalysisResult) -> None:
-    await alert_repo.create_alert(
+async def _save_alert(result: AnalysisResult) -> str | None:
+    return await alert_repo.create_alert(
         {
             "type": result.attack_type or result.ml_label,
             "message": result.explanation,
@@ -93,8 +93,8 @@ async def _save_alert(result: AnalysisResult) -> None:
 
 async def _save_traffic(
     event: LogEvent, result: AnalysisResult, raw_event: dict[str, Any]
-) -> None:
-    await traffic_repo.create_traffic_record(
+) -> str | None:
+    return await traffic_repo.create_traffic_record(
         {
             "source_ip": event.src_ip,
             "destination_ip": event.dst_ip,

@@ -224,3 +224,20 @@ async def count_suspicious_malicious(hours: int = 24) -> list[dict[str, Any]]:
     except Exception as exc:
         log.warning("Failed to count suspicious/malicious: %s", exc)
         return []
+
+
+async def update_traffic_fields(traffic_id: str, fields: dict[str, Any]) -> bool:
+    col = database.traffic_col
+    if col is None:
+        return False
+    try:
+        from bson import ObjectId
+        result = await col.update_one(
+            {"_id": ObjectId(traffic_id)},
+            {"$set": fields}
+        )
+        return result.modified_count > 0
+    except Exception as exc:
+        log.warning("Failed to update traffic fields: %s", exc)
+        return False
+

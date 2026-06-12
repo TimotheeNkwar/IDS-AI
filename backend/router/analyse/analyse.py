@@ -222,7 +222,7 @@ async def analyze(event: LogEvent) -> AnalysisResult:
     force_llm = force_llm or _should_force_llm(event, ml_conf) or abuse.should_force_llm
 
     # 5. LLM pipeline
-    if is_anomaly or force_llm:
+    if (is_anomaly or force_llm) and llm_module.LLM_ENABLED:
         log_text = _prepare_for_llm(
             raw_log=event.raw_log,
             build_fallback=_build_raw_log(event),
@@ -239,7 +239,7 @@ async def analyze(event: LogEvent) -> AnalysisResult:
                     "attack_type": attack_type,
                     "risk_signals": risk_signals,
                     "top_features": top_features,
-                    "force_review": force_llm and not is_anomaly,
+                    "force_review": force_llm,
                     "abuse_score": abuse.abuse_score,  # ← contexte AbuseIPDB
                     "abuse_isp": abuse.isp,
                     "abuse_country": abuse.country,
@@ -285,8 +285,9 @@ async def analyze(event: LogEvent) -> AnalysisResult:
     severity = _severity(is_anomaly, classification, ml_conf)
 
     # Add signals from AbuseIPDB if score > 0
+    full_risk_signals = risk_signals
     if abuse.abuse_score > 0:
-        risk_signals = [abuse.to_dict(), *risk_signals]
+        full_risk_signals = [abuse.to_dict(), *risk_signals]
 
     result = AnalysisResult(
         timestamp=datetime.now(timezone.utc),
@@ -295,7 +296,7 @@ async def analyze(event: LogEvent) -> AnalysisResult:
         ml_model=ml_model,
         is_anomaly=is_anomaly,
         attack_type=attack_type,
-        risk_signals=risk_signals,
+        risk_signals=full_risk_signals,
         top_features=top_features,
         classification=classification,
         llm_attack_type=llm_result.get("attack_type"),
@@ -403,11 +404,13 @@ async def get_alert(alert_id: str) -> dict[str, Any]:
 
 async def start_analysis_worker() -> None:
     """Initialize analysis worker on startup."""
+    await llm_queue.start()
     log.info("Analysis worker started")
 
 
 async def stop_analysis_worker() -> None:
     """Clean up analysis worker on shutdown."""
+    await llm_queue.stop()
     log.info("Analysis worker stopped")
 
 

@@ -240,3 +240,19 @@ async def top_source_ips(limit: int = 10, hours: int = 24) -> list[dict[str, Any
     except Exception as exc:
         log.warning("Failed to get top source IPs: %s", exc)
         return []
+
+
+async def update_alert_fields(alert_id: str, fields: dict[str, Any]) -> bool:
+    col = database.alerts_col
+    if col is None:
+        return False
+    try:
+        result = await col.update_one(
+            {"_id": ObjectId(alert_id)},
+            {"$set": fields}
+        )
+        return result.modified_count > 0
+    except Exception as exc:
+        log.warning("Failed to update alert fields: %s", exc)
+        return False
+
