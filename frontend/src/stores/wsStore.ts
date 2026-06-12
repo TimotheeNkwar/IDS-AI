@@ -79,12 +79,13 @@ export const useWsStore = create<WsStore>((set, get) => {
         console.log("WS:", e.data);
         const data: DashboardUpdate = JSON.parse(e.data);
 
-        if (data.alert) {
+        const alert = data.alert;
+        if (alert) {
           // ← we want to keep the latest 50 alerts and 100 traffic records in memory
           set((state) => ({
             lastUpdate: data,
             alertCount: state.alertCount + 1,
-            liveAlerts: [data.alert, ...state.liveAlerts].slice(0, 50),
+            liveAlerts: [alert, ...state.liveAlerts].slice(0, 50),
           }));
         } else {
           set((state) => ({

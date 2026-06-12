@@ -5,7 +5,6 @@ import {
   getFilteredRowModel,
   getPaginationRowModel,
   flexRender,
-  createColumnHelper,
 } from "@tanstack/react-table";
 import { useQuery } from "@tanstack/react-query";
 import { useWsStore } from "../../stores/wsStore";

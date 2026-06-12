@@ -1,6 +1,4 @@
 import api from "../Api/Api";
-import type { AxiosResponse } from "axios";
-import type { AbuseCheckResponse } from "../types/types";
 
 // services/threatService.ts
 export const threatService = {
