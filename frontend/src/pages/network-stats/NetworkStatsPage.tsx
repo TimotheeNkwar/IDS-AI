@@ -13,7 +13,7 @@ import useHourDayText from "../../hooks/useHourDayText.ts";
 import { formatCount } from "../../lib/utils.ts";
 
 export default function NetworkStatsPage() {
-  const { hours, setHours } = useAppStore();
+  const { hours } = useAppStore();
   const { data: stats, isPending } = useStats(hours);
   const { data: summary } = useTrafficSummary(hours);
   const { theme } = useThemeStore();

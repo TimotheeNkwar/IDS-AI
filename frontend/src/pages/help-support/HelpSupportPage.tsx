@@ -1,4 +1,3 @@
-import { InfoIcon } from "lucide-react";
 import HelpInfo from "./components/HelpInfo";
 import FAQ from "./components/FAQ";
 import Contact from "./components/Contact";

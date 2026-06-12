@@ -27,15 +27,6 @@ import { Fragment } from "react";
 import IPFilterInput from "../../components/IPFilterInput.tsx";
 import useAppStore from "../../stores/AppStore.ts";
 import useHourDayText from "../../hooks/useHourDayText.ts";
-
-const columnHelper = createColumnHelper<TrafficRecord>();
-
-const SEVERITY_BADGE: Record<string, string> = {
-  high: "badge badge-error",
-  medium: "badge badge-warning",
-  low: "badge badge-success",
-};
-
 export default function TrafficMonitorPage() {
   const [expandedRow, setExpandedRow] = useState<string | null>(null);
   const queryClient = useQueryClient();
@@ -47,7 +38,6 @@ export default function TrafficMonitorPage() {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const lastUpdate = useWsStore((s) => s.lastUpdate);
-  const liveTraffic = useWsStore((s) => s.liveTraffic);
   const hours = useAppStore((s) => s.hours);
 
   const { data, isPending } = useQuery({

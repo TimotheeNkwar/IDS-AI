@@ -5,7 +5,7 @@
 //   return twMerge(clsx(inputs));
 // }
 
-export const formatDate = (iso) =>
+export const formatDate = (iso: string) =>
   new Date(iso).toLocaleString("tr-TR", {
     timeZone: "Europe/Istanbul",
     day: "2-digit",

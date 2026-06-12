@@ -1,5 +1,4 @@
 import { Clock, Timer } from "lucide-react";
-import { useState } from "react";
 import useAppStore from "../../../stores/AppStore";
 
 export default function Hours() {

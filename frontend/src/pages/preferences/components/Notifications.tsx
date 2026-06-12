@@ -1,4 +1,4 @@
-import { Bell, Sparkles, AlertTriangle, Mail } from "lucide-react";
+import { Bell, AlertTriangle, Mail } from "lucide-react";
 import { useState } from "react";
 
 export default function Notifications() {
