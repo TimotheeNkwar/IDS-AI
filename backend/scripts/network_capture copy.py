@@ -1,14 +1,14 @@
 """
 network_capture.py
 ------------------
-Capture network traffic in real-time, extract flow features, and send them to FastAPI for analysis.
+Capture network traffic in real-time, extract flow features, and send them to a FastAPI
+analysis endpoint.
 
-DDependencies :
+Dependencies:
     pip install scapy httpx
 
-On Windows, install Npcap (https://npcap.com/#download) and enable "WinPcap API-compatible mode" for Scapy compatibility.
-    - Npcap  → https://npcap.com/#download  (enable "WinPcap API-compatible mode")
-    - Run as Administrator (useful for raw packet capture)
+On Windows, install Npcap (https://npcap.com/#download) and enable "WinPcap API-compatible mode"
+for Scapy compatibility. Run the script as Administrator for raw packet capture.
 """
 
 import os
@@ -28,9 +28,9 @@ from dataclasses import dataclass, field
 # ---------------------------------------------------------------------------
 ENDPOINT_URL = "http://127.0.0.1:8000/api/analyze"
 FLUSH_INTERVAL = 30  # seconds between each flush to FastAPI
-INTERFACE = r"Add your interface here, e.g. \Device\NPF_{} find yours'"
-MAX_CONCURRENT = 5  # requêtes parallèles max vers FastAPI
-TIMEOUT = 60  # timeout par requête (LLM peut être lent)
+INTERFACE = r"Specify your capture interface, e.g. \Device\NPF_{...}"
+MAX_CONCURRENT = 5  # maximum parallel requests to FastAPI
+TIMEOUT = 60  # per-request timeout (LLM may be slow)
 LOG_LEVEL = logging.INFO
 
 # ---------------------------------------------------------------------------
@@ -122,7 +122,7 @@ flows_lock = threading.Lock()
 # ---------------------------------------------------------------------------
 # HELPERS
 # ---------------------------------------------------------------------------
-def guess_service(port: int, proto: str) -> str:
+def guess_service(port: int, _proto: str) -> str:
     table = {
         80: "http",
         443: "https",
@@ -300,13 +300,13 @@ def flush_loop():
             flows.clear()
 
         if not snapshot:
-            log.debug("Aucun flux capturé.")
+            log.debug("No flows captured.")
             continue
 
         payloads = [build_payload(f) for f in snapshot.values()]
-        log.info(f"Envoi de {len(payloads)} flux vers FastAPI...")
+        log.info(f"Sending {len(payloads)} flows to FastAPI...")
         asyncio.run(flush_async(payloads))
-        log.info("Batch envoyé.")
+        log.info("Batch sent.")
 
 
 # ---------------------------------------------------------------------------
@@ -324,7 +324,7 @@ def main():
     log.info("  Network Capture → FastAPI Analyzer")
     log.info(f"  OS            : {platform.system()}")
     log.info(f"  Endpoint      : {ENDPOINT_URL}")
-    log.info(f"  Flush         : toutes les {FLUSH_INTERVAL}s")
+    log.info(f"  Flush         : every {FLUSH_INTERVAL}s")
     log.info(f"  Max concurrent: {MAX_CONCURRENT}")
     log.info(f"  Interface     : {INTERFACE}")
     log.info("=" * 60)
