@@ -8,6 +8,7 @@ dependencies = [
     "cryptography>=48.0.0",
     "fastapi==0.110.0",
     "imbalanced-learn>=0.14.1",
+    "httpx>=0.28.1",
     "joblib==1.4.2",
     "matplotlib==3.8.4",
     # "jwt==0.6.0",  <-- remove this
@@ -23,6 +24,7 @@ dependencies = [
     "python-jose[cryptography]>=3.2.0",
     "python-multipart>=0.0.27",
     "requests==2.31.0",
+    "scapy==2.5.0",
     "scikit-learn==1.4.2",
     "uvicorn[standard]==0.29.0",
     "websockets>=16.0",

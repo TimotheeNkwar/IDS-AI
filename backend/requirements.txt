@@ -36,3 +36,6 @@ python-multipart
 requests==2.31.0
 
 websockets
+# For network capture (if needed)
+scapy
+httpx

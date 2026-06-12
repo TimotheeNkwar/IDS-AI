@@ -177,3 +177,19 @@ export interface Suggestion {
 }
 
 export type Theme = "dark" | "light" | "system";
+
+export interface AbuseResult {
+  ip: string;
+  abuse_score: number; // 0-100
+  total_reports: number;
+  usage_type: string; // "Data Center", "Residential", etc.
+  isp: string;
+  country: string;
+  is_tor: boolean;
+  risk_label: "Clean" | "Low Risk" | "Suspicious" | "Malicious";
+}
+
+export interface AbuseCheckResponse {
+  ip: string;
+  result: AbuseResult;
+}

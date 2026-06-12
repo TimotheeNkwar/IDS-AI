@@ -4,6 +4,7 @@ import type { RiskSignal, TopFeature } from "../types/types";
 interface AlertPayload {
   src_ip: string;
   dst_ip: string;
+  timestamp: string;
   protocol: string;
   service: string;
   ml_label: string;

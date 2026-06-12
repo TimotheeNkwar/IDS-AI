@@ -72,10 +72,10 @@ export default function TrafficMonitorPage() {
 
   const traffic = useMemo(() => {
     const initial = data?.data?.traffic ?? [];
-    // Convertit liveAlerts en TrafficRecord
+
     const live: TrafficRecord[] = liveAlerts.map((alert) => ({
-      id: `${alert.src_ip}-${Date.now()}`,
-      timestamp: new Date().toISOString(),
+      id: `live-${alert.src_ip}-${alert.dst_ip}-${alert.timestamp}`, // ← stable
+      timestamp: alert.timestamp ?? new Date().toISOString(),
       source_ip: alert.src_ip,
       destination_ip: alert.dst_ip,
       protocol: alert.protocol,
@@ -99,7 +99,15 @@ export default function TrafficMonitorPage() {
       final_confidence: alert.confidence,
     }));
 
-    return [...live, ...initial];
+    // Déduplique — retire les live déjà présents dans initial
+    const initialSrcIps = new Set(
+      initial.map((t) => `${t.source_ip}-${t.destination_ip}`),
+    );
+    const dedupedLive = live.filter(
+      (l) => !initialSrcIps.has(`${l.source_ip}-${l.destination_ip}`),
+    );
+
+    return [...dedupedLive, ...initial];
   }, [data, liveAlerts]);
 
   const columns = useColumns();
@@ -107,6 +115,7 @@ export default function TrafficMonitorPage() {
   const table = useReactTable({
     data: traffic,
     columns,
+    autoResetPageIndex: false,
 
     state: {
       sorting,

@@ -1,5 +1,6 @@
 import { Activity, ShieldCheck, AlertTriangle } from "lucide-react";
 import { useThemeStore } from "../../../stores/themeStore";
+import { formatCount } from "../../../lib/utils";
 
 export default function TotalTrafficSummary({ summary }: { summary: any }) {
   const { theme } = useThemeStore();
@@ -92,7 +93,9 @@ export default function TotalTrafficSummary({ summary }: { summary: any }) {
                 <h2 className={`text-sm font-medium mb-3 ${t.cardTitle}`}>
                   {card.title}
                 </h2>
-                <p className={`text-4xl font-bold ${t.value}`}>{card.value}</p>
+                <p className={`text-4xl font-bold ${t.value}`}>
+                  {formatCount(card.value)}
+                </p>
               </div>
 
               <div
