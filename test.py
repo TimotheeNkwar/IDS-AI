@@ -12,7 +12,7 @@ Output fields match the schema shown below (Zeek/CTU-13 inspired):
     src_ip, dst_ip, src_port, dst_port, proto, service, conn_state,
     duration, src_bytes, dst_bytes, missed_bytes,
     src_pkts, src_ip_bytes, dst_pkts, dst_ip_bytes,
-    dns_qclass, dns_qtype, dns_rcode,
+    dns_qclass, dns_qtype, dns_rcode,<
     http_trans_depth, http_request_body_len, http_response_body_len,
     http_status_code, raw_log
 

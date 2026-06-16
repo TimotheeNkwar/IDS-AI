@@ -1,6 +1,8 @@
 """
 Network Traffic Simulator
 Envoie 10 types de trafic réseau différents vers un endpoint.
+python backend/sm.py --type port_scan --count 500
+
 Usage: python traffic_simulator.py --url http://your-endpoint/api/analyze
 """
 
