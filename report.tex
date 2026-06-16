@@ -222,7 +222,7 @@
   
   \vspace{1.0cm}
   {\Large\bfseries CYPRUS INTERNATIONAL UNIVERSITY}\\[6pt]
-  {\large\bfseries FACULTY OF APPLIED SCIENCE}\\[6pt]
+  {\large\bfseries SCHOOL OF APPLIED SCIENCE}\\[6pt]
 
   \vfill
 
@@ -443,7 +443,6 @@ Testing validated that this adaptive framework maintains a 97\% real-time classi
 % ================================================================
 \chapter{Realistic Constraints}
 
-\clearpage
 \section{Economic and Budgetary Constraints}
 
 Deploying advanced artificial intelligence models in network security environments introduces significant financial challenges, particularly for small and medium-sized enterprises (SMEs) and municipal agencies with limited cybersecurity budgets. Traditional cloud-based LLM APIs (such as OpenAI's GPT-4, Anthropic's Claude, or Google's Gemini Pro) charge per-token fees for both input prompt processing and output response generation. These API costs scale linearly with network log volumes and security event frequencies.
@@ -462,7 +461,6 @@ This totals over \$7.8 million annually. This makes public cloud LLM services ec
 
 To satisfy this budgetary constraint, IDS-AI is designed around free, open-source local machine learning classifiers (XGBoost and Random Forest) and local LLMs (e.g., Phi-3-Medium, Llama-3-8B) executed on-premise. This approach eliminates external API subscription costs and variable per-token charges, making the platform financially viable for organizations that require long-term network monitoring. The initial hardware capital expenditure (CapEx) for dedicated computing servers is rapidly amortized by the complete elimination of operational variable costs (OpEx) within the first month of deployment.
 
-\clearpage
 \section{Hardware and Resource Constraints}
 
 Running local Large Language Models (LLMs) requires substantial computational resources, including dedicated Graphical Processing Units (GPUs) with high VRAM capacity, which may not be available on standard analyst workstations or legacy virtualized servers. A typical 7B/8B-parameter open-source model (such as Llama-3-8B) requires around 16 GB of VRAM to load its weights in FP16 (16-bit floating-point) representation. To reduce this memory footprint, models are often quantized into 4-bit representation (using techniques like GPTQ, AWQ, or GGUF), which compresses the VRAM requirement to approximately 6 GB -- 8 GB.
@@ -475,7 +473,6 @@ Additionally, the hosting environment must allocate resources for:
 
 To mitigate these hardware limitations, the IDS-AI system implements an internal processing queue (\texttt{LLMQueue}) governed by an asynchronous semaphore (\texttt{asyncio.Semaphore}) with \texttt{max\_concurrent=1}. This structural design ensures that only one LLM inference task is executed at any given time. While a heavy inference job is running, incoming network traffic continues to be filtered by the lightweight machine learning classifiers (Random Forest/XGBoost) and regular expression payload matchers, which consume negligible CPU/RAM resources and maintain sub-millisecond latencies.
 
-\clearpage
 \section{Security and Data Privacy Constraints}
 
 Network intrusion logs frequently contain sensitive metadata, such as private IP addresses, internal server naming schemes, database tables, and cryptographic payloads. Uploading these raw packets to public cloud-based AI services introduces severe data leakage risks and directly violates strict data privacy regulations, including the General Data Protection Regulation (GDPR) in Europe, the Health Insurance Portability and Accountability Act (HIPAA) in healthcare, and the Payment Card Industry Data Security Standard (PCI-DSS) in financial operations. Under these frameworks, sending unencrypted personally identifiable information (PII) or authentication tokens to external third-party servers can result in massive legal liabilities and compliance audits.
@@ -488,7 +485,6 @@ Furthermore, the system must handle security exploits targetting the AI layers t
   \item \textbf{Input Sanitization}: The backend implements a security-hardening utility that sanitizes raw packet data, truncates long string fields, escapes control characters, and isolates structural logs from instructions before feeding them to the LLM prompt template, ensuring that the model remains restricted to analysis tasks.
 \end{itemize}
 
-\clearpage
 \section{Operational and Rate-Limiting Constraints}
 
 To supplement local detection heuristics, the system integrates the AbuseIPDB API for real-time threat intelligence lookup. However, external intelligence services impose strict rate limits and usage quotas. The free-tier API plan of AbuseIPDB allows a maximum of 1,000 queries per day. On a standard enterprise network interface, traffic throughput can easily exceed 1,000 packets per second. Querying AbuseIPDB for every incoming IP address would exhaust the daily API quota within the first few seconds of operation.
@@ -503,7 +499,6 @@ To address this operational constraint, the backend integrates private IP bypass
 % ================================================================
 \chapter{Methods Used to Design the Project}
 
-\clearpage
 \section{Formulation of the Engineering Problem}
 
 Modern security operations centers suffer from severe alert fatigue due to the high volume of false alarms generated by rule-based Intrusion Detection Systems (IDS). Security analysts need a platform that can process high-throughput network telemetry in real-time, accurately classify potential threats, and provide human-readable, contextual explanations for why a specific event was flagged as suspicious or malicious.
@@ -556,7 +551,6 @@ To achieve this, the engineering problem is formulated as a multi-stage decision
   \item \textbf{Human-in-the-Loop Validation}: Present $(y_i, c_i, E_i)$ on the React dashboard for analyst review and final response.
 \end{enumerate}
 
-\clearpage
 \section{Selection and Application of Analysis and Modeling Methods}
 
 To achieve high-accuracy detection, the machine learning stage prepares features from raw packet flows, addressing extreme class imbalances where benign traffic dominates malicious activities.
@@ -605,7 +599,6 @@ where $h(x)$ is the path length of sample $x$ in an iTree (number of edges from 
 \end{equation}
 If $s(x, n) \to 1$, the sample is flagged as an anomaly. If $s(x, n) \to 0$, it is classified as normal.
 
-\clearpage
 \section{Implementation of the Hybrid Detection Workflow}
 
 The overall system architecture is designed around a three-tier hybrid detection flow:
