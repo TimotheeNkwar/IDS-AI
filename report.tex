@@ -299,6 +299,9 @@ Finally, we thank our teammates for their collaborative effort, dedication, and 
 
 Intrusion Detection Systems (IDS) play a critical role in safeguarding modern network infrastructures against rapidly evolving cyber threats. However, traditional systems often struggle to balance fast classification speeds with deep, explainable threat reasoning. This graduation project presents IDS-AI, a hybrid intrusion detection system that integrates a machine learning (ML) classification layer, a local large language model (LLM) explanation layer, and a Human-in-the-Loop decision dashboard. The ML layer leverages optimized supervised models to achieve high-throughput, low-latency traffic classification, while the LLM layer uses a serialized processing queue to provide security analysts with detailed natural language explanations and actionable response recommendations for suspicious and malicious events. An AbuseIPDB threat intelligence integration is also incorporated for defense-in-depth reputation checks and automated zero-day analysis routing. Experimental evaluation demonstrates that the system achieves high classification accuracy and low false-positive rates, while providing the interpretability required for effective human decision-making in security operations centers.
 
+\vspace{1.5cm}
+\noindent\textbf{Keywords:} Intrusion Detection Systems, Machine Learning, Large Language Models, Explainable AI, Human-in-the-Loop, Cyber Security.
+
 \clearpage
 
 % -- Özet ----------------------------------------------------------------------
@@ -306,6 +309,9 @@ Intrusion Detection Systems (IDS) play a critical role in safeguarding modern ne
 \addcontentsline{toc}{chapter}{Özet}
 
 Siber güvenlik alanında, modern ağ altyapılarını hızla evrilen siber tehditlere karşı korumak için Saldırı Tespit Sistemleri (IDS) kritik bir rol oynamaktadır. Ancak geleneksel sistemler, hızlı sınıflandırma performansı ile açıklanabilir tehdit analizleri arasında denge kurmakta zorlanmaktadır. Bu mezuniyet projesi, makine öğrenmesi (ML) sınıflandırma katmanı, yerel büyük dil modeli (LLM) açıklama katmanı ve karar mekanizmasında insanı odağa alan (Human-in-the-Loop) bir kontrol panelini birleştiren hibrit bir saldırı tespit sistemi olan IDS-AI'ı sunmaktadır. ML katmanı, yüksek veri akışlı ve düşük gecikmeli trafik sınıflandırması gerçekleştirmek için optimize edilmiş gözetimli modellerden yararlanırken; LLM katmanı, şüpheli ve zararlı olaylar için güvenlik analistlerine ayrıntılı doğal dil açıklamaları ve eyleme geçirilebilir müdahale önerileri sunmak amacıyla seri hale getirilmiş bir kuyruk sistemi kullanır. Derinlemesine savunma kapsamında, itibar kontrolleri ve otomatik sıfırıncı gün analiz yönlendirmesi için AbuseIPDB tehdit istihbaratı entegrasyonu da sisteme dahil edilmiştir. Deneysel değerlendirmeler, sistemin yüksek sınıflandırma doğruluğu ve düşük yanlış alarm oranları elde ettiğini, aynı zamanda güvenlik operasyon merkezlerinde etkili insan kararları için gerekli açıklanabilirliği sağladığını göstermektedir.
+
+\vspace{1.5cm}
+\noindent\textbf{Anahtar Kelimeler:} Saldırı Tespit Sistemleri, Makine Öğrenmesi, Büyük Dil Modelleri, Açıklanabilir Yapay Zeka, Karar Mekanizmasında İnsan, Siber Güvenlik.
 
 \clearpage
 
@@ -321,39 +327,21 @@ Siber güvenlik alanında, modern ağ altyapılarını hızla evrilen siber tehd
 
 \section{Project Overview}
 
-IDS-AI is a full-stack intrusion detection system designed to classify network
-traffic, identify malicious behaviour, and provide security analysts with
-clear explanations and operational recommendations. The system is organized
-around three decision layers: the Machine Learning layer, the Large Language
-Model layer, and the Human-in-the-Loop layer. The ML layer performs fast
-statistical detection from structured traffic features, the LLM layer adds
-contextual cybersecurity reasoning and explanations, and the human analyst
-keeps final authority over incident decisions after reviewing all generated
-evidence.
+IDS-AI is a full-stack intrusion detection system designed to classify network traffic, identify malicious behaviour, and provide security analysts with clear explanations and operational recommendations. In accordance with modern security architecture designs \cite{buczak2016}, the system is organized around three decision layers: the Machine Learning layer, the Large Language Model layer, and the Human-in-the-Loop layer. The ML layer performs fast statistical detection from structured traffic features \cite{sharafaldin2018}, the LLM layer adds contextual cybersecurity reasoning and explanations, and the human analyst keeps final authority over incident decisions after reviewing all generated evidence.
 
-The software platform contains three major technical layers. The backend is
-implemented with FastAPI and exposes REST endpoints for analysis, alerts,
-traffic history, statistics, suggestions, health checks, and WebSocket alert
-updates. The frontend is a React single-page dashboard that displays traffic
-monitoring, recent alerts, network statistics, and suggested actions. The
-persistence layer uses MongoDB through the Motor asynchronous driver to store
-alert, traffic, statistics, and user records.
+The software platform contains three major technical layers. The backend is implemented with FastAPI and exposes REST endpoints for analysis, alerts, traffic history, statistics, suggestions, health checks, and WebSocket alert updates. The frontend is a React single-page dashboard that displays traffic monitoring, recent alerts, network statistics, and suggested actions. The persistence layer uses MongoDB through the Motor asynchronous driver to store alert, traffic, statistics, and user records.
 
 \section{Problem Statement}
 
-Network intrusion detection systems must classify traffic quickly while still
-providing explanations that are useful to analysts. A purely rule-based IDS is
-easy to understand but fragile against changing attack patterns. A purely
-machine-learning system is faster, but it can be difficult for an analyst to
-understand why a flow was flagged. IDS-AI addresses this gap by combining a
-supervised ML detector, payload-pattern inspection, a local LLM explanation
-layer, and a dashboard where the analyst keeps control of the final response.
+Network intrusion detection systems must classify traffic quickly while still providing explanations that are useful to analysts. As noted by Sommer and Paxson (2010) \cite{sommer2010}, a key challenge in employing machine learning for network intrusion detection is the operational difficulty of interpreting complex models and triage overhead. A purely rule-based IDS is easy to understand but fragile against changing attack patterns. A purely machine-learning system is faster, but it can be difficult for an analyst to understand why a flow was flagged. IDS-AI addresses this gap by combining a supervised ML detector, payload-pattern inspection, a local LLM explanation layer, and a dashboard where the analyst keeps control of the final response.
 
-The current backend exposes a synchronous analysis endpoint. Inside that
-request flow, potentially slow LLM calls are submitted to an internal
-\texttt{LLMQueue} with a semaphore limiting concurrent LLM inference. This
-keeps LLM work serialized and predictable, while the ML detector remains the
-fast first-line classifier.
+The current backend exposes a synchronous analysis endpoint. Inside that request flow, potentially slow LLM calls are submitted to an internal \texttt{LLMQueue} with a semaphore limiting concurrent LLM inference. This keeps LLM work serialized and predictable, while the ML detector remains the fast first-line classifier.
+
+\section{Benefits and Organizational Applications of IDS}
+
+Deploying an Intrusion Detection System (IDS) provides critical benefits to modern enterprise environments. First and foremost, an IDS delivers continuous, real-time visibility into network-layer activities, allowing organizations to monitor traffic flows and detect malicious activities (such as protocol violations, unauthorized data access, and brute-force attempts) before they escalate into catastrophic breaches \cite{buczak2016}. Furthermore, intrusion detection capabilities are mandatory for satisfying regulatory compliance standards. Major security frameworks—including the International Organization for Standardization (ISO/IEC 27001), the Payment Card Industry Data Security Standard (PCI-DSS), and the General Data Protection Regulation (GDPR)—explicitly mandate the implementation of continuous system monitoring and audit logging controls to protect sensitive customer data and privacy.
+
+In terms of organizational applications, an IDS serves as the primary data source for Security Operations Centers (SOCs). Security analysts rely on the alert streams generated by the NIDS/HIDS infrastructure to perform incident response and forensic investigations \cite{sommer2010}. However, standard deployments often suffer from alert fatigue. By utilizing hybrid architectures like IDS-AI, organizations can automate the classification of high-volume benign telemetry while generating explainable context for critical alerts. This directly optimizes the operational workflow of security teams, reducing both the Mean Time to Detect (MTTD) and the Mean Time to Respond (MTTR), while maximizing the utility of human security expertise through a Human-in-the-Loop decision paradigm.
 
 \section{Objectives}
 
@@ -391,34 +379,42 @@ and validating the API analysis pipeline.
 
 \section{The Evolution of Intrusion Detection: From Human Observation to AI}
 
-Safeguarding infrastructure is an indispensable duty performed by Intrusion Detection Systems (IDS) within cybersecurity. Early iterations of IDS heavily relied on manual human observation and primitive pattern identification to isolate network intrusions. However, manual triage has proven entirely ineffective when countering sophisticated, rapidly evolving categories of cyber threats.
+Safeguarding digital infrastructure is an indispensable duty performed by Intrusion Detection Systems (IDS) within modern cybersecurity architectures. The formal conceptualization of intrusion detection traces back to the seminal work of Anderson (1980) \cite{anderson1980}, who first proposed auditing system log files to automate the detection of unauthorized user behaviors and anomalies. This concept was mathematically formalized by Denning (1987) \cite{denning1987}, who introduced the first generalized intrusion detection model. Denning's model utilized statistical profiles of subjects (e.g., users or devices) in relation to objects (e.g., files or connections) to identify abnormal activity, laying the theoretical foundation for both rule-based and anomaly-based detection mechanisms.
 
-As the digital landscape shifted, cybersecurity experts realized that the massive, accelerating adoption of cloud computing directly correlated with an expanded attack surface. This evolution created a critical demand for modern IDS platforms capable of identifying complex perimeter breaches and ensuring long-term data safety. Over time, researchers proposed diverse methodologies to identify and mitigate network attacks, progressively moving from rigid, signature-based rules to more flexible anomaly-based and hybrid detection structures.
+Following these initial foundations, the field branched into distinct deployment architectures and detection paradigms. In terms of deployment, literature distinguishes between Host-based Intrusion Detection Systems (HIDS), which monitor internal host activities such as system logs, file modifications, and process executions, and Network-based Intrusion Detection Systems (NIDS), which monitor and inspect network packets flowing across key infrastructure nodes (such as switches or routers). Mechanistically, detection engines evolved into Signature-based Intrusion Detection Systems (SIDS) and Anomaly-based Intrusion Detection Systems (AIDS). SIDS platforms, exemplified by Snort (Roesch, 1999 \cite{roesch1999}), compare traffic patterns against a predefined database of known threat signatures. SIDS dominated early industry deployments due to its deterministic accuracy and low computational overhead for known attacks. However, as noted by Buczak and Guven (2016) \cite{buczak2016}, signature matching is fundamentally incapable of detecting novel zero-day exploits, prompting a shift toward anomaly detection.
 
-Despite these iterative improvements, standard enterprise measures frequently struggle when deployed in dense cloud environments and high-speed network traffic. The processing overhead and strict rules of legacy setups cannot maintain real-time protection under extreme throughput. These explicit operational limitations ultimately triggered the development of Artificial Intelligence (AI)-based IDS architectures, which facilitate the rapid, automated, and effective analysis of network-layer threats. In recent years, a growing body of research has introduced varied Machine Learning (ML) and Deep Learning (DL) algorithms into the cybersecurity space, significantly augmenting the defensive capabilities of modern network perimeters.
+The transition from signature matching to Machine Learning (ML) and Deep Learning (DL) algorithms represented a paradigm shift in NIDS research. As surveyed by Buczak and Guven (2016) \cite{buczak2016}, rigid signature rules struggled to scale with the high throughput, dimensionality, and encryption of modern network telemetry. Researchers began applying supervised models (e.g., Random Forests, XGBoost, and neural networks) and unsupervised methods (e.g., Autoencoders and Isolation Forests) to construct dynamic classifiers capable of generalizing to unseen traffic variations. By learning complex, non-linear relationships directly from raw features, machine learning models enabled the automated classification of multivariate data, vastly improving the detection envelope of anomaly-based systems.
+
+Despite these advancements, deploying machine learning models in live enterprise perimeters introduces significant operational challenges. Sommer and Paxson (2010) \cite{sommer2010} highlighted a critical disconnect between theoretical ML performance in academic studies and their actual efficacy in production networks. Unlike other ML application domains, network traffic exhibits extreme diversity, meaning that anomalies are far more frequently caused by benign behavioral changes (e.g., seasonal updates or configuration shifts) than by actual malicious intrusions. This leads to high false positive rates, flooding Security Operations Centers (SOCs) with thousands of false alerts daily. This phenomenon, known as alert fatigue, degrades analyst response times, leading to cognitive overload and increases in both Mean Time to Detect (MTTD) and Mean Time to Respond (MTTR). Addressing these limitations requires moving beyond simple binary classifiers toward hybrid architectures that combine high-accuracy anomaly detection with explainable AI components to assist human operators in decision-making.
 
 \section{Combining Unsupervised and Supervised Learning to Catch New Threats}
 
-To analyze high-throughput network traffic without introducing catastrophic processing latency, recent literature focuses heavily on optimizing data ingestion. High-dimensional packet telemetry often contains redundant or non-contributory feature variables that bloat training intervals and degrade classifier precision. To remediate this bottleneck, Kostiuk et al. (2025) \cite{kostiuk2025} introduced the SentinelIDS framework, which prioritizes advanced feature-space dimensionality reduction. By implementing mathematical mapping techniques, specifically Principal Component Analysis (PCA) and Uniform Manifold Approximation and Projection (UMAP), the researchers successfully compressed complex, raw network traffic feature vectors into dense, low-dimensional representations without losing latent behavioral traits.
+To analyze high-throughput network traffic without introducing catastrophic processing latency, recent literature focuses heavily on optimizing data ingestion. High-dimensional packet telemetry often contains redundant or non-contributory feature variables that bloat training intervals and degrade classifier precision. To remediate this bottleneck, Kostiuk et al. (2025) \cite{kostiuk2025} prioritized advanced feature-space dimensionality reduction. By implementing mathematical mapping techniques, specifically Principal Component Analysis (PCA) and Uniform Manifold Approximation and Projection (UMAP), the researchers successfully compressed complex, raw network traffic feature vectors into dense, low-dimensional representations without losing latent behavioral traits.
 
-Beyond data optimization, the core innovation of the SentinelIDS framework lies in its branched, two-stage hybrid processing pipeline, which systematically isolates zero-day network threats. Traditional signature-matching mechanisms remain fundamentally blind to novel, uncatalogued vulnerability exploits. Kostiuk et al. (2025) \cite{kostiuk2025} bypassed this limitation by structuring a multi-tiered logical pipeline:
+Beyond data preprocessing, the core classification paradigms in machine learning-based IDS are divided into supervised and unsupervised learning techniques. Supervised learning models are trained on highly structured, pre-labeled datasets (such as the standard UNSW-NB15 or CICIDS2017 datasets \cite{sharafaldin2018}) to learn mapping functions between flow features and specific threat categories. Algorithms such as Decision Trees, Random Forest, Support Vector Machines (SVM), and Extreme Gradient Boosting (XGBoost) are widely studied in NIDS literature. Supervised classifiers offer exceptional performance, frequently achieving classification accuracy and F1-scores exceeding 99\% for known threat vectors. However, they suffer from two major limitations: they require labor-intensive, manually annotated training datasets, and they are fundamentally incapable of identifying novel, uncatalogued zero-day exploits, as their decision boundaries are restricted to the classes present in the training set.
 
-\begin{itemize}[leftmargin=1.5em]
-  \item \textbf{Tier 1 (Unsupervised Profiling):} An unsupervised learning layer combining an Autoencoder with an Isolation Forest maps and establishes an invariant statistical baseline of normal, healthy network traffic behavior.
-  \item \textbf{Tier 2 (Supervised Classification):} Any telemetry deviating from this baseline is flagged as anomalous and passed to a supervised Extreme Gradient Boosting (XGBoost) classifier, which isolates and maps the anomaly to known multi-class attack categories.
-\end{itemize}
+To address the limitations of supervised learning, researchers have leveraged unsupervised anomaly detection algorithms. Unsupervised models do not require labeled data; instead, they ingest large volumes of normal, benign traffic to learn its underlying statistical baseline. Popular techniques surveyed by Chandola et al. (2009) \cite{chandola2009} include Autoencoders, Isolation Forests, and K-Means clustering. For instance, Autoencoders (a type of neural network) are trained to compress and reconstruct normal traffic; when presented with malicious anomalies, the model exhibits a high reconstruction error, flagging the event as suspicious. Similarly, Isolation Forests isolate anomalous observations by randomly partitioning the feature space, exploiting the fact that anomalies require fewer splits to isolate than normal instances. While unsupervised methods are uniquely capable of detecting zero-day threats, they generally suffer from higher false positive rates due to benign behavioral shifts and cannot categorize the specific type of threat detected.
 
-When evaluated against modern, highly imbalanced network traffic benchmarks, this multi-stage pipeline demonstrated exceptional operational capability, achieving an overall classification accuracy of 99.87\% while maintaining a remarkably low false alarm rate of 0.088\%. This study proved that filtering raw traffic flows through sequential unsupervised and supervised layers allows an NIDS to flag previously unseen zero-day anomalies without bloating computational overhead.
+To resolve the "closed-world" limitation of supervised models and the high false alarm rate of unsupervised models, modern architectures combine them into a tiered hybrid pipeline. The combination methodology operates step-by-step:
+\begin{enumerate}[leftmargin=1.5em]
+  \item \textbf{High-Speed Unsupervised Filtering (Tier 1):} Incoming traffic, represented as low-dimensional feature vectors, is first processed by the unsupervised models (Autoencoder and Isolation Forest). Since normal benign traffic represents over 99\% of production network volume, the model quickly reconstructs and permits these flows, avoiding downstream classification latency. If a packet's reconstruction error or isolation path length violates the statistical normal threshold \cite{chandola2009}, it is flagged as an anomaly and forwarded.
+  \item \textbf{Multi-Class Supervised Labeling (Tier 2):} The flagged anomalies are passed directly to the supervised classifier (XGBoost). This classifier categorizes the anomaly into one of several known attack classes (e.g., DDoS, SQL injection, Port Scan) based on training features from standard benchmarks like CICIDS2017 \cite{sharafaldin2018}.
+  \item \textbf{Confidence-Based Triage (Tier 3):} The supervised engine produces a prediction alongside a confidence score. If the confidence is high, a deterministic mitigation action is executed. If the confidence is low—signifying an anomaly that does not match known attack signatures—the event is flagged as a potential zero-day exploit and routed to the explainability layer (LLM parser and security knowledge base) for deep contextual inspection by security analysts.
+\end{enumerate}
+
+When evaluated against modern, highly imbalanced network traffic benchmarks, this multi-stage pipeline demonstrated exceptional operational capability, achieving an overall classification accuracy of 99.87\% while maintaining a remarkably low false alarm rate of 0.088\% \cite{kostiuk2025}. This study proved that filtering raw traffic flows through sequential unsupervised and supervised layers allows an NIDS to flag previously unseen zero-day anomalies without bloating computational overhead.
 
 \section{Using Retraining to Fix Shifting Traffic Patterns Over Time}
 
-While two-stage static hybrid architectures achieve high immediate accuracy, their long-term operational efficacy is often degraded by a phenomenon known as ``concept drift.'' In live enterprise environments, benign network traffic patterns are not static; seasonal software updates, changing user behaviors, and evolving enterprise protocols continuously alter the baseline data distribution. Over time, static models mistake these natural behavioral shifts for malicious actions, causing a gradual explosion in false positive rates.
+While two-stage static hybrid architectures achieve high immediate accuracy, their long-term operational efficacy is often degraded by a phenomenon known as ``concept drift.'' In live enterprise environments, benign network traffic patterns are not static; seasonal software updates, changing user behaviors, and evolving enterprise protocols continuously alter the baseline data distribution. Concept drift is categorized in literature by Gama et al. (2014) \cite{gama2014} into four main types: sudden (e.g., immediate network configuration changes), gradual (e.g., slow adoption of a new protocol), incremental (e.g., seasonal user changes), and reoccurring (e.g., periodic system backups). Over time, static models mistake these natural behavioral shifts for malicious actions, causing a gradual explosion in false positive rates and severe model degradation.
+
+To remediate this issue, literature proposes transition from static classifiers to dynamic, self-updating models. Traditional periodic retraining schedules (e.g., weekly or monthly) are often insufficient because they are computationally expensive and leave a window of vulnerability between retraining intervals. Consequently, modern research focuses on active retraining triggered by drift-detection algorithms, such as the Drift Detection Method (DDM) or Page-Hinkley test, which monitor statistical metrics (e.g., Kullback-Leibler divergence or Wasserstein distance) of incoming features \cite{gama2014}. When these metrics exceed a confidence threshold, it signifies a statistical divergence, prompting the system to initiate an update.
 
 Addressing this core operational vulnerability, Kostiuk et al. (2026) \cite{kostiuk2026} developed an advanced, follow-up optimization framework designed to maintain high classification stability across volatile, real-world network environments. Similar to their 2025 baseline study, the researchers utilized PCA and UMAP to condense high-dimensional feature vectors extracted from the standard CICIDS2017 and UNSW-NB15 traffic datasets. Their core classification engine also relied on a blended unsupervised/supervised stack, using an Autoencoder, an Isolation Forest, and a One-Class Support Vector Machine (SVM) to discover deviations before routing them to an XGBoost module for multi-class threat categorization.
 
-The defining scientific contribution of the 2026 framework is the integration of an adaptive update mechanism driven by Markov Decision Processes (MDP). Instead of leaving the model static, the MDP layer continuously tracks the mathematical transition states of incoming telemetry. When the statistical properties of the benign traffic drift past a calculated threshold, the MDP automatically triggers a real-time, closed-loop model retraining sequence.
+The defining scientific contribution of the 2026 framework is the integration of an adaptive update mechanism driven by Markov Decision Processes (MDP). Instead of leaving the model static, the MDP layer continuously tracks the mathematical transition states of incoming telemetry. When the statistical properties of the benign traffic drift past a calculated threshold, the MDP automatically triggers a real-time, closed-loop model retraining sequence. The MDP framework is particularly effective here as it models the trade-off between the computational cost of model retraining and the cost of model degradation, optimizing the timing of retraining runs.
 
-Testing validated that this adaptive framework maintains a 97\% real-time classification accuracy even among shifting traffic baselines. By coupling unsupervised anomaly detection with automated reinforcement loops, the study demonstrated a resilient approach to safeguarding critical information infrastructures against zero-day exploits without requiring disruptive manual intervention.
+Testing validated that this adaptive framework maintains a 97\% real-time classification accuracy even among shifting traffic baselines. By coupling unsupervised anomaly detection with automated reinforcement loops, the study demonstrated a resilient approach to safeguarding critical information infrastructures against zero-day exploits without requiring disruptive manual intervention. Additionally, incorporating Active Learning into the retraining loop allows the model to query human analysts for labels on borderline or highly ambiguous events, ensuring that the ground-truth data used for retraining is highly accurate while minimizing manual analysis overhead.
 
 % ================================================================
 \chapter{Realistic Constraints}
@@ -1924,6 +1920,30 @@ LLM_PRELOAD=false
 % ================================================================
 \begin{thebibliography}{99}
 \addcontentsline{toc}{chapter}{References}
+
+\bibitem{anderson1980}
+Anderson, J. P.: Computer Security Threat Monitoring and Surveillance., \textit{Technical Report, James P. Anderson Co.}, Fort Washington, PA, 1980.
+
+\bibitem{denning1987}
+Denning, D. E.: An Intrusion-Detection Model., \textit{IEEE Transactions on Software Engineering}, SE-13(2), pp. 222--232, 1987.
+
+\bibitem{roesch1999}
+Roesch, M.: Snort - Lightweight Intrusion Detection for Networks., \textit{Proceedings of the 13th USENIX Conference on System Administration (LISA '99)}, pp. 229--238, 1999.
+
+\bibitem{sommer2010}
+Sommer, R. \& Paxson, V.: Outside the Closed World: On Using Machine Learning for Network Intrusion Detection., \textit{Proceedings of the IEEE Symposium on Security and Privacy (S\&P '10)}, pp. 305--316, 2010.
+
+\bibitem{chandola2009}
+Chandola, V., Banerjee, A. \& Kumar, V.: Anomaly Detection: A Survey., \textit{ACM Computing Surveys}, 41(3), Article 15, pp. 1--58, 2009.
+
+\bibitem{buczak2016}
+Buczak, A. L. \& Guven, E.: A Survey of Data Mining and Machine Learning Methods for Cyber Security., \textit{IEEE Communications Surveys \& Tutorials}, 18(2), pp. 1153--1176, 2016.
+
+\bibitem{sharafaldin2018}
+Sharafaldin, I., Lashkari, A. H. \& Ghorbani, A. A.: Toward Generating a New Dataset for Evaluation of Intrusion Detection Systems (CICIDS2017)., \textit{Proceedings of the International Conference on Information Systems Security and Privacy (ICISSP '18)}, pp. 108--116, 2018.
+
+\bibitem{gama2014}
+Gama, J., Žliobaitė, I., Bifet, A., Pechenizkiy, M. \& Bouchachia, A.: A Survey on Concept Drift Adaptation., \textit{ACM Computing Surveys}, 46(4), Article 44, pp. 1--37, 2014.
 
 \bibitem{kostiuk2025}
 Kostiuk, M. \& Sentinel Team: Advanced Dimensionality Reduction and Hybrid Processing for Cloud Intrusion Detection., \textit{IEEE Transactions on Cloud Computing}, 12, pp. 450--468, 2025.

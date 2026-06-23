@@ -1,0 +1,221 @@
+﻿	Cyprus International University
+School of Applied Sciences
+
+General Rules for ITEC402/MISY402/ITSE402 Capstone Project Report
+This document describes the rules and formatting of writing a graduation project report. The rules are described below briefly. 
+    1) Graduation project reports will be presented in maroon hardcover with at least 50 pages including table of contents and etc. Your source codes and soft copy of the thesis must be presented in a CD-ROM and will be attached to the rear page of the report. Each student will prepare 3 copy of graduation report. 
+    2) The general format of the graduation report will be as in the following order:
+    • Cover page
+    • Inner- cover page
+    • Approval page
+    • Acknowledgment (optional)
+    • Abstract
+    • Özet ( in Turkish)
+    • TABLE OF CONTENTS (new page, pages numbered with roman numbers) (ex: page 9)
+    • TABLE OF FIGURES (new page, pages numbered with roman numbers, continue from table of contents)
+    • CHAPTER ONE INTRODUCTION  (new page) (page numbering starts from 1 with numbers (1, 2, 3, …) ) (Each chapter will be as in the example at page 10)
+    • CHAPTER TWO LITERATURE SURVEY (or BACKGROUND or PREVIOUS STUIDES) (new page)
+    • CHAPTER THREE REALISTIC CONSTRAINTS (new page), (Each section starts on a new page) , (This chapter explained separately in details in the Chapter 3 Realistic Constraints and Chapter 4 Design Methods.doc  file)
+    • CHAPTER FOUR  METHODS USED TO DESIGN THE PROJECT (new page), (Each section starts on a new page) , ( Must be include: Formulation, and solution of the necessary engineering problems for their project; selection and application to proper analysis and modeling methods for their project. Use theoretical and applied knowledge for their project.)
+
+    • CHAPTER XXXX  Extra Chapter for Explain the Work Done (More Chapters can be added according to the requirements)
+    • CONCLUSION AND FUTURE WORKS	(new page)
+    • APPENDICES (APPENDIX)	(new page)
+    • REFERENCES	(new page)
+General Style Requirements:
+Page Margins: Left = 3 cm, Right = 2.5 cm, Top = 3 cm, Bottom = 3 cm
+Font, When Not Specified: Times New Roman, 12 pt
+Paragraph: Line spacing = 1.5, Alignment = Justified, Indentation = First Line 1 cm.
+Section Headings: Alignment = Left, Font: 14 pt Bold Uppercase
+Subsection Headings: Alignment = Left, Font: 12 pt Bold Lowercase
+Sub subsection Headings: Alignment = Left, Font: 12 pt Regular Underlined
+
+Heading Numbering: #.#... (Example: 2.3.7. Experimental Verification)
+Pictures and Figures: Inline with text. On new line, centered, captioned below. (10 pt)
+Ex: 
+Figure 1.2: Screen shoots of patient registration form.
+
+Tables: Numbered Titles, Centered, aligned to left, captioned above of table. (10 pt)
+Ex:
+Table 3.4: Table of force vector parameters.
+
+Equations: Use Microsoft Equation Editor, Numbered, Numbers on right in parentheses.
+Cross-References: Without Author [Ref.#], With Author(s) (Authors, [#]), With Author(s) and Year (Authors, Year, [#]).
+
+References Style:  Example:
+    1. Brown, P. & Pietra, S. & Pietra, V. & Mercer, Robert: The Mathematics of Machine Translation: Parameter Estimation., Computational Linguistics, 19, pp. 263-312, 2003.
+Can, F., Ozkarahan. E.A.. Concepts and Effectiveness of the Cover Coefficient Based Clustering Methodology for Text Databases, ACM Transactions on Database Systems, Vol. 15, No. 4., 1998
+(cover page)
+
+CYPRUS INTERNATIONAL UNIVERSITY
+FACULTY OF ENGINEERING 
+DEPARTMENT OF ELECTRICAL AND ELECTRONIC ENGINEERING
+						                                                                                       		   		
+
+
+
+
+COMBINING TEXTUAL AND VISUAL CLUSTERS 
+FOR SEMANTIC IMAGE RETRIEVAL
+
+
+
+
+
+by
+Name SURNAME
+
+
+
+
+
+
+
+
+
+
+April, 2019
+Nicosia, NORTH CYPRUS
+(inner cover page)
+CYPRUS INTERNATIONAL UNIVERSITY
+FACULTY OF ENGINEERING 
+DEPARTMENT OF ELECTRICAL AND ELECTRONIC ENGINEERING
+						                                                                                       		   		
+
+
+
+
+COMBINING TEXTUAL AND VISUAL CLUSTERS 
+FOR SEMANTIC IMAGE RETRIEVAL
+
+
+
+
+
+by
+Name SURNAME
+
+
+
+
+
+
+
+
+
+
+April, 2019
+Nicosia, NORTH CYPRUS
+
+ YOUR THESIS TITLE YOUR THESIS TITLE YOUR THESIS TITLE THESIS YOUR TITLE THESIS TITLE
+
+
+
+
+
+
+
+
+
+By
+
+NAME SURNAME
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+DATE OF APPROVAL:	10 April 2019
+
+
+APPROVED BY:
+
+(Asst./Assoc.) Prof.Dr.
+Project Supervisor	
+
+
+ACKNOWLEDGEMENTS
+(Optional)
+(page numbering starts here with iii in roman numbers (iii, iv, v, …))
+
+
+Xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.
+
+
+Names Last Name
+
+
+
+Abstract
+
+Xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx 
+Maximum 400 words
+Line spacing: 1.5
+Font: 12 pt Times New roman
+
+
+
+Özet
+
+Xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx 
+Maximum 400 words
+Line spacing: 1.5
+Font: 12 pt Times New roman
+
+TABLE OF CONTENTS
+											Page	
+THESIS EXAMINATION RESULT FORM	ii
+ACKNOWLEDGEMENTS	iii
+ABSTRACT	iv
+ÖZET	v
+
+CHAPTER ONE – INTRODUCTION	1
+1.1 Heading 2	1
+1.1.1 Heading 3	4
+1.1.1.1 Heading 4	5
+1.1.1.2 Heading 4	6
+1.1.1.2.1 Heading 5	6
+
+
+1.2 Heading 2	10
+1.2.1 Heading 3	14
+1.2.1.1 Heading 4	15
+1.2.1.2 Heading 4	18
+
+CHAPTER TWO – GEOLOGICAL SETTING	20
+
+2.1 Heading 2	20
+2.1.1 Heading 3	24
+2.1.1.1 Heading 4	25
+2.1.1.2 Heading 4	26
+
+2.2 Heading 2	31
+2.2.1 Heading 3	34
+2.2.1.1 Heading 4	35
+2.2.1.2 Heading 4	36
+CHAPTER ONE
+INTRODUCTION
+ 
+        1.1 Heading 2							
+      0.5 cm
+	.................................................................................................................................................................................................................................................................................................................................................................................................................................................
+
+1.1.1 Heading 3
+
+	.................................................................................................................................................................................................................................................................................................................................................................................................................................................
+																			
+1.1.1 Heading 4
+
