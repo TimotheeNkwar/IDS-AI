@@ -589,9 +589,9 @@ The overall system architecture is designed around a three-tier hybrid detection
 \end{itemize}
 
 % ================================================================
-\section{System Architecture}
+\chapter{System Architecture}
 
-\subsection{High-Level Architecture}
+\section{High-Level Architecture}
 
 Figure~\ref{fig:architecture} illustrates the high-level architecture of the IDS-AI platform. The system operates through a structured, multi-stage pipeline designed for low-latency detection, deep context enrichment, and human-guided triage. The data flow follows these key steps:
 
@@ -655,7 +655,7 @@ Figure~\ref{fig:architecture} illustrates the high-level architecture of the IDS
   \label{fig:architecture}
 \end{figure}
 
-\subsection{Three-Layer Decision Model}
+\section{Three-Layer Decision Model}
 
 IDS-AI is designed around a three-layer decision model:
 
@@ -676,7 +676,7 @@ This structure prevents the system from blindly trusting automation. ML and
 LLM components assist the analyst, but the human remains responsible for the
 final decision after all analysis is complete.
 
-\subsection{Component-to-Component Interaction Sequence}
+\section{Component-to-Component Interaction Sequence}
 
 To detail how the individual system blocks cooperate during operations, the execution path of a single network log event received at the `/api/analyze` endpoint is traced through the following step-by-step lifecycle:
 \begin{enumerate}[leftmargin=1.5em]
@@ -693,7 +693,7 @@ To detail how the individual system blocks cooperate during operations, the exec
   \item \textbf{Dashboard Rendering}: The React frontend receives the WebSocket packet. The Zustand store updates its state, triggering a dashboard toast notification and updating the charts. The analyst can then review the incident details and update the workflow status.
 \end{enumerate}
 
-\subsection{Repository Structure}
+\section{Repository Structure}
 
 \begin{lstlisting}[style=bashstyle, caption={Project directory structure}]
 IDS-AI/
@@ -725,7 +725,7 @@ IDS-AI/
 `-- report.tex
 \end{lstlisting}
 
-\subsection{Technology Stack}
+\section{Technology Stack}
 
 \begin{table}[htbp]
   \centering
@@ -750,9 +750,9 @@ IDS-AI/
 \end{table}
 
 % ================================================================
-\section{Backend Design}
+\chapter{Backend Design}
 
-\subsection{FastAPI Application Setup}
+\section{FastAPI Application Setup}
 
 The backend core of the IDS-AI platform is initialized in \texttt{backend/main.py} using the FastAPI framework. FastAPI was selected due to its high-performance asynchronous execution model, native support for OpenAPI documentation, and integration with the Pydantic data validation library. On application startup, the framework executes a lifespan context manager to load environment variables, establish database connections, preload machine learning models, and initialize background analysis workers.
 
@@ -783,7 +783,7 @@ async def lifespan(app: FastAPI):
 
 This lifespan design ensures that database connection pools and heavy ML model weights are loaded once in memory and shared across all request threads, minimizing request latency and preventing connection leaks.
 
-\subsection{Internal LLM Queue}
+\section{Internal LLM Queue}
 
 Large Language Models (LLMs) are compute-heavy systems. Calling the model directly in a standard synchronous request would block the FastAPI event loop, causing all other concurrent network connections to timeout. To protect the host hardware from CPU and GPU memory exhaustion, the system routes all LLM queries through an internal, thread-safe asynchronous queue defined in \texttt{backend/llm\_queue/llm\_queue.py}.
 
@@ -846,7 +846,7 @@ llm_queue = LLMQueue(max_concurrent=1)
 This design operates as an internal task-serialization pipeline. When a user submits traffic via \texttt{POST /api/analyze}, the backend processes the fast ML checks immediately. If an LLM analysis is required, the request submits a coroutine to the queue and waits for its future to resolve. The queue ensures that only one heavy local LLM inference task runs at a time, protecting VRAM while maintaining an asynchronous execution model.
 
 
-\subsection{Analysis Router}
+\section{Analysis Router}
 
 The main packet processing endpoint is located at \texttt{POST /api/analyze} inside the analysis router (\texttt{backend/router/analyse/analyse.py}). This router performs the following operations:
 \begin{enumerate}[leftmargin=1.5em]
@@ -859,7 +859,7 @@ The main packet processing endpoint is located at \texttt{POST /api/analyze} ins
   \item \textbf{WebSocket Broadcast}: Persists the result in MongoDB and broadcasts the JSON structure to connected WebSocket dashboard clients.
 \end{enumerate}
 
-\subsection{Stats Router}
+\section{Stats Router}
 
 The statistics router (\texttt{backend/router/stats/\_\_init\_\_.py}) handles the data aggregation required by the frontend dashboard. It defines the \texttt{GET /api/stats} endpoint, which accepts an \texttt{hours} query parameter to filter metrics. The router queries MongoDB using the Motor driver and aggregates results using specialized pipelines. It retrieves:
 \begin{itemize}[leftmargin=1.5em]
@@ -872,13 +872,13 @@ The statistics router (\texttt{backend/router/stats/\_\_init\_\_.py}) handles th
 
 Since MongoDB documents use BSON formats, the router leverages the \texttt{bson.json\_util} library to serialize ObjectId and DateTime fields before sending them to the client.
 
-\subsection{Suggestions Router}
+\section{Suggestions Router}
 
 To support security analysts in mitigating active threats, the suggestions router (\texttt{backend/router/suggestion/\_\_init\_\_.py}) exposes the \texttt{GET /api/suggestions} endpoint. This router retrieves open alerts from MongoDB, groups them by attack type and source IP, and generates recommended actions.
 
 For example, if multiple SQL Injection alerts are recorded from a public IP, the suggestions router groups these incidents together, calculates the priority based on the highest severity alert, extracts the evidence list, and presents a single, cohesive action block (e.g., "Block IP 198.51.100.12 at the perimeter firewall and review Web Server logs"). This grouping prevents the analyst from being overwhelmed by repetitive alerts, allowing them to focus on the root cause.
 
-\subsection{WebSocket Alert Router}
+\section{WebSocket Alert Router}
 
 Real-time alert delivery is managed by the WebSocket router (\texttt{backend/router/websockets\_router/\_\_init\_\_.py}). It implements a connection manager class that tracks active WebSocket connections and handles connection registration and disconnection.
 
@@ -905,7 +905,7 @@ class ConnectionManager:
 
 When the \texttt{/api/ws/alerts} WebSocket endpoint is established, the client is registered. When a new alert is generated by the analysis pipeline, the backend formats an alert payload containing the threat classification, severity, explanation, and recommended actions, and broadcasts it to all connected frontend clients instantly.
 
-\subsection{Error Handling and Recovery}
+\section{Error Handling and Recovery}
 
 The backend is designed for resilience. If the machine learning model bundle cannot be loaded on startup, the analysis endpoint returns a \texttt{503 Service Unavailable} status, instructing the operator to run the training script.
 
@@ -919,9 +919,9 @@ If local LLM inference fails (e.g., due to model server offline or prompt timeou
 
 Additionally, any blocking CPU/GPU operations (such as loading raw model files) are wrapped in \texttt{asyncio.to\_thread} to prevent blocking the FastAPI event loop, ensuring that the REST API remains responsive to other clients.
 % ================================================================
-\section{Detection Pipeline}
+\chapter{Detection Pipeline}
 
-\subsection{Input Event Schema}
+\section{Input Event Schema}
 
 IDS-AI receives normalized network event records inspired by Zeek and CTU-style flow features. The main request schema is represented by the \texttt{LogEvent} Pydantic model. Pydantic was chosen because it enforces runtime type enforcement, performs data coercion (e.g., parsing a string port into an integer), and applies strict value validations (such as verifying that port integers reside in the valid $[0, 65535]$ range).
 
@@ -989,7 +989,7 @@ class AnalysisResult(BaseModel):
     service: str
 \end{lstlisting}
 
-\subsection{Machine Learning Stage}
+\section{Machine Learning Stage}
 
 The ML detector loads the trained model bundle from
 \texttt{backend/ml/best\_model.joblib}. The training pipeline compares Random
@@ -1008,7 +1008,7 @@ The ML result includes:
   \item top model features when available.
 \end{itemize}
 
-\subsubsection{How the ML Layer Works}
+\subsection{How the ML Layer Works}
 
 The ML layer operates on structured, pre-processed features extracted from
 the incoming \texttt{LogEvent}. Typical preprocessing steps include
@@ -1028,12 +1028,12 @@ Key properties:
     analysts and help the LLM when constructing explanations.
 \end{itemize}
 
-\subsubsection{Training Process}
+\subsection{Training Process}
 
 The ML model training pipeline follows standard supervised learning methodology
 to ensure reproducible and robust detection performance.
 
-\paragraph{Data Preparation}
+\subsubsection{Data Preparation}
 
 Training data is collected from network flow records, each labeled as normal or
 belonging to an attack category. Categorical features such as protocol name,
@@ -1042,7 +1042,7 @@ encoding. Numeric features are normalized to zero mean and unit variance.
 Missing or anomalous values are imputed using sensible defaults (e.g.\ zero
 bytes, no service).
 
-\paragraph{Class Imbalance Handling}
+\subsubsection{Class Imbalance Handling}
 
 Real-world intrusion datasets are often imbalanced: normal traffic vastly
 outnumbers attack traffic. Without correction, the ML model becomes biased
@@ -1072,7 +1072,7 @@ set. This prevents data leakage: the test set remains genuinely imbalanced,
 allowing realistic evaluation of model performance on real-world class
 distributions.
 
-\paragraph{Train-Test Split and Cross-Validation}
+\subsubsection{Train-Test Split and Cross-Validation}
 
 The dataset is split into training (70--80\%) and test (20--30\%) subsets
 using stratified random splitting to preserve class proportions. During
@@ -1080,7 +1080,7 @@ hyperparameter tuning, stratified 5-fold cross-validation is used on the
 training set. The final model is retrained on the entire training set with the
 selected hyperparameters.
 
-\paragraph{Model Training and Selection}
+\subsubsection{Model Training and Selection}
 
 Three candidate models are trained: Random Forest, XGBoost, and Isolation
 Forest. Each is evaluated on the held-out test set using Accuracy, Precision,
@@ -1088,7 +1088,7 @@ Recall, and F1-score. The model with the highest F1-score is selected for
 production deployment and serialized using joblib into
 \texttt{backend/ml/best\_model.joblib}.
 
-\subsubsection{Models Used and Evaluation Metrics}
+\subsection{Models Used and Evaluation Metrics}
 
 During development IDS-AI evaluated three primary detection approaches:
 Random Forest (supervised), XGBoost (supervised), and Isolation Forest
@@ -1114,7 +1114,7 @@ test set.
   \end{tabular}
 \end{table}
 
-\subsubsection{Metric Definitions}
+\subsection{Metric Definitions}
 
 The main classification metrics are defined as follows, where
 \textit{TP} = true positives, \textit{TN} = true negatives,
@@ -1145,7 +1145,7 @@ In an intrusion detection context, high Recall is important to reduce missed
 attacks (low FN), while high Precision reduces alert fatigue caused by false
 alarms (low FP). The F1-score balances both objectives.
 
-\subsubsection{Interpretation of Results}
+\subsection{Interpretation of Results}
 
 \begin{itemize}[leftmargin=1.5em]
   \item \textbf{RandomForest (F1 = 0.9931):} Precision 0.9934 means 99.34\%
@@ -1164,7 +1164,7 @@ From an operational perspective, RandomForest or XGBoost are strongly preferred.
 For both supervised models at Recall $>$ 99\%, the system misses fewer than 1
 in 100 real attacks, which is operationally acceptable for most environments.
 
-\subsubsection{Confusion Matrix Analysis}
+\subsection{Confusion Matrix Analysis}
 
 The confusion matrix provides a detailed breakdown of model predictions across
 all attack classes. Each row represents the true label, each column represents
@@ -1182,7 +1182,7 @@ XGBoost model on the test set.
   \label{fig:xgboost-cm}
 \end{figure}
 
-\paragraph{Per-Class Performance}
+\subsubsection{Per-Class Performance}
 
 Table~\ref{tab:cm-analysis} summarizes per-class accuracy derived from the
 confusion matrix:
@@ -1211,7 +1211,7 @@ confusion matrix:
   \end{tabular}
 \end{table}
 
-\paragraph{Interpretation and Operational Significance}
+\subsubsection{Interpretation and Operational Significance}
 
 \paragraph{Strengths:}
 The model achieves $>99\%$ accuracy on critical attack types (backdoor,
@@ -1229,13 +1229,13 @@ patterns between these attack families.
 For critical MITM detection, the organization could:
 \begin{enumerate}[leftmargin=1.5em]
   \item Collect more labeled MITM samples to retrain the model.
-  \item Deploy the LLM layer (Subsection~\ref{sec:llm}) to provide additional
+  \item Deploy the LLM layer (Section~\ref{sec:llm}) to provide additional
     contextual reasoning on borderline cases.
   \item Use the LLM's \texttt{needs\_manual\_review} flag to route ambiguous
     MITM detections to human analysts.
 \end{enumerate}
 
-\paragraph{Comparison with Other Models}
+\subsubsection{Comparison with Other Models}
 
 Figures~\ref{fig:rf-cm} and~\ref{fig:iso-cm} show the confusion matrices for
 RandomForest and IsolationForest respectively.
@@ -1259,7 +1259,7 @@ dominated patterns indicating few classification errors. IsolationForest, being
 unsupervised and binary (normal vs.\ anomaly), cannot differentiate specific
 attack types and is reserved for novelty detection in IDS-AI.
 
-\subsubsection{Example ML Output}
+\subsection{Example ML Output}
 
 The following example illustrates the runtime output returned by the ML layer
 for a suspicious HTTP event. The values are representative of the backend
@@ -1294,12 +1294,12 @@ explain which patterns pushed the model toward that decision. Together, these
 fields give the analyst a fast first-line verdict and a short technical
 explanation of why the event was flagged.
 
-\subsection{LLM Stage}
+\section{LLM Stage}
 \label{sec:llm}
 
 When the ML model identifies an anomaly, or when the external threat intelligence reports a suspicious IP address, IDS-AI invokes the local Large Language Model (LLM) stage. The default configuration uses the Ollama API serving the \texttt{phi3} model (or \texttt{llama3}), but the system also includes code fallbacks to load a Hugging Face text-generation pipeline if Ollama is unreachable.
 
-\subsubsection{Prompt Engineering and In-Context Learning}
+\subsection{Prompt Engineering and In-Context Learning}
 
 The LLM is prompted using a carefully designed template that enforces structural integrity and extracts reasoning capability:
 \begin{enumerate}[leftmargin=1.5em]
@@ -1308,7 +1308,7 @@ The LLM is prompted using a carefully designed template that enforces structural
   \item \textbf{Response Constraints}: The model is instructed to output a single JSON document conforming to a strict JSON Schema, ensuring that the backend can parse the response fields directly without formatting errors.
 \end{enumerate}
 
-\subsubsection{Example LLM Output}
+\subsection{Example LLM Output}
 
 The following is a representative output from the LLM layer:
 
@@ -1332,7 +1332,7 @@ The following is a representative output from the LLM layer:
 }
 \end{lstlisting}
 
-\subsection{Prompt Injection Protection}
+\section{Prompt Injection Protection}
 
 Allowing raw network payloads to be interpolated directly into LLM prompts introduces a significant vulnerability: \textbf{Prompt Injection}. An attacker could craft a packet containing instruction text designed to override the system instructions, such as:
 \begin{quote}
@@ -1348,7 +1348,7 @@ To mitigate this threat, the backend implements a payload-sanitization utility:
   \item \textbf{Redaction Policy}: If a prompt injection attempt is detected, the raw payload field is completely replaced with the string: \texttt{[REDACTED: Potential Prompt Injection Attempt]}. The metadata and ML features are still sent to the LLM, ensuring the event is classified based on structural flow variables alone.
 \end{itemize}
 
-\subsection{Final Classification Logic}
+\section{Final Classification Logic}
 
 When both ML and LLM stages complete, the backend combines their outputs to compute the final verdict.
 
@@ -1369,7 +1369,7 @@ and the final severity is determined from the ML confidence score:
   \item $C_{\text{ml}} < 50\% \implies$ Severity: \textbf{low}
 \end{itemize}
 
-\subsection{Human-in-the-Loop Decision Layer}
+\section{Human-in-the-Loop Decision Layer}
 
 The final operational decision is not made automatically by the ML model or the LLM. Instead, IDS-AI follows a Human-in-the-Loop approach. After the ML layer predicts the traffic label and the LLM layer produces explanations, evidence, severity, and recommended action, the security analyst reviews the complete result in the dashboard.
 
@@ -1382,7 +1382,7 @@ The analyst uses the dashboard interface to update the status of the alert:
 \end{itemize}
 This ensures that the final control remains with the human operator, utilizing the AI as an assistive advisor rather than a black-box auto-blocking tool.
 
-\subsubsection{UX and Operational Recommendations}
+\subsection{UX and Operational Recommendations}
 
 Recommended features include:
 \begin{itemize}[leftmargin=1.5em]
@@ -1392,9 +1392,9 @@ Recommended features include:
   \item a future durable analysis job queue if high-volume asynchronous processing becomes a production requirement.
 \end{itemize}
 
-\section{Database and Persistence}
+\chapter{Database and Persistence}
 
-\subsection{MongoDB Collections and Schemas}
+\section{MongoDB Collections and Schemas}
 
 The persistence layer stores operational network records, alerts, statistics, and administrative accounts in MongoDB. As a document-oriented database, MongoDB provides high scalability for semi-structured log telemetry. The backend interacts with four primary collections:
 
@@ -1415,7 +1415,7 @@ The persistence layer stores operational network records, alerts, statistics, an
   \item \texttt{users}: Holds analyst administrative details, including encrypted passwords hashed with Argon2/BCrypt.
 \end{itemize}
 
-\subsection{Asynchronous Database Operations via Motor}
+\section{Asynchronous Database Operations via Motor}
 
 Synchronous database drivers (e.g., PyMongo) block the execution thread while waiting for a response from the database socket, which decreases the performance of FastAPI. To prevent this, IDS-AI utilizes the \textbf{Motor} library (\texttt{motor.motor\_asyncio}), which wraps PyMongo in an asynchronous event-loop architecture.
 
@@ -1445,7 +1445,7 @@ async def connect_db() -> bool:
         return False
 \end{lstlisting}
 
-\subsection{Database Indexing Strategy}
+\section{Database Indexing Strategy}
 
 To ensure low response latencies for dashboard queries and prevent table scans, the database layer enforces indexing on columns that are frequently used in filtering and sorting:
 \begin{itemize}[leftmargin=1.5em]
@@ -1463,7 +1463,7 @@ To ensure low response latencies for dashboard queries and prevent table scans, 
   \item \textbf{Unique Constraints}: Applied on user collections to enforce email and username uniqueness.
 \end{itemize}
 
-\subsection{Aggregation Pipelines}
+\section{Aggregation Pipelines}
 
 For complex statistical analysis, the repository layer executes MongoDB aggregation pipelines. For example, the \texttt{alerts\_over\_time} method utilizes a two-stage aggregation pipeline to group alerts by hour and severity.
 
@@ -1500,9 +1500,9 @@ pipeline = [
 This aggregation occurs entirely within the MongoDB database engine. The Python process receives a structured list of count items, which are transformed and sent to the client as JSON. This approach minimizes network overhead and improves performance compared to processing large numbers of raw documents in Python.
 
 % ================================================================
-\section{Frontend Dashboard}
+\chapter{Frontend Dashboard}
 
-\subsection{Dashboard Overview and Router Structure}
+\section{Dashboard Overview and Router Structure}
 
 The frontend is implemented as a single-page application using React, TypeScript, and Vite. The route configuration lives in \texttt{frontend/src/router/router.tsx}. The application implements a sidebar layout that allows security analysts to navigate between pages:
 \begin{itemize}[leftmargin=1.5em]
@@ -1513,15 +1513,15 @@ The frontend is implemented as a single-page application using React, TypeScript
   \item \textbf{System Diagnostics}: Page showing backend, database, and machine learning model health.
 \end{itemize}
 
-\subsubsection{Standardizing Icons and Visual Polish}
+\subsection{Standardizing Icons and Visual Polish}
 
 To ensure visual consistency and a premium user experience, the interface has been modernized by replacing all legacy text-based emojis and symbols with SVG icon components from the \texttt{lucide-react} library. For example, text-based warning indicators are replaced with the \texttt{AlertTriangle} SVG component, and status controls use the \texttt{CheckCircle} and \texttt{Clock} components. This change aligns the application with modern design standards and improves visual appeal.
 
-\subsection{State Management and Client-Side Architecture}
+\section{State Management and Client-Side Architecture}
 
 The frontend architecture separates local UI state, server data cache, and real-time event streams using two libraries: \textbf{React Query} (\texttt{@tanstack/react-query}) and \textbf{Zustand}.
 
-\subsubsection{Server-State Caching with React Query}
+\subsection{Server-State Caching with React Query}
 
 For REST API queries, the application relies on React Query. React Query is used to fetch and cache data from endpoints such as \texttt{/api/alerts} and \texttt{/api/stats}:
 \begin{itemize}[leftmargin=1.5em]
@@ -1529,7 +1529,7 @@ For REST API queries, the application relies on React Query. React Query is used
   \item \textbf{Query Caching}: Fetched results are cached in memory. When navigating between dashboard views, cached data is displayed immediately while a background fetch updates the view in the background.
 \end{itemize}
 
-\subsubsection{Real-Time Event Streams with Zustand}
+\subsection{Real-Time Event Streams with Zustand}
 
 Real-time alert delivery from the backend's \texttt{/api/ws/alerts} WebSocket endpoint is managed using a \textbf{Zustand} store defined in \texttt{frontend/src/stores/wsStore.ts}. Zustand provides a lightweight state machine that maintains the open socket connection, parses incoming JSON messages, and maintains a buffer of recent events.
 
@@ -1599,7 +1599,7 @@ export const useWsStore = create<WsStore>((set, get) => {
 
 This store handles connection loss gracefully by executing a \texttt{setTimeout} on close to automatically reconnect, maintaining real-time alert updates on the dashboard.
 
-\subsection{Traffic View and Details Drawer}
+\section{Traffic View and Details Drawer}
 
 The Traffic Monitor view retrieves data from \texttt{GET /api/traffic} and displays it in a structured table. When an analyst clicks on a traffic row, a slide-out details panel is shown:
 \begin{itemize}[leftmargin=1.5em]
@@ -1610,13 +1610,13 @@ The Traffic Monitor view retrieves data from \texttt{GET /api/traffic} and displ
 
 \screenshot{traffic_monitor.png}{Traffic Monitor page with persisted IDS traffic records}
 
-\subsection{Network Statistics and Metrics View}
+\section{Network Statistics and Metrics View}
 
 The Network Stats page (\texttt{NetworkStats.tsx}) displays visual graphs and metrics representing system throughput and detected attack distributions. Using Recharts, it renders charts of attack categories, severity distributions, and timeline graphs showing threat counts over time.
 
 \screenshot{network_stats.png}{Network Stats page showing traffic volume and attack classification distributions}
 
-\subsection{Human Analyst Triage Controls}
+\section{Human Analyst Triage Controls}
 
 The threats page (\texttt{ThreatsAnalysis.tsx}) allows security analysts to triage alerts. When an alert card is clicked, a modal window displays the full attack context.
 
@@ -1629,7 +1629,7 @@ Inside this modal, the analyst can update the alert status:
 
 \screenshot{threats_analysis.png}{Threats Analysis page with severity and status controls}
 
-\subsection{Health and Troubleshooting View}
+\section{Health and Troubleshooting View}
 
 The System Diagnostics page fetches system state from the \texttt{GET /api/health} endpoint and renders status indicator badges:
 \begin{itemize}[leftmargin=1.5em]
